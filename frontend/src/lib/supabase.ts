@@ -21,7 +21,7 @@ class SupabaseService {
       const { data, error } = await supabase.functions.invoke('validate-telegram', {
         body: { initData }
       });
-
+      
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
 
@@ -42,9 +42,12 @@ class SupabaseService {
   async getPrograms() {
     const { data, error } = await supabase
       .from('programs')
-      .select('*, exercises (*)')
+      .select(`
+        *,
+        exercises (*)
+      `)
       .eq('is_template', false)
-      .order('updated_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -53,8 +56,12 @@ class SupabaseService {
   async getProgramTemplates() {
     const { data, error } = await supabase
       .from('program_templates')
-      .select('*, template_exercises (*)')
-      .eq('is_active', true);
+      .select(`
+        *,
+        template_exercises (*)
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -62,100 +69,100 @@ class SupabaseService {
 
   async copyTemplate(templateId: string, userId: string) {
     try {
-      console.log('Copying template:', templateId, 'for user:', userId);
+      const { data, error } = await supabase.functions.invoke('copy-template', {
+        body: { template_id: templateId, user_id: userId }
+      });
 
-      // Получаем шаблон с упражнениями
-      const { data: template, error: templateError } = await supabase
-        .from('program_templates')
-        .select('*, template_exercises (*)')
-        .eq('id', templateId)
-        .single();
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || 'Copy failed');
 
-      if (templateError) {
-        console.error('Template fetch error:', templateError);
-        throw templateError;
-      }
-
-      console.log('Template found:', template);
-
-      // Создаем новую программу
-      const { data: newProgram, error: programError } = await supabase
-        .from('programs')
-        .insert({
-          user_id: userId,
-          program_name: template.template_name,
-          is_template: false
-        })
-        .select()
-        .single();
-
-      if (programError) {
-        console.error('Program create error:', programError);
-        throw programError;
-      }
-
-      console.log('Program created:', newProgram);
-
-      // Копируем упражнения если есть
-      if (template.template_exercises && template.template_exercises.length > 0) {
-        const exercises = template.template_exercises.map((ex: any) => ({
-          program_id: newProgram.id,
-          user_id: userId,
-          exercise_name: ex.exercise_name,
-          target_sets: ex.target_sets,
-          target_reps: ex.target_reps,
-          target_weight: ex.target_weight,
-          order_index: ex.order_index,
-          notes: ex.notes
-        }));
-
-        console.log('Creating exercises:', exercises);
-
-        const { error: exercisesError } = await supabase
-          .from('exercises')
-          .insert(exercises);
-
-        if (exercisesError) {
-          console.error('Exercises create error:', exercisesError);
-          throw exercisesError;
-        }
-      }
-
-      // Получаем полную программу с упражнениями
-      const { data: completeProgram, error: fetchError } = await supabase
-        .from('programs')
-        .select('*, exercises (*)')
-        .eq('id', newProgram.id)
-        .single();
-
-      if (fetchError) {
-        console.error('Fetch complete program error:', fetchError);
-        throw fetchError;
-      }
-
-      console.log('Complete program:', completeProgram);
-      return completeProgram;
+      return data;
     } catch (error) {
       console.error('Copy template error:', error);
       throw error;
     }
   }
 
-  async createProgram(program: any) {
-    const { data, error } = await supabase
+  async createProgram(programData: any) {
+    const { program_name, exercises } = programData;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) throw new Error('User not authenticated');
+
+    const { data: program, error: programError } = await supabase
       .from('programs')
-      .insert(program)
+      .insert({
+        user_id: user.id,
+        program_name,
+        is_template: false
+      })
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    if (programError) throw programError;
+
+    if (exercises && exercises.length > 0) {
+      const exercisesData = exercises.map((ex: any, index: number) => ({
+        program_id: program.id,
+        user_id: user.id,
+        exercise_name: ex.exercise_name,
+        target_sets: ex.target_sets,
+        target_reps: ex.target_reps,
+        target_weight: ex.target_weight || 0,
+        order_index: index,
+        notes: ex.notes || ''
+      }));
+
+      const { error: exercisesError } = await supabase
+        .from('exercises')
+        .insert(exercisesData);
+
+      if (exercisesError) throw exercisesError;
+    }
+
+    return program;
   }
 
-  async createExercises(exercises: any[]) {
+  // ✅ НОВОЕ: Удаление программы
+  async deleteProgram(programId: string) {
+    // Сначала удаляем упражнения (каскадное удаление может быть настроено в БД, но на всякий случай делаем явно)
+    const { error: exercisesError } = await supabase
+      .from('exercises')
+      .delete()
+      .eq('program_id', programId);
+
+    if (exercisesError) throw exercisesError;
+
+    // Затем удаляем саму программу
+    const { error: programError } = await supabase
+      .from('programs')
+      .delete()
+      .eq('id', programId);
+
+    if (programError) throw programError;
+
+    return { success: true };
+  }
+
+  async createExercises(programId: string, exercises: any[]) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) throw new Error('User not authenticated');
+
+    const exercisesData = exercises.map((ex, index) => ({
+      program_id: programId,
+      user_id: user.id,
+      exercise_name: ex.exercise_name,
+      target_sets: ex.target_sets,
+      target_reps: ex.target_reps,
+      target_weight: ex.target_weight || 0,
+      order_index: index,
+      notes: ex.notes || ''
+    }));
+
     const { data, error } = await supabase
       .from('exercises')
-      .insert(exercises)
+      .insert(exercisesData)
       .select();
 
     if (error) throw error;
