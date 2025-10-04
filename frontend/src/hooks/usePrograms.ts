@@ -35,18 +35,9 @@ export const usePrograms = () => {
     const newProgram = await supabaseService.createProgram({
       user_id: programData.user_id,
       program_name: programData.program_name,
+      exercises: programData.exercises, // Передаём упражнения сразу в createProgram
       is_template: false
     });
-
-    if (programData.exercises && programData.exercises.length > 0) {
-      const exercises = programData.exercises.map((ex: any, index: number) => ({
-        ...ex,
-        program_id: newProgram.id,
-        user_id: programData.user_id,
-        order_index: index
-      }));
-      await supabaseService.createExercises(exercises);
-    }
 
     await loadPrograms();
     return newProgram;
@@ -58,6 +49,12 @@ export const usePrograms = () => {
     return newProgram;
   }, [loadPrograms]);
 
+  // ✅ НОВОЕ: Удаление программы
+  const deleteProgram = useCallback(async (programId: string) => {
+    await supabaseService.deleteProgram(programId);
+    await loadPrograms();
+  }, [loadPrograms]);
+
   return {
     programs,
     templates,
@@ -65,6 +62,7 @@ export const usePrograms = () => {
     loadPrograms,
     loadTemplates,
     createProgram,
-    copyTemplate
+    copyTemplate,
+    deleteProgram // ✅ Экспортируем deleteProgram
   };
 };
