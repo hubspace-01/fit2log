@@ -1,8 +1,17 @@
 import React from 'react';
+import { 
+  Section, 
+  Cell, 
+  Button, 
+  Title, 
+  Text,
+  Card
+} from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
 
 interface Props {
   programs: Program[];
+  userName: string;
   onCreateProgram: () => void;
   onSelectTemplate: () => void;
   onSelectProgram: (program: Program) => void;
@@ -10,54 +19,95 @@ interface Props {
 
 export const ProgramSelector: React.FC<Props> = ({
   programs,
+  userName,
   onCreateProgram,
   onSelectTemplate,
   onSelectProgram
 }) => {
   return (
-    <div style={{ padding: '16px' }}>
-      <h1>Fit2Log</h1>
-      
+    <div className="app-container fade-in" style={{ padding: '16px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <Title level="1" weight="1" style={{ marginBottom: '8px' }}>
+          Привет, {userName}! 👋
+        </Title>
+        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+          Готов к тренировке?
+        </Text>
+      </div>
+
       {programs.length === 0 ? (
-        <div>
-          <p>У вас пока нет программ тренировок</p>
-          <button onClick={onSelectTemplate} style={{ marginBottom: '8px', width: '100%' }}>
-            �� Выбрать готовую программу
-          </button>
-          <button onClick={onCreateProgram} style={{ width: '100%' }}>
-            ✏️ Создать свою программу
-          </button>
-        </div>
-      ) : (
-        <div>
-          {programs.map((program) => (
-            <div 
-              key={program.id} 
-              onClick={() => onSelectProgram(program)}
-              style={{ 
-                padding: '12px', 
-                marginBottom: '8px', 
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}
+        <Section>
+          <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
+            <Title level="3" weight="2" style={{ marginBottom: '8px' }}>
+              Начни свой путь
+            </Title>
+            <Text style={{ color: 'var(--tg-theme-hint-color)', marginBottom: '24px' }}>
+              У тебя пока нет программ тренировок
+            </Text>
+            
+            <Button 
+              size="l" 
+              stretched 
+              onClick={onSelectTemplate}
+              style={{ marginBottom: '12px' }}
             >
-              <strong>{program.program_name}</strong>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                {program.exercises?.length || 0} упражнений
-              </div>
+              📋 Выбрать готовую программу
+            </Button>
+            
+            <Button 
+              size="l" 
+              stretched 
+              mode="outline"
+              onClick={onCreateProgram}
+            >
+              ✏️ Создать свою программу
+            </Button>
+          </Card>
+        </Section>
+      ) : (
+        <>
+          <Section 
+            header={<Title level="2" weight="2">Мои программы ({programs.length})</Title>}
+          >
+            {programs.map((program) => (
+              <Card key={program.id} style={{ marginBottom: '12px' }}>
+                <Cell
+                  onClick={() => onSelectProgram(program)}
+                  subtitle={`${program.exercises?.length || 0} упражнений`}
+                  after={
+                    <Button size="s" mode="filled">
+                      Начать 🏋️
+                    </Button>
+                  }
+                >
+                  {program.program_name}
+                </Cell>
+              </Card>
+            ))}
+          </Section>
+
+          <Section style={{ marginTop: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <Button 
+                size="l" 
+                stretched 
+                mode="outline"
+                onClick={onSelectTemplate}
+              >
+                📋 Шаблоны
+              </Button>
+              <Button 
+                size="l" 
+                stretched 
+                mode="outline"
+                onClick={onCreateProgram}
+              >
+                ➕ Создать
+              </Button>
             </div>
-          ))}
-          
-          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-            <button onClick={onSelectTemplate} style={{ flex: 1 }}>
-              📋 Шаблоны
-            </button>
-            <button onClick={onCreateProgram} style={{ flex: 1 }}>
-              ➕ Создать
-            </button>
-          </div>
-        </div>
+          </Section>
+        </>
       )}
     </div>
   );

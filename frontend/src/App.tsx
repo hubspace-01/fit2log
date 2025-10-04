@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
+import { Spinner } from '@telegram-apps/telegram-ui';
 import { useAuth, useAppState, usePrograms } from './hooks';
 import { ProgramSelector, TemplateList, ProgramEditor } from './components';
 import { AppScreen } from './types';
@@ -53,11 +54,9 @@ const App: React.FC = () => {
       });
       
       setScreen(AppScreen.PROGRAM_SELECTOR);
-      alert('Программа успешно создана!');
     } catch (error) {
       console.error('Save error:', error);
       setError('Ошибка при сохранении программы');
-      alert('Ошибка при сохранении программы');
     } finally {
       setLoading(false);
     }
@@ -69,14 +68,11 @@ const App: React.FC = () => {
     try {
       setLoading(true);
       clearError();
-      console.log('Copying template:', template.id, 'for user:', user.id);
       await copyTemplate(template.id, user.id);
       setScreen(AppScreen.PROGRAM_SELECTOR);
-      alert(`Программа "${template.template_name}" добавлена!`);
     } catch (error) {
       console.error('Copy template error:', error);
       setError('Ошибка при копировании шаблона');
-      alert(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setLoading(false);
     }
@@ -88,8 +84,14 @@ const App: React.FC = () => {
 
   if (authLoading || state.screen === AppScreen.LOADING) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div>Загрузка...</div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: 'var(--tg-theme-bg-color)'
+      }}>
+        <Spinner size="l" />
       </div>
     );
   }
@@ -97,23 +99,19 @@ const App: React.FC = () => {
   if (authError) {
     return (
       <div style={{ padding: '16px', textAlign: 'center' }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>😕</div>
         <h2>Ошибка авторизации</h2>
-        <p>{authError}</p>
+        <p style={{ color: 'var(--tg-theme-hint-color)' }}>{authError}</p>
       </div>
     );
   }
 
   return (
-    <div>
-      {state.error && (
-        <div style={{ padding: '12px', backgroundColor: '#ff6b6b', color: 'white', margin: '16px' }}>
-          {state.error}
-        </div>
-      )}
-
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
       {state.screen === AppScreen.PROGRAM_SELECTOR && (
         <ProgramSelector
           programs={programs}
+          userName={user?.first_name || 'Друг'}
           onCreateProgram={handleCreateProgram}
           onSelectTemplate={handleSelectTemplate}
           onSelectProgram={handleSelectProgram}

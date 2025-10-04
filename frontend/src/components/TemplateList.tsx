@@ -1,4 +1,13 @@
 import React from 'react';
+import { 
+  Section, 
+  Cell, 
+  Button, 
+  Title, 
+  Text,
+  Card,
+  Spinner
+} from '@telegram-apps/telegram-ui';
 import type { ProgramTemplate } from '../types';
 
 interface Props {
@@ -15,39 +24,58 @@ export const TemplateList: React.FC<Props> = ({
   onBack
 }) => {
   if (loading) {
-    return <div style={{ padding: '16px' }}>Загрузка...</div>;
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <Spinner size="l" />
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: '16px' }}>
-      <h1>Готовые программы</h1>
-      <p>Выберите программу из готовых шаблонов</p>
+    <div className="app-container fade-in" style={{ padding: '16px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <Title level="1" weight="1" style={{ marginBottom: '8px' }}>
+          Готовые программы
+        </Title>
+        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+          Выбери программу из готовых шаблонов
+        </Text>
+      </div>
 
-      {templates.map((template) => (
-        <div 
-          key={template.id}
-          onClick={() => onSelectTemplate(template)}
-          style={{ 
-            padding: '12px', 
-            marginBottom: '8px', 
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            cursor: 'pointer'
-          }}
+      <Section>
+        {templates.map((template) => (
+          <Card key={template.id} style={{ marginBottom: '12px' }}>
+            <Cell
+              onClick={() => onSelectTemplate(template)}
+              description={template.description}
+              subtitle={`${template.template_exercises?.length || 0} упражнений • ${template.category}`}
+              after={
+                <Button size="s" mode="filled">
+                  Добавить
+                </Button>
+              }
+            >
+              {template.template_name}
+            </Cell>
+          </Card>
+        ))}
+      </Section>
+
+      <Section style={{ marginTop: '24px' }}>
+        <Button 
+          size="l" 
+          stretched 
+          mode="outline"
+          onClick={onBack}
         >
-          <strong>{template.template_name}</strong>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            {template.description}
-          </div>
-          <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-            {template.template_exercises?.length || 0} упражнений • {template.category}
-          </div>
-        </div>
-      ))}
-
-      <button onClick={onBack} style={{ width: '100%', marginTop: '16px' }}>
-        Назад
-      </button>
+          ← Назад
+        </Button>
+      </Section>
     </div>
   );
 };

@@ -1,4 +1,12 @@
 import React, { useState } from 'react';
+import { 
+  Section, 
+  Button, 
+  Input,
+  Title, 
+  Text,
+  Card
+} from '@telegram-apps/telegram-ui';
 
 interface Props {
   onSave: (data: any) => void;
@@ -24,72 +32,127 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
     setExercises(updated);
   };
 
+  const removeExercise = (index: number) => {
+    setExercises(exercises.filter((_, i) => i !== index));
+  };
+
   const handleSave = () => {
     if (programName.trim() && exercises.length > 0) {
-      onSave({ program_name: programName, exercises });
+      const validExercises = exercises.filter(ex => ex.exercise_name.trim());
+      onSave({ program_name: programName, exercises: validExercises });
     }
   };
 
   return (
-    <div style={{ padding: '16px' }}>
-      <h1>Новая программа</h1>
-      
-      <div style={{ marginBottom: '16px' }}>
-        <label>Название программы</label>
-        <input
-          type="text"
+    <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '100px' }}>
+      <Title level="1" weight="1" style={{ marginBottom: '24px' }}>
+        ➕ Новая программа
+      </Title>
+
+      <Section header="Название программы">
+        <Input
+          header="Название"
+          placeholder="Введите название программы"
           value={programName}
           onChange={(e) => setProgramName(e.target.value)}
-          placeholder="Введите название"
-          style={{ width: '100%', padding: '8px', marginTop: '4px' }}
         />
-      </div>
+      </Section>
 
-      <div style={{ marginBottom: '16px' }}>
-        <h3>Упражнения ({exercises.length})</h3>
-        {exercises.map((ex, i) => (
-          <div key={i} style={{ marginBottom: '12px', padding: '12px', border: '1px solid #ccc', borderRadius: '8px' }}>
-            <input
-              type="text"
-              value={ex.exercise_name}
-              onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
-              placeholder="Название упражнения"
-              style={{ width: '100%', marginBottom: '8px' }}
-            />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-              <input
-                type="number"
-                value={ex.target_sets}
-                onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value))}
-                placeholder="Подходы"
-              />
-              <input
-                type="number"
-                value={ex.target_reps}
-                onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value))}
-                placeholder="Повторы"
-              />
-              <input
-                type="number"
-                value={ex.target_weight}
-                onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value))}
-                placeholder="Вес"
-              />
-            </div>
+      <Section 
+        header={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Title level="2" weight="2">Упражнения ({exercises.length})</Title>
+            <Button size="s" mode="filled" onClick={addExercise}>
+              + Добавить
+            </Button>
           </div>
-        ))}
-        <button onClick={addExercise} style={{ width: '100%' }}>
-          + Добавить упражнение
-        </button>
-      </div>
+        }
+      >
+        {exercises.length === 0 ? (
+          <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>💪</div>
+            <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+              Добавьте упражнения в программу
+            </Text>
+          </Card>
+        ) : (
+          exercises.map((ex, i) => (
+            <Card key={i} style={{ marginBottom: '12px', padding: '16px' }}>
+              <Input
+                header="Упражнение"
+                placeholder="Название упражнения"
+                value={ex.exercise_name}
+                onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
+                style={{ marginBottom: '12px' }}
+              />
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr 1fr', 
+                gap: '8px',
+                marginBottom: '12px'
+              }}>
+                <Input
+                  header="Подходы"
+                  type="number"
+                  value={ex.target_sets}
+                  onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
+                />
+                <Input
+                  header="Повторы"
+                  type="number"
+                  value={ex.target_reps}
+                  onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
+                />
+                <Input
+                  header="Вес (кг)"
+                  type="number"
+                  value={ex.target_weight}
+                  onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
+                />
+              </div>
 
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={handleSave} disabled={!programName || exercises.length === 0} style={{ flex: 1 }}>
-          Сохранить
-        </button>
-        <button onClick={onBack} style={{ flex: 1 }}>
+              <Button 
+                size="s" 
+                mode="outline" 
+                stretched
+                onClick={() => removeExercise(i)}
+                style={{ color: 'var(--tg-theme-destructive-text-color)' }}
+              >
+                🗑️ Удалить
+              </Button>
+            </Card>
+          ))
+        )}
+      </Section>
+
+      <div style={{ 
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px',
+        backgroundColor: 'var(--tg-theme-bg-color)',
+        borderTop: '1px solid var(--tg-theme-section-separator-color)',
+        display: 'flex',
+        gap: '12px'
+      }}>
+        <Button 
+          size="l"
+          stretched
+          mode="filled"
+          onClick={handleSave}
+          disabled={!programName.trim() || exercises.length === 0}
+        >
+          💾 Сохранить
+        </Button>
+        <Button 
+          size="l"
+          mode="outline"
+          onClick={onBack}
+        >
           Отмена
-        </button>
+        </Button>
       </div>
     </div>
   );
