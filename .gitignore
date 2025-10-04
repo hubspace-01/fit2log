@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+frontend/dist/
+frontend/build/
+.DS_Store
+npm-debug.log*
+*.log
+.vscode/settings.json
