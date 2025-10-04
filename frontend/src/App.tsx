@@ -58,14 +58,29 @@ const App: React.FC = () => {
     setScreen(AppScreen.PROGRAM_DETAILS);
   }, [setCurrentProgram, setScreen]);
 
+  // ✅ ИСПРАВЛЕНО: добавляем user_id в programData
   const handleProgramEditorSave = useCallback(async (programData: any) => {
-    if (!user) return;
+    if (!user) {
+      alert('Ошибка: пользователь не авторизован');
+      return;
+    }
+    
     try {
       console.log('🔍 Saving program with data:', programData);
+      console.log('🔍 User ID:', user.id);
+      
       setLoading(true);
       clearError();
       
-      const result = await createProgram(programData);
+      // Добавляем user_id к данным программы
+      const dataWithUserId = {
+        ...programData,
+        user_id: user.id
+      };
+      
+      console.log('🔍 Final data:', dataWithUserId);
+      
+      const result = await createProgram(dataWithUserId);
       console.log('✅ Program created:', result);
       
       await loadPrograms();
