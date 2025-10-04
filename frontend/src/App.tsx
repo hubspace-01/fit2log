@@ -24,7 +24,8 @@ const App: React.FC = () => {
     loadPrograms, 
     loadTemplates, 
     createProgram, 
-    copyTemplate 
+    copyTemplate,
+    deleteProgram // ✅ Добавили deleteProgram
   } = usePrograms();
 
   useEffect(() => {
@@ -52,7 +53,6 @@ const App: React.FC = () => {
     setScreen(AppScreen.TEMPLATE_LIST);
   }, [templates.length, loadTemplates, setScreen]);
 
-  // ✅ ИСПРАВЛЕНО: переключаем на PROGRAM_DETAILS
   const handleSelectProgram = useCallback((program: Program) => {
     setCurrentProgram(program);
     setScreen(AppScreen.PROGRAM_DETAILS);
@@ -68,7 +68,7 @@ const App: React.FC = () => {
         user_id: user.id,
         is_template: false
       });
-      await loadPrograms(); // Перезагружаем список
+      await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       console.error('Save error:', error);
@@ -84,7 +84,7 @@ const App: React.FC = () => {
       setLoading(true);
       clearError();
       await copyTemplate(template.id, user.id);
-      await loadPrograms(); // Перезагружаем список
+      await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       console.error('Copy template error:', error);
@@ -94,19 +94,17 @@ const App: React.FC = () => {
     }
   }, [user, copyTemplate, loadPrograms, setLoading, clearError, setError, setScreen]);
 
-  // ✅ НОВОЕ: Редактирование программы
   const handleEditProgram = useCallback((program: Program) => {
     setCurrentProgram(program);
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
 
-  // ✅ НОВОЕ: Удаление программы (пока alert)
+  // ✅ ИСПРАВЛЕНО: Реальное удаление программы
   const handleDeleteProgram = useCallback(async (programId: string) => {
     try {
       setLoading(true);
       clearError();
-      // TODO: добавить метод deleteProgram в supabase.ts
-      alert(`Удаление программы ${programId} - метод в разработке`);
+      await deleteProgram(programId);
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       console.error('Delete error:', error);
@@ -114,13 +112,11 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [setLoading, clearError, setError, setScreen]);
+  }, [deleteProgram, setLoading, clearError, setError, setScreen]);
 
-  // ✅ НОВОЕ: Начать тренировку
   const handleStartWorkout = useCallback((program: Program) => {
     startWorkout(program);
     setScreen(AppScreen.WORKOUT_LOGGER);
-    // TODO: создать компонент WorkoutLogger
     alert('Экран тренировки в разработке');
   }, [startWorkout, setScreen]);
 
@@ -155,7 +151,6 @@ const App: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      {/* Главный экран - список программ */}
       {state.screen === AppScreen.PROGRAM_SELECTOR && (
         <ProgramSelector
           programs={state.programs}
@@ -166,7 +161,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ НОВОЕ: Экран деталей программы */}
       {state.screen === AppScreen.PROGRAM_DETAILS && state.current_program && (
         <ProgramDetails
           program={state.current_program}
@@ -177,7 +171,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Список шаблонов */}
       {state.screen === AppScreen.TEMPLATE_LIST && (
         <TemplateList
           templates={templates}
@@ -187,7 +180,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Редактор программы - требует onSave и onBack */}
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
@@ -195,7 +187,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* TODO: Экран тренировки */}
       {state.screen === AppScreen.WORKOUT_LOGGER && (
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h2>Экран тренировки</h2>
