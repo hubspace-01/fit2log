@@ -42,8 +42,9 @@ const App: React.FC = () => {
   }, [programs, setPrograms, state.programs]);
 
   const handleCreateProgram = useCallback(() => {
+    setCurrentProgram(undefined); // Сброс текущей программы
     setScreen(AppScreen.PROGRAM_EDITOR);
-  }, [setScreen]);
+  }, [setCurrentProgram, setScreen]);
 
   const handleSelectTemplate = useCallback(async () => {
     if (templates.length === 0) {
@@ -191,7 +192,6 @@ const App: React.FC = () => {
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
-          onCancel={handleBack}
           initialData={state.current_program}
         />
       )}
