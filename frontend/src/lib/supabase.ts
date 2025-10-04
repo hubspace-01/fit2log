@@ -16,8 +16,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 class SupabaseService {
-  private accessToken?: string;
-
   async validateTelegramInitData(initData: string) {
     try {
       const { data, error } = await supabase.functions.invoke('validate-telegram', {
@@ -26,8 +24,6 @@ class SupabaseService {
 
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
-
-      this.accessToken = data.access_token;
 
       if (data.access_token && data.refresh_token) {
         await supabase.auth.setSession({
