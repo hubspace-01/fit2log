@@ -27,7 +27,6 @@ class TelegramService {
   getUser(): any {
     try {
       const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-      console.log('Telegram user:', user);
       return user;
     } catch (error) {
       console.error('Failed to get user:', error);
@@ -54,6 +53,75 @@ class TelegramService {
       console.error('Expand failed:', error);
     }
   }
+
+  // MainButton методы
+  showMainButton(text: string, onClick: () => void): void {
+    try {
+      const mainButton = window.Telegram?.WebApp?.MainButton;
+      if (mainButton) {
+        mainButton.text = text;
+        mainButton.onClick(onClick);
+        mainButton.show();
+      }
+    } catch (error) {
+      console.error('Show MainButton failed:', error);
+    }
+  }
+
+  hideMainButton(): void {
+    try {
+      window.Telegram?.WebApp?.MainButton?.hide();
+    } catch (error) {
+      console.error('Hide MainButton failed:', error);
+    }
+  }
+
+  setMainButtonText(text: string): void {
+    try {
+      const mainButton = window.Telegram?.WebApp?.MainButton;
+      if (mainButton) {
+        mainButton.text = text;
+      }
+    } catch (error) {
+      console.error('Set MainButton text failed:', error);
+    }
+  }
+
+  enableMainButton(): void {
+    try {
+      window.Telegram?.WebApp?.MainButton?.enable();
+    } catch (error) {
+      console.error('Enable MainButton failed:', error);
+    }
+  }
+
+  disableMainButton(): void {
+    try {
+      window.Telegram?.WebApp?.MainButton?.disable();
+    } catch (error) {
+      console.error('Disable MainButton failed:', error);
+    }
+  }
+
+  showBackButton(onClick: () => void): void {
+    try {
+      const backButton = window.Telegram?.WebApp?.BackButton;
+      if (backButton) {
+        backButton.onClick(onClick);
+        backButton.show();
+      }
+    } catch (error) {
+      console.error('Show BackButton failed:', error);
+    }
+  }
+
+  hideBackButton(): void {
+    try {
+      window.Telegram?.WebApp?.BackButton?.hide();
+    } catch (error) {
+      console.error('Hide BackButton failed:', error);
+    }
+  }
 }
 
 declare global {
@@ -65,6 +133,21 @@ declare global {
         ready(): void;
         expand(): void;
         close(): void;
+        MainButton?: {
+          text: string;
+          show(): void;
+          hide(): void;
+          enable(): void;
+          disable(): void;
+          onClick(callback: () => void): void;
+          offClick(callback: () => void): void;
+        };
+        BackButton?: {
+          show(): void;
+          hide(): void;
+          onClick(callback: () => void): void;
+          offClick(callback: () => void): void;
+        };
       };
     };
   }
