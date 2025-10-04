@@ -67,23 +67,70 @@ class SupabaseService {
     return data || [];
   }
 
+  // ✅ НОВОЕ: копирование шаблона БЕЗ Edge Function
   async copyTemplate(templateId: string, userId: string) {
     try {
-      const { data, error } = await supabase.functions.invoke('copy-template', {
-        body: { template_id: templateId, user_id: userId }
-      });
+      console.log('🔍 Copying template:', templateId, 'for user:', userId);
+      
+      // 1. Получаем шаблон с упражнениями
+      const { data: template, error: templateError } = await supabase
+        .from('program_templates')
+        .select(`
+          *,
+          template_exercises (*)
+        `)
+        .eq('id', templateId)
+        .single();
 
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error || 'Copy failed');
+      if (templateError) throw templateError;
+      if (!template) throw new Error('Template not found');
 
-      return data;
+      console.log('✅ Template loaded:', template);
+
+      // 2. Создаём новую программу
+      const { data: program, error: programError } = await supabase
+        .from('programs')
+        .insert({
+          user_id: userId,
+          program_name: template.template_name,
+          is_template: false
+        })
+        .select()
+        .single();
+
+      if (programError) throw programError;
+
+      console.log('✅ Program created:', program);
+
+      // 3. Копируем упражнения из шаблона
+      if (template.template_exercises && template.template_exercises.length > 0) {
+        const exercises = template.template_exercises.map((ex: any) => ({
+          program_id: program.id,
+          user_id: userId,
+          exercise_name: ex.exercise_name,
+          target_sets: ex.target_sets,
+          target_reps: ex.target_reps,
+          target_weight: ex.target_weight || 0,
+          order_index: ex.order_index,
+          notes: ex.notes || ''
+        }));
+
+        const { error: exercisesError } = await supabase
+          .from('exercises')
+          .insert(exercises);
+
+        if (exercisesError) throw exercisesError;
+
+        console.log('✅ Exercises copied:', exercises.length);
+      }
+
+      return { ok: true, program };
     } catch (error) {
-      console.error('Copy template error:', error);
+      console.error('❌ Copy template error:', error);
       throw error;
     }
   }
 
-  // ✅ ИСПРАВЛЕНО: принимаем user_id в параметрах
   async createProgram(programData: any) {
     const { program_name, exercises, user_id } = programData;
     
@@ -91,7 +138,6 @@ class SupabaseService {
       throw new Error('User ID is required');
     }
 
-    // Создаём программу
     const { data: program, error: programError } = await supabase
       .from('programs')
       .insert({
@@ -104,7 +150,6 @@ class SupabaseService {
 
     if (programError) throw programError;
 
-    // Если есть упражнения - создаём их
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
         program_id: program.id,
@@ -128,7 +173,6 @@ class SupabaseService {
   }
 
   async deleteProgram(programId: string) {
-    // Сначала удаляем упражнения
     const { error: exercisesError } = await supabase
       .from('exercises')
       .delete()
@@ -136,7 +180,6 @@ class SupabaseService {
 
     if (exercisesError) throw exercisesError;
 
-    // Затем удаляем программу
     const { error: programError } = await supabase
       .from('programs')
       .delete()
