@@ -31,11 +31,17 @@ export const usePrograms = () => {
     }
   }, []);
 
-  // ✅ ИСПРАВЛЕНО: просто передаём все данные в createProgram
   const createProgram = useCallback(async (programData: any) => {
     const newProgram = await supabaseService.createProgram(programData);
     await loadPrograms();
     return newProgram;
+  }, [loadPrograms]);
+
+  // ✅ НОВОЕ: Обновление программы
+  const updateProgram = useCallback(async (programId: string, programData: any) => {
+    const updatedProgram = await supabaseService.updateProgram(programId, programData);
+    await loadPrograms();
+    return updatedProgram;
   }, [loadPrograms]);
 
   const copyTemplate = useCallback(async (templateId: string, userId: string) => {
@@ -56,6 +62,7 @@ export const usePrograms = () => {
     loadPrograms,
     loadTemplates,
     createProgram,
+    updateProgram, // ✅ Экспортируем updateProgram
     copyTemplate,
     deleteProgram
   };
