@@ -4,3 +4,4 @@ export { TemplateList } from './TemplateList';
 export { ProgramDetails } from './ProgramDetails';
 export { Stepper } from './Stepper';
 export { WorkoutLogger } from './WorkoutLogger';
+export { WorkoutSummary } from './WorkoutSummary';

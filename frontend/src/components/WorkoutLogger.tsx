@@ -8,7 +8,7 @@ import type { WorkoutSession } from '../types';
 interface WorkoutLoggerProps {
   session: WorkoutSession;
   userId: string;
-  onFinish: () => void;
+  onFinish: (completedSets: any[], duration: number) => void;
   onCancel: () => void;
 }
 
@@ -28,14 +28,15 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
-  const currentSetNumber = completedSets.length + 1;
+  const currentSetNumber = completedSets.filter(
+    set => set.exercise_id === currentExercise?.id
+  ).length + 1;
 
   useEffect(() => {
     if (currentExercise) {
       setReps(currentExercise.target_reps);
       setWeight(currentExercise.target_weight);
       setRpe(8);
-      setCompletedSets([]);
     }
   }, [currentExerciseIndex, currentExercise]);
 
@@ -74,11 +75,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // ✅ НОВОЕ: Сохранить подход в БД
   const handleCompleteSet = async () => {
     if (saving || !currentExercise) return;
 
     const newSet = {
+      exercise_id: currentExercise.id,
+      exercise_name: currentExercise.exercise_name,
       set_no: currentSetNumber,
       reps,
       weight,
@@ -89,7 +91,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     try {
       setSaving(true);
 
-      // Сохраняем в БД
       await supabaseService.saveWorkoutLog({
         user_id: userId,
         program_id: session.program_id,
@@ -104,11 +105,14 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       console.log('✅ Set saved to DB:', newSet);
 
-      // Добавляем в локальный state
-      setCompletedSets([...completedSets, newSet]);
+      const updatedSets = [...completedSets, newSet];
+      setCompletedSets(updatedSets);
 
-      // Проверяем завершено ли упражнение
-      if (currentSetNumber >= currentExercise.target_sets) {
+      const exerciseSets = updatedSets.filter(
+        set => set.exercise_id === currentExercise.id
+      );
+
+      if (exerciseSets.length >= currentExercise.target_sets) {
         if (currentExerciseIndex < totalExercises - 1) {
           telegramService.showConfirm(
             'Упражнение завершено! Перейти к следующему?',
@@ -119,9 +123,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             }
           );
         } else {
-          telegramService.showAlert('Поздравляем! Тренировка завершена!', () => {
-            onFinish();
-          });
+          // ✅ ИЗМЕНЕНО: Передаём данные для экрана итогов
+          onFinish(updatedSets, elapsedTime);
         }
       }
     } catch (error) {
@@ -139,8 +142,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   };
 
   const handleRepeatSet = () => {
-    if (completedSets.length > 0) {
-      const lastSet = completedSets[completedSets.length - 1];
+    const exerciseSets = completedSets.filter(
+      set => set.exercise_id === currentExercise?.id
+    );
+    
+    if (exerciseSets.length > 0) {
+      const lastSet = exerciseSets[exerciseSets.length - 1];
       setReps(lastSet.reps);
       setWeight(lastSet.weight);
       setRpe(lastSet.rpe);
@@ -166,13 +173,16 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     );
   }
 
+  const exerciseCompletedSets = completedSets.filter(
+    set => set.exercise_id === currentExercise.id
+  );
+
   return (
     <div style={{ 
       minHeight: '100vh',
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      {/* Header */}
       <div style={{
         padding: '16px',
         display: 'flex',
@@ -189,7 +199,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Caption>
       </div>
 
-      {/* Progress */}
       <Section>
         <div style={{ padding: '12px 16px' }}>
           <Caption level="1" style={{ 
@@ -217,7 +226,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      {/* Exercise Title */}
       <div style={{ padding: '16px', textAlign: 'center' }}>
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
           💪 {currentExercise.exercise_name}
@@ -227,7 +235,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Caption>
       </div>
 
-      {/* Notes */}
       {currentExercise.notes && (
         <Section>
           <Cell
@@ -242,7 +249,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Section>
       )}
 
-      {/* Current Set */}
       <Section header={`Подход ${currentSetNumber} из ${currentExercise.target_sets}`}>
         <div style={{ padding: '0 16px' }}>
           <Stepper
@@ -275,10 +281,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      {/* History */}
-      {completedSets.length > 0 && (
+      {exerciseCompletedSets.length > 0 && (
         <Section header="История подходов">
-          {completedSets.map((set, index) => (
+          {exerciseCompletedSets.map((set, index) => (
             <Cell
               key={index}
               before="✅"
@@ -292,7 +297,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       <Divider />
 
-      {/* Actions */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Button
           size="l"
@@ -320,7 +324,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             size="m"
             mode="outline"
             onClick={handleRepeatSet}
-            disabled={completedSets.length === 0 || saving}
+            disabled={exerciseCompletedSets.length === 0 || saving}
             style={{ fontSize: '14px' }}
           >
             🔄 Повторить
