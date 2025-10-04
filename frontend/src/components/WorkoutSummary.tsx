@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Section, Cell, Title, Caption, Text, Button } from '@telegram-apps/telegram-ui';
+import { Section, Cell, Title, Caption, Button } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
 
 interface SetLog {
@@ -15,7 +15,7 @@ interface SetLog {
 interface WorkoutSummaryProps {
   programName: string;
   completedSets: SetLog[];
-  duration: number; // в секундах
+  duration: number;
   totalExercises: number;
   onFinish: () => void;
 }
@@ -27,28 +27,23 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   totalExercises,
   onFinish
 }) => {
-  // Убираем BackButton на экране итогов
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
 
-  // Расчёт статистики
   const stats = useMemo(() => {
     const totalSets = completedSets.length;
     
-    // Общий вес (сумма reps * weight для всех подходов)
     const totalWeight = completedSets.reduce((sum, set) => 
       sum + (set.reps * set.weight), 0
     );
 
-    // Группировка по упражнениям
     const exerciseMap = new Map<string, SetLog[]>();
     completedSets.forEach(set => {
       const existing = exerciseMap.get(set.exercise_id) || [];
       exerciseMap.set(set.exercise_id, [...existing, set]);
     });
 
-    // Статистика по каждому упражнению
     const exerciseStats = Array.from(exerciseMap.values()).map(sets => {
       const totalReps = sets.reduce((sum, set) => sum + set.reps, 0);
       const maxWeight = Math.max(...sets.map(set => set.weight));
@@ -71,7 +66,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
     };
   }, [completedSets]);
 
-  // Форматирование времени
   const formatDuration = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -92,7 +86,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      {/* Header с celebration */}
       <div style={{
         padding: '32px 16px 24px',
         textAlign: 'center',
@@ -113,7 +106,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Caption>
       </div>
 
-      {/* Статистика */}
       <Section header="📊 Статистика">
         <Cell
           before="⏱"
@@ -137,14 +129,13 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Cell>
 
         <Cell
-          before="��️"
+          before="🏋️"
           subtitle={`${Math.round(stats.totalWeight)} кг`}
         >
           Общий вес
         </Cell>
       </Section>
 
-      {/* Список упражнений */}
       <Section header="💪 Упражнения">
         {stats.exerciseStats.map((exercise, index) => (
           <Cell
@@ -165,7 +156,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         ))}
       </Section>
 
-      {/* Кнопка завершения */}
       <div style={{ padding: '24px 16px' }}>
         <Button
           size="l"
