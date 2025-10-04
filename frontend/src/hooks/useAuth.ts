@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { telegramService } from '../lib/telegram';
-import { supabaseService } from '../lib/supabase';
 import type { User } from '../types';
 
 export const useAuth = () => {
