@@ -168,7 +168,6 @@ class SupabaseService {
     return program;
   }
 
-  // ✅ НОВОЕ: Обновление программы
   async updateProgram(programId: string, programData: any) {
     const { program_name, exercises, user_id } = programData;
     
@@ -176,7 +175,6 @@ class SupabaseService {
       throw new Error('User ID is required');
     }
 
-    // 1. Обновляем название программы
     const { data: program, error: programError } = await supabase
       .from('programs')
       .update({
@@ -184,13 +182,12 @@ class SupabaseService {
         updated_at: new Date().toISOString()
       })
       .eq('id', programId)
-      .eq('user_id', user_id) // Проверка что пользователь - владелец
+      .eq('user_id', user_id)
       .select()
       .single();
 
     if (programError) throw programError;
 
-    // 2. Удаляем старые упражнения
     const { error: deleteError } = await supabase
       .from('exercises')
       .delete()
@@ -198,7 +195,6 @@ class SupabaseService {
 
     if (deleteError) throw deleteError;
 
-    // 3. Создаём новые упражнения
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
         program_id: programId,
@@ -237,6 +233,93 @@ class SupabaseService {
     if (programError) throw programError;
 
     return { success: true };
+  }
+
+  // ✅ НОВОЕ: Сохранить один лог подхода
+  async saveWorkoutLog(logData: {
+    user_id: string;
+    program_id: string;
+    exercise_id: string;
+    exercise_name: string;
+    set_no: number;
+    reps: number;
+    weight: number;
+    rpe?: number;
+    datetime: string;
+    comments?: string;
+  }) {
+    const { data, error } = await supabase
+      .from('logs')
+      .insert({
+        user_id: logData.user_id,
+        program_id: logData.program_id,
+        exercise_id: logData.exercise_id,
+        exercise_name: logData.exercise_name,
+        set_no: logData.set_no,
+        reps: logData.reps,
+        weight: logData.weight,
+        rpe: logData.rpe || null,
+        datetime: logData.datetime,
+        comments: logData.comments || null
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // ✅ НОВОЕ: Batch-сохранение логов (все подходы за тренировку)
+  async saveWorkoutLogs(logs: any[]) {
+    if (logs.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from('logs')
+      .insert(logs)
+      .select();
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  // ✅ НОВОЕ: Получить историю тренировок по программе
+  async getWorkoutHistory(programId: string, limit = 10) {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('*')
+      .eq('program_id', programId)
+      .order('datetime', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  // ✅ НОВОЕ: Получить историю по конкретному упражнению
+  async getExerciseHistory(exerciseId: string, limit = 5) {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('*')
+      .eq('exercise_id', exerciseId)
+      .order('datetime', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  // ✅ НОВОЕ: Получить последнюю тренировку
+  async getLastWorkout(userId: string, programId: string) {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('program_id', programId)
+      .order('datetime', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    return data && data.length > 0 ? data[0] : null;
   }
 
   async createExercises(programId: string, userId: string, exercises: any[]) {
