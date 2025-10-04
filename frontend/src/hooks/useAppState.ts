@@ -1,14 +1,13 @@
 import { useState, useCallback } from 'react';
-import type { AppState, AppScreen, Program, WorkoutSession } from '../types';
-
-const initialState: AppState = {
-  screen: 'loading' as AppScreen,
-  programs: [],
-  loading: false
-};
+import { AppScreen } from '../types';
+import type { Program, WorkoutSession, AppState } from '../types';
 
 export const useAppState = () => {
-  const [state, setState] = useState<AppState>(initialState);
+  const [state, setState] = useState<AppState>({
+    screen: AppScreen.LOADING,
+    programs: [],
+    loading: false
+  });
 
   const setScreen = useCallback((screen: AppScreen) => {
     setState(prev => ({ ...prev, screen }));
@@ -18,31 +17,25 @@ export const useAppState = () => {
     setState(prev => ({ ...prev, programs }));
   }, []);
 
-  const setCurrentProgram = useCallback((program: Program) => {
+  // ✅ ИСПРАВЛЕНО: Принимает Program | undefined
+  const setCurrentProgram = useCallback((program: Program | undefined) => {
     setState(prev => ({ ...prev, current_program: program }));
   }, []);
 
   const startWorkout = useCallback((program: Program) => {
     const session: WorkoutSession = {
       program_id: program.id,
-      program_name: program.program_name,
-      started_at: new Date().toISOString(),
-      exercises: program.exercises || [],
-      current_exercise_index: 0,
-      logs: []
+      start_time: new Date().toISOString(),
+      exercises: []
     };
-    setState(prev => ({ 
-      ...prev, 
-      workout_session: session, 
-      screen: 'workout_logger' as AppScreen 
-    }));
+    setState(prev => ({ ...prev, workout_session: session }));
   }, []);
 
   const setLoading = useCallback((loading: boolean) => {
     setState(prev => ({ ...prev, loading }));
   }, []);
 
-  const setError = useCallback((error?: string) => {
+  const setError = useCallback((error: string) => {
     setState(prev => ({ ...prev, error }));
   }, []);
 
@@ -58,6 +51,6 @@ export const useAppState = () => {
     startWorkout,
     setLoading,
     setError,
-    clearError
+    clearError,
   };
 };
