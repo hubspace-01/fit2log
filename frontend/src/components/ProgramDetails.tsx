@@ -4,9 +4,9 @@ import {
   Button,
   Title,
   Text,
-  Card,
   List,
-  Cell
+  Cell,
+  Placeholder
 } from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
 import { telegramService } from '../lib/telegram';
@@ -26,7 +26,6 @@ export const ProgramDetails: React.FC<Props> = ({
   onDelete,
   onStartWorkout
 }) => {
-  // Управление BackButton
   useEffect(() => {
     telegramService.showBackButton(onBack);
     return () => {
@@ -34,16 +33,13 @@ export const ProgramDetails: React.FC<Props> = ({
     };
   }, [onBack]);
 
-  // Сортируем упражнения по order_index
   const exercises = [...(program.exercises || [])].sort(
     (a, b) => a.order_index - b.order_index
   );
 
   const handleDelete = () => {
-    // Подтверждение удаления через Telegram WebApp API
     const webApp = window.Telegram?.WebApp;
     
-    // Проверка наличия showConfirm с правильным типом
     if (webApp && 'showConfirm' in webApp && typeof (webApp as any).showConfirm === 'function') {
       (webApp as any).showConfirm(
         `Удалить программу "${program.program_name}"?`,
@@ -54,7 +50,6 @@ export const ProgramDetails: React.FC<Props> = ({
         }
       );
     } else {
-      // Fallback для браузера
       if (confirm(`Удалить программу "${program.program_name}"?`)) {
         onDelete(program.id);
       }
@@ -64,51 +59,63 @@ export const ProgramDetails: React.FC<Props> = ({
   return (
     <div style={{ 
       minHeight: '100vh',
-      backgroundColor: 'var(--tg-theme-bg-color, #ffffff)',
-      paddingBottom: '80px'
+      paddingBottom: '120px'
     }}>
       {/* Заголовок программы */}
-      <Section
-        header={
-          <Title level="1" weight="1" style={{ padding: '16px 0' }}>
+      <Section>
+        <div style={{ 
+          padding: '20px 0',
+          textAlign: 'center'
+        }}>
+          <Title 
+            level="1" 
+            weight="2"
+          >
             {program.program_name}
           </Title>
-        }
-      >
-        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
-          {exercises.length} {exercises.length === 1 ? 'упражнение' : 'упражнений'}
-        </Text>
+          <Text style={{ 
+            color: 'var(--tg-theme-hint-color)',
+            marginTop: '8px',
+            display: 'block'
+          }}>
+            {exercises.length} {exercises.length === 1 ? 'упражнение' : exercises.length < 5 ? 'упражнения' : 'упражнений'}
+          </Text>
+        </div>
       </Section>
 
-      {/* Список упражнений */}
+      {/* Список упражнений или Placeholder */}
       {exercises.length > 0 ? (
         <Section header="Упражнения">
-          <List style={{ background: 'transparent' }}>
+          <List>
             {exercises.map((exercise, index) => (
               <Cell
                 key={exercise.id}
                 before={
                   <div
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '40px',
+                      height: '40px',
+                      minWidth: '40px',
                       borderRadius: '50%',
                       backgroundColor: 'var(--tg-theme-button-color)',
                       color: 'var(--tg-theme-button-text-color)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: 'bold'
+                      fontWeight: '600',
+                      fontSize: '17px'
                     }}
                   >
                     {index + 1}
                   </div>
                 }
                 subtitle={
-                  <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
-                    {exercise.target_sets} × {exercise.target_reps} повторений
-                    {exercise.target_weight > 0 && ` • ${exercise.target_weight} кг`}
-                  </Text>
+                  <div style={{ marginTop: '4px' }}>
+                    <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+                      {exercise.target_sets} подходов • {exercise.target_reps} повторений
+                      {exercise.target_weight > 0 && ` • ${exercise.target_weight} кг`}
+                    </Text>
+                  </div>
                 }
               >
                 {exercise.exercise_name}
@@ -118,11 +125,16 @@ export const ProgramDetails: React.FC<Props> = ({
         </Section>
       ) : (
         <Section>
-          <Card style={{ padding: '20px', textAlign: 'center' }}>
-            <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
-              В программе пока нет упражнений
-            </Text>
-          </Card>
+          <Placeholder
+            description="Добавьте упражнения, чтобы начать тренировку"
+          >
+            <div style={{ 
+              fontSize: '64px',
+              marginBottom: '16px'
+            }}>
+              💪
+            </div>
+          </Placeholder>
         </Section>
       )}
 
@@ -130,27 +142,23 @@ export const ProgramDetails: React.FC<Props> = ({
       <div
         style={{
           position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: '12px 16px',
+          bottom: '0',
+          left: '0',
+          right: '0',
+          padding: '12px 16px 16px',
           backgroundColor: 'var(--tg-theme-bg-color)',
-          borderTop: '1px solid var(--tg-theme-hint-color, #e0e0e0)',
+          borderTop: '0.5px solid var(--tg-theme-section-separator-color)',
           display: 'flex',
           flexDirection: 'column',
           gap: '8px'
         }}
       >
-        {/* Главная кнопка - Начать тренировку */}
+        {/* Главная кнопка */}
         {exercises.length > 0 && (
           <Button
             size="l"
             stretched
             onClick={() => onStartWorkout(program)}
-            style={{
-              backgroundColor: 'var(--tg-theme-button-color)',
-              color: 'var(--tg-theme-button-text-color)'
-            }}
           >
             🏋️ Начать тренировку
           </Button>
@@ -171,10 +179,6 @@ export const ProgramDetails: React.FC<Props> = ({
             mode="outline"
             stretched
             onClick={handleDelete}
-            style={{
-              borderColor: 'var(--tg-theme-destructive-text-color, #ff3b30)',
-              color: 'var(--tg-theme-destructive-text-color, #ff3b30)'
-            }}
           >
             🗑️ Удалить
           </Button>
