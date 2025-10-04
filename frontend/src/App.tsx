@@ -25,7 +25,7 @@ const App: React.FC = () => {
     loadTemplates, 
     createProgram, 
     copyTemplate,
-    deleteProgram // ✅ Добавили deleteProgram
+    deleteProgram
   } = usePrograms();
 
   useEffect(() => {
@@ -61,18 +61,19 @@ const App: React.FC = () => {
   const handleProgramEditorSave = useCallback(async (programData: any) => {
     if (!user) return;
     try {
+      console.log('🔍 Saving program with data:', programData);
       setLoading(true);
       clearError();
-      await createProgram({
-        ...programData,
-        user_id: user.id,
-        is_template: false
-      });
+      
+      const result = await createProgram(programData);
+      console.log('✅ Program created:', result);
+      
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      console.error('Save error:', error);
-      setError('Ошибка при сохранении программы');
+      console.error('❌ Save error:', error);
+      setError(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      alert(`Ошибка при сохранении: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setLoading(false);
     }
@@ -81,14 +82,19 @@ const App: React.FC = () => {
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
     if (!user) return;
     try {
+      console.log('🔍 Copying template:', template.id);
       setLoading(true);
       clearError();
-      await copyTemplate(template.id, user.id);
+      
+      const result = await copyTemplate(template.id, user.id);
+      console.log('✅ Template copied:', result);
+      
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      console.error('Copy template error:', error);
-      setError('Ошибка при копировании шаблона');
+      console.error('❌ Copy template error:', error);
+      setError(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      alert(`Ошибка при копировании: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setLoading(false);
     }
@@ -99,7 +105,6 @@ const App: React.FC = () => {
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
 
-  // ✅ ИСПРАВЛЕНО: Реальное удаление программы
   const handleDeleteProgram = useCallback(async (programId: string) => {
     try {
       setLoading(true);
