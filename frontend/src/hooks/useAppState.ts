@@ -17,7 +17,6 @@ export const useAppState = () => {
     setState(prev => ({ ...prev, programs }));
   }, []);
 
-  // ✅ ИСПРАВЛЕНО: Принимает Program | undefined
   const setCurrentProgram = useCallback((program: Program | undefined) => {
     setState(prev => ({ ...prev, current_program: program }));
   }, []);
@@ -25,8 +24,11 @@ export const useAppState = () => {
   const startWorkout = useCallback((program: Program) => {
     const session: WorkoutSession = {
       program_id: program.id,
-      start_time: new Date().toISOString(),
-      exercises: []
+      program_name: program.program_name,
+      started_at: new Date().toISOString(), // ✅ ИСПРАВЛЕНО: started_at вместо start_time
+      exercises: program.exercises || [],
+      current_exercise_index: 0,
+      logs: []
     };
     setState(prev => ({ ...prev, workout_session: session }));
   }, []);
