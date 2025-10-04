@@ -4,8 +4,7 @@ import {
   Button, 
   Input,
   Title, 
-  Text,
-  Card
+  Text
 } from '@telegram-apps/telegram-ui';
 
 interface Props {
@@ -44,35 +43,52 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
   };
 
   return (
-    <div className="app-container fade-in" style={{ 
-      padding: '16px', 
-      paddingBottom: '120px',
-      minHeight: '100vh'
+    <div style={{ 
+      minHeight: '100vh',
+      paddingBottom: '200px',
+      backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
       {/* Заголовок */}
-      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+      <div style={{ 
+        padding: '16px',
+        textAlign: 'center',
+        marginBottom: '20px'
+      }}>
         <Title level="2" weight="2" style={{ fontSize: '24px' }}>
           ➕ Новая программа
         </Title>
       </div>
 
-      {/* Название программы */}
-      <Section style={{ marginBottom: '20px' }}>
-        <Card style={{ padding: '16px' }}>
-          <Text weight="2" style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+      {/* Название программы - растянуто */}
+      <div style={{ padding: '0 16px', marginBottom: '24px' }}>
+        <div style={{ 
+          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+          borderRadius: '12px',
+          padding: '16px'
+        }}>
+          <Text weight="2" style={{ 
+            fontSize: '14px', 
+            marginBottom: '10px', 
+            display: 'block',
+            color: 'var(--tg-theme-text-color)'
+          }}>
             Название программы
           </Text>
           <Input
             placeholder="Введите название"
             value={programName}
             onChange={(e) => setProgramName(e.target.value)}
-            style={{ fontSize: '15px', width: '100%' }}
+            style={{ 
+              fontSize: '15px', 
+              width: '100%',
+              backgroundColor: 'var(--tg-theme-bg-color)'
+            }}
           />
-        </Card>
-      </Section>
+        </div>
+      </div>
 
       {/* Список упражнений */}
-      <Section>
+      <div style={{ padding: '0 16px' }}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -92,36 +108,52 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
           </Button>
         </div>
 
+        {/* Пустое состояние - текст по центру без фона */}
         {exercises.length === 0 ? (
-          <Card style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '40px', marginBottom: '12px' }}>💪</div>
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 20px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
             <Text style={{ 
               color: 'var(--tg-theme-hint-color)', 
-              fontSize: '14px',
-              marginBottom: '8px',
-              display: 'block'
+              fontSize: '15px',
+              display: 'block',
+              marginBottom: '8px'
             }}>
               Добавьте упражнения в программу
             </Text>
             <Text style={{ 
               color: 'var(--tg-theme-hint-color)', 
-              fontSize: '12px'
+              fontSize: '13px',
+              display: 'block'
             }}>
               Нажмите кнопку "+ Добавить"
             </Text>
-          </Card>
+          </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
             {exercises.map((ex, i) => (
-              <Card key={i} style={{ padding: '16px' }}>
-                {/* Номер упражнения */}
+              <div 
+                key={i} 
+                style={{ 
+                  backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+                  borderRadius: '12px',
+                  padding: '16px'
+                }}
+              >
+                {/* Номер упражнения и кнопка удалить */}
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center',
                   marginBottom: '12px'
                 }}>
-                  <Text weight="2" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+                  <Text weight="2" style={{ 
+                    fontSize: '14px', 
+                    color: 'var(--tg-theme-hint-color)' 
+                  }}>
                     Упражнение #{i + 1}
                   </Text>
                   <Button 
@@ -132,23 +164,32 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                       color: 'var(--tg-theme-destructive-text-color)',
                       borderColor: 'var(--tg-theme-destructive-text-color)',
                       fontSize: '12px',
-                      padding: '4px 12px'
+                      padding: '4px 10px'
                     }}
                   >
-                    🗑️ Удалить
+                    🗑️
                   </Button>
                 </div>
 
                 {/* Название упражнения */}
-                <div style={{ marginBottom: '12px' }}>
-                  <Text weight="2" style={{ fontSize: '13px', marginBottom: '6px', display: 'block' }}>
+                <div style={{ marginBottom: '14px' }}>
+                  <Text weight="2" style={{ 
+                    fontSize: '13px', 
+                    marginBottom: '8px', 
+                    display: 'block',
+                    color: 'var(--tg-theme-text-color)'
+                  }}>
                     Название
                   </Text>
                   <Input
                     placeholder="Например: Жим лежа"
                     value={ex.exercise_name}
                     onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
-                    style={{ fontSize: '15px', width: '100%' }}
+                    style={{ 
+                      fontSize: '15px', 
+                      width: '100%',
+                      backgroundColor: 'var(--tg-theme-bg-color)'
+                    }}
                   />
                 </div>
                 
@@ -159,58 +200,89 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                   gap: '10px'
                 }}>
                   <div>
-                    <Text weight="2" style={{ fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '12px', 
+                      marginBottom: '8px', 
+                      display: 'block',
+                      color: 'var(--tg-theme-text-color)'
+                    }}>
                       Подходы
                     </Text>
                     <Input
                       type="number"
                       value={ex.target_sets}
                       onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
-                      style={{ fontSize: '14px', width: '100%', textAlign: 'center' }}
+                      style={{ 
+                        fontSize: '14px', 
+                        width: '100%', 
+                        textAlign: 'center',
+                        backgroundColor: 'var(--tg-theme-bg-color)'
+                      }}
                     />
                   </div>
                   <div>
-                    <Text weight="2" style={{ fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '12px', 
+                      marginBottom: '8px', 
+                      display: 'block',
+                      color: 'var(--tg-theme-text-color)'
+                    }}>
                       Повторы
                     </Text>
                     <Input
                       type="number"
                       value={ex.target_reps}
                       onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
-                      style={{ fontSize: '14px', width: '100%', textAlign: 'center' }}
+                      style={{ 
+                        fontSize: '14px', 
+                        width: '100%', 
+                        textAlign: 'center',
+                        backgroundColor: 'var(--tg-theme-bg-color)'
+                      }}
                     />
                   </div>
                   <div>
-                    <Text weight="2" style={{ fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '12px', 
+                      marginBottom: '8px', 
+                      display: 'block',
+                      color: 'var(--tg-theme-text-color)'
+                    }}>
                       Вес (кг)
                     </Text>
                     <Input
                       type="number"
                       value={ex.target_weight}
                       onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
-                      style={{ fontSize: '14px', width: '100%', textAlign: 'center' }}
+                      style={{ 
+                        fontSize: '14px', 
+                        width: '100%', 
+                        textAlign: 'center',
+                        backgroundColor: 'var(--tg-theme-bg-color)'
+                      }}
                     />
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
-      </Section>
+      </div>
 
-      {/* Нижняя панель с кнопками */}
+      {/* Нижняя панель с кнопками - фиксированная с отступом от клавиатуры */}
       <div style={{ 
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        padding: '16px',
+        padding: '12px 16px',
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         backgroundColor: 'var(--tg-theme-bg-color)',
         borderTop: '1px solid var(--tg-theme-section-separator-color)',
-        boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-        zIndex: 100
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+        zIndex: 1000
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
           <Button 
             size="l"
             stretched
