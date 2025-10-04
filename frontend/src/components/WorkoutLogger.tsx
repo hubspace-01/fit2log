@@ -26,7 +26,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const totalExercises = session.exercises.length;
   const currentSetNumber = completedSets.length + 1;
 
-  // Инициализация значений из целевых параметров
   useEffect(() => {
     if (currentExercise) {
       setReps(currentExercise.target_reps);
@@ -36,7 +35,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   }, [currentExerciseIndex, currentExercise]);
 
-  // Таймер тренировки
   useEffect(() => {
     const startTime = new Date(session.started_at).getTime();
     const interval = setInterval(() => {
@@ -48,12 +46,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, [session.started_at]);
 
-  // BackButton для отмены тренировки
   useEffect(() => {
     telegramService.showBackButton(() => {
       telegramService.showConfirm(
         'Вы уверены, что хотите завершить тренировку? Прогресс будет потерян.',
-        (confirmed) => {
+        (confirmed: boolean) => {
           if (confirmed) {
             onCancel();
           }
@@ -66,7 +63,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     };
   }, [onCancel]);
 
-  // Форматирование времени
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -74,7 +70,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Обработчик выполнения подхода
   const handleCompleteSet = () => {
     const newSet = {
       set_no: currentSetNumber,
@@ -85,41 +80,32 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     };
 
     setCompletedSets([...completedSets, newSet]);
-
-    // TODO: Сохранить в БД
     console.log('Set completed:', newSet);
 
-    // Если выполнены все подходы - предложить следующее упражнение
     if (currentSetNumber >= currentExercise.target_sets) {
       if (currentExerciseIndex < totalExercises - 1) {
         telegramService.showConfirm(
           'Упражнение завершено! Перейти к следующему?',
-          (confirmed) => {
+          (confirmed: boolean) => {
             if (confirmed) {
               handleNextExercise();
             }
           }
         );
       } else {
-        // Последнее упражнение завершено
-        telegramService.showConfirm(
-          'Поздравляем! Тренировка завершена!',
-          () => {
-            onFinish();
-          }
-        );
+        telegramService.showAlert('Поздравляем! Тренировка завершена!', () => {
+          onFinish();
+        });
       }
     }
   };
 
-  // Следующее упражнение
   const handleNextExercise = () => {
     if (currentExerciseIndex < totalExercises - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
     }
   };
 
-  // Повторить предыдущий подход
   const handleRepeatSet = () => {
     if (completedSets.length > 0) {
       const lastSet = completedSets[completedSets.length - 1];
@@ -129,11 +115,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   };
 
-  // Пропустить упражнение
   const handleSkipExercise = () => {
     telegramService.showConfirm(
       'Пропустить это упражнение?',
-      (confirmed) => {
+      (confirmed: boolean) => {
         if (confirmed) {
           handleNextExercise();
         }
@@ -155,7 +140,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      {/* Header: Название программы + Таймер */}
       <div style={{
         padding: '16px',
         display: 'flex',
@@ -172,7 +156,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Caption>
       </div>
 
-      {/* Progress */}
       <Section>
         <div style={{ padding: '12px 16px' }}>
           <Caption level="1" style={{ 
@@ -183,7 +166,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           }}>
             📊 Упражнение {currentExerciseIndex + 1} из {totalExercises}
           </Caption>
-          {/* Progress Bar */}
           <div style={{
             width: '100%',
             height: '4px',
@@ -201,7 +183,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      {/* Exercise Title */}
       <div style={{ padding: '16px', textAlign: 'center' }}>
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
           💪 {currentExercise.exercise_name}
@@ -211,7 +192,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Caption>
       </div>
 
-      {/* Notes (если есть) */}
       {currentExercise.notes && (
         <Section>
           <Cell
@@ -226,7 +206,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Section>
       )}
 
-      {/* Current Set */}
       <Section header={`Подход ${currentSetNumber} из ${currentExercise.target_sets}`}>
         <div style={{ padding: '0 16px' }}>
           <Stepper
@@ -259,7 +238,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      {/* History of completed sets */}
       {completedSets.length > 0 && (
         <Section header="История подходов">
           {completedSets.map((set, index) => (
@@ -276,7 +254,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       <Divider />
 
-      {/* Actions */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Button
           size="l"

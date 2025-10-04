@@ -9,8 +9,6 @@ class TelegramService {
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
         window.Telegram.WebApp.enableClosingConfirmation();
-        
-        // Отключаем вертикальные свайпы
         window.Telegram.WebApp.disableVerticalSwipes();
         
         this.initialized = true;
@@ -126,6 +124,41 @@ class TelegramService {
       console.error('Hide BackButton failed:', error);
     }
   }
+
+  // ✅ НОВОЕ: Показать нативное подтверждение Telegram
+  showConfirm(message: string, callback: (confirmed: boolean) => void): void {
+    try {
+      if (window.Telegram?.WebApp?.showConfirm) {
+        window.Telegram.WebApp.showConfirm(message, callback);
+      } else {
+        // Fallback на window.confirm если Telegram API недоступен
+        const confirmed = window.confirm(message);
+        callback(confirmed);
+      }
+    } catch (error) {
+      console.error('Show confirm failed:', error);
+      // Fallback
+      const confirmed = window.confirm(message);
+      callback(confirmed);
+    }
+  }
+
+  // ✅ НОВОЕ: Показать нативный alert Telegram
+  showAlert(message: string, callback?: () => void): void {
+    try {
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert(message, callback);
+      } else {
+        // Fallback на window.alert
+        window.alert(message);
+        if (callback) callback();
+      }
+    } catch (error) {
+      console.error('Show alert failed:', error);
+      window.alert(message);
+      if (callback) callback();
+    }
+  }
 }
 
 declare global {
@@ -139,6 +172,8 @@ declare global {
         close(): void;
         enableClosingConfirmation(): void;
         disableVerticalSwipes(): void;
+        showConfirm(message: string, callback: (confirmed: boolean) => void): void;
+        showAlert(message: string, callback?: () => void): void;
         MainButton?: {
           text: string;
           show(): void;
