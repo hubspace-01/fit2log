@@ -78,10 +78,12 @@ export interface AuthData {
   expires_at: string;
 }
 
+// ✅ ДОБАВИЛИ НОВЫЙ ЭКРАН
 export enum AppScreen {
   LOADING = 'loading',
   AUTH_ERROR = 'auth_error',
   PROGRAM_SELECTOR = 'program_selector',
+  PROGRAM_DETAILS = 'program_details', // 👈 НОВЫЙ ЭКРАН
   TEMPLATE_LIST = 'template_list',
   PROGRAM_EDITOR = 'program_editor',
   WORKOUT_LOGGER = 'workout_logger',
