@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Input,
+  Textarea,
   Title, 
   Text,
   Button
@@ -11,19 +12,17 @@ import type { Program } from '../types';
 interface Props {
   onSave: (data: any) => void;
   onBack: () => void;
-  initialData?: Program; // ✅ НОВОЕ: Опциональные данные для редактирования
+  initialData?: Program;
 }
 
 export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) => {
   const [programName, setProgramName] = useState('');
   const [exercises, setExercises] = useState<any[]>([]);
 
-  // ✅ НОВОЕ: Загружаем данные при редактировании
   useEffect(() => {
     if (initialData) {
       setProgramName(initialData.program_name);
       
-      // Сортируем упражнения по order_index и загружаем
       const sortedExercises = [...(initialData.exercises || [])].sort(
         (a, b) => a.order_index - b.order_index
       );
@@ -33,7 +32,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight,
-        notes: ex.notes || ''
+        notes: ex.notes || '' // ✅ Загружаем заметки
       })));
     }
   }, [initialData]);
@@ -43,7 +42,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
       exercise_name: '',
       target_sets: 3,
       target_reps: 10,
-      target_weight: 0
+      target_weight: 0,
+      notes: '' // ✅ Добавили поле notes
     }]);
   };
 
@@ -74,7 +74,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
     };
   }, [onBack]);
 
-  // ✅ НОВОЕ: Разные заголовки для создания/редактирования
   const title = initialData ? '✏️ Редактирование программы' : '➕ Новая программа';
 
   return (
@@ -145,7 +144,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
           </Button>
         </div>
 
-        {/* Пустое состояние */}
         {exercises.length === 0 ? (
           <div style={{ 
             textAlign: 'center', 
@@ -207,6 +205,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </Button>
                 </div>
 
+                {/* Название упражнения */}
                 <div style={{ marginBottom: '14px' }}>
                   <Text weight="2" style={{ 
                     fontSize: '13px', 
@@ -229,10 +228,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   />
                 </div>
                 
+                {/* Параметры: подходы, повторы, вес */}
                 <div style={{ 
                   display: 'grid', 
                   gridTemplateColumns: '1fr 1fr 1fr', 
-                  gap: '10px'
+                  gap: '10px',
+                  marginBottom: '14px'
                 }}>
                   <div>
                     <Text weight="2" style={{ 
@@ -300,6 +301,30 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                       }}
                     />
                   </div>
+                </div>
+
+                {/* ✅ НОВОЕ: Поле для заметок */}
+                <div>
+                  <Text weight="2" style={{ 
+                    fontSize: '13px', 
+                    marginBottom: '8px', 
+                    display: 'block',
+                    color: 'var(--tg-theme-text-color)',
+                    textAlign: 'center'
+                  }}>
+                    Заметки (опционально)
+                  </Text>
+                  <Textarea
+                    placeholder="Техника, особенности..."
+                    value={ex.notes}
+                    onChange={(e) => updateExercise(i, 'notes', e.target.value)}
+                    style={{ 
+                      fontSize: '14px', 
+                      width: '100%',
+                      minHeight: '60px',
+                      backgroundColor: 'var(--tg-theme-bg-color)'
+                    }}
+                  />
                 </div>
               </div>
             ))}
