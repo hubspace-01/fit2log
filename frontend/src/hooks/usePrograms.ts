@@ -31,14 +31,9 @@ export const usePrograms = () => {
     }
   }, []);
 
+  // ✅ ИСПРАВЛЕНО: просто передаём все данные в createProgram
   const createProgram = useCallback(async (programData: any) => {
-    const newProgram = await supabaseService.createProgram({
-      user_id: programData.user_id,
-      program_name: programData.program_name,
-      exercises: programData.exercises, // Передаём упражнения сразу в createProgram
-      is_template: false
-    });
-
+    const newProgram = await supabaseService.createProgram(programData);
     await loadPrograms();
     return newProgram;
   }, [loadPrograms]);
@@ -49,7 +44,6 @@ export const usePrograms = () => {
     return newProgram;
   }, [loadPrograms]);
 
-  // ✅ НОВОЕ: Удаление программы
   const deleteProgram = useCallback(async (programId: string) => {
     await supabaseService.deleteProgram(programId);
     await loadPrograms();
@@ -63,6 +57,6 @@ export const usePrograms = () => {
     loadTemplates,
     createProgram,
     copyTemplate,
-    deleteProgram // ✅ Экспортируем deleteProgram
+    deleteProgram
   };
 };
