@@ -40,11 +40,14 @@ export const ProgramDetails: React.FC<Props> = ({
   );
 
   const handleDelete = () => {
-    // Подтверждение удаления
-    if (window.Telegram?.WebApp?.showConfirm) {
-      window.Telegram.WebApp.showConfirm(
+    // Подтверждение удаления через Telegram WebApp API
+    const webApp = window.Telegram?.WebApp;
+    
+    // Проверка наличия showConfirm с правильным типом
+    if (webApp && 'showConfirm' in webApp && typeof (webApp as any).showConfirm === 'function') {
+      (webApp as any).showConfirm(
         `Удалить программу "${program.program_name}"?`,
-        (confirmed) => {
+        (confirmed: boolean) => {
           if (confirmed) {
             onDelete(program.id);
           }
