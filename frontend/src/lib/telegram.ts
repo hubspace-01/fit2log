@@ -8,6 +8,11 @@ class TelegramService {
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.enableClosingConfirmation();
+        
+        // Отключаем вертикальные свайпы
+        window.Telegram.WebApp.disableVerticalSwipes();
+        
         this.initialized = true;
       }
     } catch (error) {
@@ -54,7 +59,6 @@ class TelegramService {
     }
   }
 
-  // MainButton методы
   showMainButton(text: string, onClick: () => void): void {
     try {
       const mainButton = window.Telegram?.WebApp?.MainButton;
@@ -133,6 +137,8 @@ declare global {
         ready(): void;
         expand(): void;
         close(): void;
+        enableClosingConfirmation(): void;
+        disableVerticalSwipes(): void;
         MainButton?: {
           text: string;
           show(): void;
