@@ -28,9 +28,14 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
-  const currentSetNumber = completedSets.filter(
+  
+  const exerciseCompletedSets = completedSets.filter(
     set => set.exercise_id === currentExercise?.id
-  ).length + 1;
+  );
+  const currentSetNumber = exerciseCompletedSets.length + 1;
+  
+  // ✅ НОВОЕ: Проверка последнего подхода
+  const isLastSetOfExercise = currentSetNumber >= (currentExercise?.target_sets || 0);
 
   useEffect(() => {
     if (currentExercise) {
@@ -108,11 +113,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
 
-      const exerciseSets = updatedSets.filter(
+      const updatedExerciseSets = updatedSets.filter(
         set => set.exercise_id === currentExercise.id
       );
 
-      if (exerciseSets.length >= currentExercise.target_sets) {
+      if (updatedExerciseSets.length >= currentExercise.target_sets) {
         if (currentExerciseIndex < totalExercises - 1) {
           telegramService.showConfirm(
             'Упражнение завершено! Перейти к следующему?',
@@ -123,7 +128,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             }
           );
         } else {
-          // ✅ ИЗМЕНЕНО: Передаём данные для экрана итогов
           onFinish(updatedSets, elapsedTime);
         }
       }
@@ -141,28 +145,45 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   };
 
+  // ✅ НОВОЕ: Пропустить подход
+  const handleSkipSet = () => {
+    if (!currentExercise) return;
+
+    // Если это последний подход упражнения
+    if (isLastSetOfExercise) {
+      if (currentExerciseIndex < totalExercises - 1) {
+        // Есть ещё упражнения - переходим к следующему
+        telegramService.showConfirm(
+          'Завершить упражнение и перейти к следующему?',
+          (confirmed: boolean) => {
+            if (confirmed) {
+              handleNextExercise();
+            }
+          }
+        );
+      } else {
+        // Это последнее упражнение - завершаем тренировку
+        telegramService.showConfirm(
+          'Это последнее упражнение. Завершить тренировку?',
+          (confirmed: boolean) => {
+            if (confirmed) {
+              onFinish(completedSets, elapsedTime);
+            }
+          }
+        );
+      }
+    }
+    // Если не последний подход - просто ничего не делаем
+    // Пользователь может продолжить следующий подход
+  };
+
   const handleRepeatSet = () => {
-    const exerciseSets = completedSets.filter(
-      set => set.exercise_id === currentExercise?.id
-    );
-    
-    if (exerciseSets.length > 0) {
-      const lastSet = exerciseSets[exerciseSets.length - 1];
+    if (exerciseCompletedSets.length > 0) {
+      const lastSet = exerciseCompletedSets[exerciseCompletedSets.length - 1];
       setReps(lastSet.reps);
       setWeight(lastSet.weight);
       setRpe(lastSet.rpe);
     }
-  };
-
-  const handleSkipExercise = () => {
-    telegramService.showConfirm(
-      'Пропустить это упражнение?',
-      (confirmed: boolean) => {
-        if (confirmed) {
-          handleNextExercise();
-        }
-      }
-    );
   };
 
   if (!currentExercise) {
@@ -172,10 +193,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       </div>
     );
   }
-
-  const exerciseCompletedSets = completedSets.filter(
-    set => set.exercise_id === currentExercise.id
-  );
 
   return (
     <div style={{ 
@@ -310,14 +327,15 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Button>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {/* ✅ ОБНОВЛЕНО: Контекстная кнопка */}
           <Button
             size="m"
             mode="outline"
-            onClick={handleSkipExercise}
+            onClick={handleSkipSet}
             disabled={saving}
             style={{ fontSize: '14px' }}
           >
-            ⏭️ Пропустить
+            {isLastSetOfExercise ? '⏩ Следующее' : '⏭️ Пропустить'}
           </Button>
 
           <Button
