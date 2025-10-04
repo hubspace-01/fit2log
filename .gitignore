@@ -7,3 +7,4 @@ frontend/build/
 npm-debug.log*
 *.log
 .vscode/settings.json
+.DS_Store
