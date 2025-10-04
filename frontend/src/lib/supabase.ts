@@ -67,12 +67,10 @@ class SupabaseService {
     return data || [];
   }
 
-  // ✅ НОВОЕ: копирование шаблона БЕЗ Edge Function
   async copyTemplate(templateId: string, userId: string) {
     try {
       console.log('🔍 Copying template:', templateId, 'for user:', userId);
       
-      // 1. Получаем шаблон с упражнениями
       const { data: template, error: templateError } = await supabase
         .from('program_templates')
         .select(`
@@ -87,7 +85,6 @@ class SupabaseService {
 
       console.log('✅ Template loaded:', template);
 
-      // 2. Создаём новую программу
       const { data: program, error: programError } = await supabase
         .from('programs')
         .insert({
@@ -102,7 +99,6 @@ class SupabaseService {
 
       console.log('✅ Program created:', program);
 
-      // 3. Копируем упражнения из шаблона
       if (template.template_exercises && template.template_exercises.length > 0) {
         const exercises = template.template_exercises.map((ex: any) => ({
           program_id: program.id,
@@ -153,6 +149,59 @@ class SupabaseService {
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
         program_id: program.id,
+        user_id: user_id,
+        exercise_name: ex.exercise_name,
+        target_sets: ex.target_sets,
+        target_reps: ex.target_reps,
+        target_weight: ex.target_weight || 0,
+        order_index: index,
+        notes: ex.notes || ''
+      }));
+
+      const { error: exercisesError } = await supabase
+        .from('exercises')
+        .insert(exercisesData);
+
+      if (exercisesError) throw exercisesError;
+    }
+
+    return program;
+  }
+
+  // ✅ НОВОЕ: Обновление программы
+  async updateProgram(programId: string, programData: any) {
+    const { program_name, exercises, user_id } = programData;
+    
+    if (!user_id) {
+      throw new Error('User ID is required');
+    }
+
+    // 1. Обновляем название программы
+    const { data: program, error: programError } = await supabase
+      .from('programs')
+      .update({
+        program_name,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', programId)
+      .eq('user_id', user_id) // Проверка что пользователь - владелец
+      .select()
+      .single();
+
+    if (programError) throw programError;
+
+    // 2. Удаляем старые упражнения
+    const { error: deleteError } = await supabase
+      .from('exercises')
+      .delete()
+      .eq('program_id', programId);
+
+    if (deleteError) throw deleteError;
+
+    // 3. Создаём новые упражнения
+    if (exercises && exercises.length > 0) {
+      const exercisesData = exercises.map((ex: any, index: number) => ({
+        program_id: programId,
         user_id: user_id,
         exercise_name: ex.exercise_name,
         target_sets: ex.target_sets,
