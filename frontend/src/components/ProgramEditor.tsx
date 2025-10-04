@@ -69,7 +69,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
             fontSize: '14px', 
             marginBottom: '10px', 
             display: 'block',
-            color: 'var(--tg-theme-text-color)'
+            color: 'var(--tg-theme-text-color)',
+            textAlign: 'center'
           }}>
             Название программы
           </Text>
@@ -80,7 +81,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
             style={{ 
               fontSize: '15px', 
               width: '100%',
-              backgroundColor: 'var(--tg-theme-bg-color)'
+              backgroundColor: 'var(--tg-theme-bg-color)',
+              textAlign: 'center'
             }}
           />
         </div>
@@ -176,9 +178,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                     fontSize: '13px', 
                     marginBottom: '8px', 
                     display: 'block',
-                    color: 'var(--tg-theme-text-color)'
+                    color: 'var(--tg-theme-text-color)',
+                    textAlign: 'center'
                   }}>
-                    Название
+                    Название упражнения
                   </Text>
                   <Input
                     placeholder="Например: Жим лежа"
@@ -203,7 +206,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                       fontSize: '12px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)'
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
                     }}>
                       Подходы
                     </Text>
@@ -224,7 +228,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                       fontSize: '12px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)'
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
                     }}>
                       Повторы
                     </Text>
@@ -245,7 +250,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                       fontSize: '12px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)'
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
                     }}>
                       Вес (кг)
                     </Text>
@@ -268,7 +274,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
         )}
       </div>
 
-      {/* Нижняя панель с кнопками - фиксированная с отступом от клавиатуры */}
+      {/* Нижняя панель с кнопками - обе outline как Шаблоны/Создать */}
       <div style={{ 
         position: 'fixed',
         bottom: 0,
@@ -281,22 +287,23 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
         boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
         zIndex: 1000
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <Button 
-            size="l"
+            size="m"
             stretched
-            mode="filled"
+            mode="outline"
             onClick={handleSave}
             disabled={!programName.trim() || exercises.length === 0}
-            style={{ fontSize: '15px' }}
+            style={{ fontSize: '14px' }}
           >
             💾 Сохранить
           </Button>
           <Button 
-            size="l"
+            size="m"
+            stretched
             mode="outline"
             onClick={onBack}
-            style={{ fontSize: '15px' }}
+            style={{ fontSize: '14px' }}
           >
             Отмена
           </Button>
