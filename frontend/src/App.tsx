@@ -1,14 +1,31 @@
 import React, { useEffect, useCallback } from 'react';
 import { Spinner } from '@telegram-apps/telegram-ui';
 import { useAuth, useAppState, usePrograms } from './hooks';
-import { ProgramSelector, TemplateList, ProgramEditor } from './components';
+import { ProgramSelector, TemplateList, ProgramEditor, ProgramDetails } from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate } from './types';
 
 const App: React.FC = () => {
   const { user, loading: authLoading, error: authError } = useAuth();
-  const { state, setScreen, setPrograms, setCurrentProgram, setLoading, setError, clearError } = useAppState();
-  const { programs, templates, loading: programsLoading, loadPrograms, loadTemplates, createProgram, copyTemplate } = usePrograms();
+  const { 
+    state, 
+    setScreen, 
+    setPrograms, 
+    setCurrentProgram, 
+    startWorkout,
+    setLoading, 
+    setError, 
+    clearError 
+  } = useAppState();
+  const { 
+    programs, 
+    templates, 
+    loading: programsLoading, 
+    loadPrograms, 
+    loadTemplates, 
+    createProgram, 
+    copyTemplate 
+  } = usePrograms();
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -35,24 +52,23 @@ const App: React.FC = () => {
     setScreen(AppScreen.TEMPLATE_LIST);
   }, [templates.length, loadTemplates, setScreen]);
 
+  // ✅ ИСПРАВЛЕНО: переключаем на PROGRAM_DETAILS
   const handleSelectProgram = useCallback((program: Program) => {
     setCurrentProgram(program);
-    alert(`Программа "${program.program_name}" выбрана!\n${program.exercises?.length || 0} упражнений`);
-  }, [setCurrentProgram]);
+    setScreen(AppScreen.PROGRAM_DETAILS);
+  }, [setCurrentProgram, setScreen]);
 
   const handleProgramEditorSave = useCallback(async (programData: any) => {
     if (!user) return;
-
     try {
       setLoading(true);
       clearError();
-      
       await createProgram({
         ...programData,
         user_id: user.id,
         is_template: false
       });
-      
+      await loadPrograms(); // Перезагружаем список
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       console.error('Save error:', error);
@@ -60,15 +76,15 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, createProgram, setLoading, clearError, setError, setScreen]);
+  }, [user, createProgram, loadPrograms, setLoading, clearError, setError, setScreen]);
 
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
     if (!user) return;
-
     try {
       setLoading(true);
       clearError();
       await copyTemplate(template.id, user.id);
+      await loadPrograms(); // Перезагружаем список
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       console.error('Copy template error:', error);
@@ -76,7 +92,37 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, copyTemplate, setLoading, clearError, setError, setScreen]);
+  }, [user, copyTemplate, loadPrograms, setLoading, clearError, setError, setScreen]);
+
+  // ✅ НОВОЕ: Редактирование программы
+  const handleEditProgram = useCallback((program: Program) => {
+    setCurrentProgram(program);
+    setScreen(AppScreen.PROGRAM_EDITOR);
+  }, [setCurrentProgram, setScreen]);
+
+  // ✅ НОВОЕ: Удаление программы (пока alert)
+  const handleDeleteProgram = useCallback(async (programId: string) => {
+    try {
+      setLoading(true);
+      clearError();
+      // TODO: добавить метод deleteProgram в supabase.ts
+      alert(`Удаление программы ${programId} - метод в разработке`);
+      setScreen(AppScreen.PROGRAM_SELECTOR);
+    } catch (error) {
+      console.error('Delete error:', error);
+      setError('Ошибка при удалении программы');
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading, clearError, setError, setScreen]);
+
+  // ✅ НОВОЕ: Начать тренировку
+  const handleStartWorkout = useCallback((program: Program) => {
+    startWorkout(program);
+    setScreen(AppScreen.WORKOUT_LOGGER);
+    // TODO: создать компонент WorkoutLogger
+    alert('Экран тренировки в разработке');
+  }, [startWorkout, setScreen]);
 
   const handleBack = useCallback(() => {
     setScreen(AppScreen.PROGRAM_SELECTOR);
@@ -88,29 +134,31 @@ const App: React.FC = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh',
-        backgroundColor: 'var(--tg-theme-bg-color)'
+        height: '100vh' 
       }}>
         <Spinner size="l" />
       </div>
     );
   }
 
-  if (authError) {
+  if (authError || state.screen === AppScreen.AUTH_ERROR) {
     return (
-      <div style={{ padding: '16px', textAlign: 'center' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>😕</div>
-        <h2>Ошибка авторизации</h2>
-        <p style={{ color: 'var(--tg-theme-hint-color)' }}>{authError}</p>
+      <div style={{ 
+        padding: '20px', 
+        textAlign: 'center',
+        color: 'var(--tg-theme-destructive-text-color, #ff3b30)'
+      }}>
+        {authError}
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
+    <div style={{ minHeight: '100vh' }}>
+      {/* Главный экран - список программ */}
       {state.screen === AppScreen.PROGRAM_SELECTOR && (
         <ProgramSelector
-          programs={programs}
+          programs={state.programs}
           userName={user?.first_name || 'Друг'}
           onCreateProgram={handleCreateProgram}
           onSelectTemplate={handleSelectTemplate}
@@ -118,6 +166,18 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* ✅ НОВОЕ: Экран деталей программы */}
+      {state.screen === AppScreen.PROGRAM_DETAILS && state.current_program && (
+        <ProgramDetails
+          program={state.current_program}
+          onBack={handleBack}
+          onEdit={handleEditProgram}
+          onDelete={handleDeleteProgram}
+          onStartWorkout={handleStartWorkout}
+        />
+      )}
+
+      {/* Список шаблонов */}
       {state.screen === AppScreen.TEMPLATE_LIST && (
         <TemplateList
           templates={templates}
@@ -127,11 +187,22 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* Редактор программы */}
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
-          onBack={handleBack}
+          onCancel={handleBack}
+          initialData={state.current_program}
         />
+      )}
+
+      {/* TODO: Экран тренировки */}
+      {state.screen === AppScreen.WORKOUT_LOGGER && (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h2>Экран тренировки</h2>
+          <p>В разработке...</p>
+          <button onClick={handleBack}>Назад</button>
+        </div>
       )}
     </div>
   );
