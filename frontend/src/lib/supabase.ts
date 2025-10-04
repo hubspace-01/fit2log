@@ -83,12 +83,14 @@ class SupabaseService {
     }
   }
 
+  // ✅ ОТКАТИЛ К РАБОЧЕМУ ВАРИАНТУ
   async createProgram(programData: any) {
     const { program_name, exercises } = programData;
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) throw new Error('User not authenticated');
 
+    // Создаём программу
     const { data: program, error: programError } = await supabase
       .from('programs')
       .insert({
@@ -101,6 +103,7 @@ class SupabaseService {
 
     if (programError) throw programError;
 
+    // Если есть упражнения - создаём их
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
         program_id: program.id,
@@ -125,7 +128,7 @@ class SupabaseService {
 
   // ✅ НОВОЕ: Удаление программы
   async deleteProgram(programId: string) {
-    // Сначала удаляем упражнения (каскадное удаление может быть настроено в БД, но на всякий случай делаем явно)
+    // Сначала удаляем упражнения
     const { error: exercisesError } = await supabase
       .from('exercises')
       .delete()
@@ -133,7 +136,7 @@ class SupabaseService {
 
     if (exercisesError) throw exercisesError;
 
-    // Затем удаляем саму программу
+    // Затем удаляем программу
     const { error: programError } = await supabase
       .from('programs')
       .delete()
