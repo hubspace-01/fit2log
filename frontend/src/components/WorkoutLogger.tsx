@@ -20,6 +20,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 }) => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(session.current_exercise_index || 0);
   const [completedSets, setCompletedSets] = useState<any[]>([]);
+  const [skippedSets, setSkippedSets] = useState<Set<string>>(new Set()); // ✅ НОВОЕ: Трекинг пропущенных подходов
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [rpe, setRpe] = useState(8);
@@ -32,9 +33,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const exerciseCompletedSets = completedSets.filter(
     set => set.exercise_id === currentExercise?.id
   );
-  const currentSetNumber = exerciseCompletedSets.length + 1;
   
-  // ✅ НОВОЕ: Проверка последнего подхода
+  // ✅ ИСПРАВЛЕНО: Учитываем пропущенные подходы
+  const exerciseSkippedCount = Array.from(skippedSets).filter(
+    key => key.startsWith(`${currentExercise?.id}_`)
+  ).length;
+  
+  const currentSetNumber = exerciseCompletedSets.length + exerciseSkippedCount + 1;
   const isLastSetOfExercise = currentSetNumber >= (currentExercise?.target_sets || 0);
 
   useEffect(() => {
@@ -113,11 +118,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
 
-      const updatedExerciseSets = updatedSets.filter(
-        set => set.exercise_id === currentExercise.id
-      );
-
-      if (updatedExerciseSets.length >= currentExercise.target_sets) {
+      // Проверяем завершено ли упражнение
+      if (currentSetNumber >= currentExercise.target_sets) {
         if (currentExerciseIndex < totalExercises - 1) {
           telegramService.showConfirm(
             'Упражнение завершено! Перейти к следующему?',
@@ -142,17 +144,18 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const handleNextExercise = () => {
     if (currentExerciseIndex < totalExercises - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
+      // Очищаем пропущенные подходы для нового упражнения
+      setSkippedSets(new Set());
     }
   };
 
-  // ✅ НОВОЕ: Пропустить подход
+  // ✅ ИСПРАВЛЕНО: Пропустить подход
   const handleSkipSet = () => {
     if (!currentExercise) return;
 
     // Если это последний подход упражнения
     if (isLastSetOfExercise) {
       if (currentExerciseIndex < totalExercises - 1) {
-        // Есть ещё упражнения - переходим к следующему
         telegramService.showConfirm(
           'Завершить упражнение и перейти к следующему?',
           (confirmed: boolean) => {
@@ -162,7 +165,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           }
         );
       } else {
-        // Это последнее упражнение - завершаем тренировку
         telegramService.showConfirm(
           'Это последнее упражнение. Завершить тренировку?',
           (confirmed: boolean) => {
@@ -172,9 +174,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           }
         );
       }
+    } else {
+      // ✅ НОВОЕ: Отмечаем подход как пропущенный
+      const skipKey = `${currentExercise.id}_${currentSetNumber}`;
+      setSkippedSets(prev => new Set([...prev, skipKey]));
+      console.log(`⏭️ Skipped set ${currentSetNumber} of exercise ${currentExercise.exercise_name}`);
     }
-    // Если не последний подход - просто ничего не делаем
-    // Пользователь может продолжить следующий подход
   };
 
   const handleRepeatSet = () => {
@@ -327,7 +332,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Button>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          {/* ✅ ОБНОВЛЕНО: Контекстная кнопка */}
           <Button
             size="m"
             mode="outline"
