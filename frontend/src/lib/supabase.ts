@@ -83,18 +83,19 @@ class SupabaseService {
     }
   }
 
-  // ✅ ОТКАТИЛ К РАБОЧЕМУ ВАРИАНТУ
+  // ✅ ИСПРАВЛЕНО: принимаем user_id в параметрах
   async createProgram(programData: any) {
-    const { program_name, exercises } = programData;
-    const { data: { user } } = await supabase.auth.getUser();
+    const { program_name, exercises, user_id } = programData;
     
-    if (!user) throw new Error('User not authenticated');
+    if (!user_id) {
+      throw new Error('User ID is required');
+    }
 
     // Создаём программу
     const { data: program, error: programError } = await supabase
       .from('programs')
       .insert({
-        user_id: user.id,
+        user_id: user_id,
         program_name,
         is_template: false
       })
@@ -107,7 +108,7 @@ class SupabaseService {
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
         program_id: program.id,
-        user_id: user.id,
+        user_id: user_id,
         exercise_name: ex.exercise_name,
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
@@ -126,7 +127,6 @@ class SupabaseService {
     return program;
   }
 
-  // ✅ НОВОЕ: Удаление программы
   async deleteProgram(programId: string) {
     // Сначала удаляем упражнения
     const { error: exercisesError } = await supabase
@@ -147,14 +147,14 @@ class SupabaseService {
     return { success: true };
   }
 
-  async createExercises(programId: string, exercises: any[]) {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) throw new Error('User not authenticated');
+  async createExercises(programId: string, userId: string, exercises: any[]) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
 
     const exercisesData = exercises.map((ex, index) => ({
       program_id: programId,
-      user_id: user.id,
+      user_id: userId,
       exercise_name: ex.exercise_name,
       target_sets: ex.target_sets,
       target_reps: ex.target_reps,
