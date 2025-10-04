@@ -135,21 +135,17 @@ const App: React.FC = () => {
     }
   }, [deleteProgram, setLoading, clearError, setError, setScreen]);
 
-  // ✅ НОВОЕ: Начать тренировку
   const handleStartWorkout = useCallback((program: Program) => {
     console.log('🏋️ Starting workout:', program);
     startWorkout(program);
     setScreen(AppScreen.WORKOUT_LOGGER);
   }, [startWorkout, setScreen]);
 
-  // ✅ НОВОЕ: Завершить тренировку
   const handleFinishWorkout = useCallback(() => {
     console.log('✅ Workout finished');
-    // TODO: Сохранить логи в БД
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
-  // ✅ НОВОЕ: Отменить тренировку
   const handleCancelWorkout = useCallback(() => {
     console.log('❌ Workout cancelled');
     setScreen(AppScreen.PROGRAM_SELECTOR);
@@ -223,10 +219,10 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ НОВОЕ: Экран тренировки */}
-      {state.screen === AppScreen.WORKOUT_LOGGER && state.workout_session && (
+      {state.screen === AppScreen.WORKOUT_LOGGER && state.workout_session && user && (
         <WorkoutLogger
           session={state.workout_session}
+          userId={user.id}
           onFinish={handleFinishWorkout}
           onCancel={handleCancelWorkout}
         />

@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
+import { supabaseService } from '../lib/supabase';
 import { Stepper } from './Stepper';
 import type { WorkoutSession } from '../types';
 
 interface WorkoutLoggerProps {
   session: WorkoutSession;
+  userId: string;
   onFinish: () => void;
   onCancel: () => void;
 }
 
 export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   session,
+  userId,
   onFinish,
   onCancel
 }) => {
@@ -21,6 +24,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [weight, setWeight] = useState(0);
   const [rpe, setRpe] = useState(8);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
@@ -70,7 +74,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleCompleteSet = () => {
+  // ✅ НОВОЕ: Сохранить подход в БД
+  const handleCompleteSet = async () => {
+    if (saving || !currentExercise) return;
+
     const newSet = {
       set_no: currentSetNumber,
       reps,
@@ -79,24 +86,49 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       timestamp: new Date().toISOString()
     };
 
-    setCompletedSets([...completedSets, newSet]);
-    console.log('Set completed:', newSet);
+    try {
+      setSaving(true);
 
-    if (currentSetNumber >= currentExercise.target_sets) {
-      if (currentExerciseIndex < totalExercises - 1) {
-        telegramService.showConfirm(
-          'Упражнение завершено! Перейти к следующему?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleNextExercise();
+      // Сохраняем в БД
+      await supabaseService.saveWorkoutLog({
+        user_id: userId,
+        program_id: session.program_id,
+        exercise_id: currentExercise.id,
+        exercise_name: currentExercise.exercise_name,
+        set_no: currentSetNumber,
+        reps,
+        weight,
+        rpe,
+        datetime: newSet.timestamp
+      });
+
+      console.log('✅ Set saved to DB:', newSet);
+
+      // Добавляем в локальный state
+      setCompletedSets([...completedSets, newSet]);
+
+      // Проверяем завершено ли упражнение
+      if (currentSetNumber >= currentExercise.target_sets) {
+        if (currentExerciseIndex < totalExercises - 1) {
+          telegramService.showConfirm(
+            'Упражнение завершено! Перейти к следующему?',
+            (confirmed: boolean) => {
+              if (confirmed) {
+                handleNextExercise();
+              }
             }
-          }
-        );
-      } else {
-        telegramService.showAlert('Поздравляем! Тренировка завершена!', () => {
-          onFinish();
-        });
+          );
+        } else {
+          telegramService.showAlert('Поздравляем! Тренировка завершена!', () => {
+            onFinish();
+          });
+        }
       }
+    } catch (error) {
+      console.error('❌ Failed to save set:', error);
+      telegramService.showAlert('Ошибка сохранения. Попробуйте ещё раз.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -140,6 +172,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
+      {/* Header */}
       <div style={{
         padding: '16px',
         display: 'flex',
@@ -156,6 +189,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Caption>
       </div>
 
+      {/* Progress */}
       <Section>
         <div style={{ padding: '12px 16px' }}>
           <Caption level="1" style={{ 
@@ -183,6 +217,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
+      {/* Exercise Title */}
       <div style={{ padding: '16px', textAlign: 'center' }}>
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
           💪 {currentExercise.exercise_name}
@@ -192,6 +227,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Caption>
       </div>
 
+      {/* Notes */}
       {currentExercise.notes && (
         <Section>
           <Cell
@@ -206,6 +242,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Section>
       )}
 
+      {/* Current Set */}
       <Section header={`Подход ${currentSetNumber} из ${currentExercise.target_sets}`}>
         <div style={{ padding: '0 16px' }}>
           <Stepper
@@ -238,6 +275,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
+      {/* History */}
       {completedSets.length > 0 && (
         <Section header="История подходов">
           {completedSets.map((set, index) => (
@@ -254,15 +292,17 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       <Divider />
 
+      {/* Actions */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Button
           size="l"
           stretched
           mode="filled"
           onClick={handleCompleteSet}
+          disabled={saving}
           style={{ fontSize: '16px' }}
         >
-          ✅ Выполнить подход
+          {saving ? '⏳ Сохранение...' : '✅ Выполнить подход'}
         </Button>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -270,6 +310,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             size="m"
             mode="outline"
             onClick={handleSkipExercise}
+            disabled={saving}
             style={{ fontSize: '14px' }}
           >
             ⏭️ Пропустить
@@ -279,7 +320,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             size="m"
             mode="outline"
             onClick={handleRepeatSet}
-            disabled={completedSets.length === 0}
+            disabled={completedSets.length === 0 || saving}
             style={{ fontSize: '14px' }}
           >
             🔄 Повторить
