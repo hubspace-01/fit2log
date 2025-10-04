@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { Spinner } from '@telegram-apps/telegram-ui';
 import { useAuth, useAppState, usePrograms } from './hooks';
-import { ProgramSelector, TemplateList, ProgramEditor, ProgramDetails } from './components';
+import { ProgramSelector, TemplateList, ProgramEditor, ProgramDetails, WorkoutLogger } from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate } from './types';
 
@@ -24,7 +24,7 @@ const App: React.FC = () => {
     loadPrograms, 
     loadTemplates, 
     createProgram,
-    updateProgram, // ✅ ДОБАВИЛИ updateProgram
+    updateProgram,
     copyTemplate,
     deleteProgram
   } = usePrograms();
@@ -44,7 +44,7 @@ const App: React.FC = () => {
   }, [programs, setPrograms, state.programs]);
 
   const handleCreateProgram = useCallback(() => {
-    setCurrentProgram(undefined); // ✅ Очищаем current_program для создания
+    setCurrentProgram(undefined);
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
 
@@ -60,7 +60,6 @@ const App: React.FC = () => {
     setScreen(AppScreen.PROGRAM_DETAILS);
   }, [setCurrentProgram, setScreen]);
 
-  // ✅ ОБНОВЛЕНО: Обработка создания И редактирования
   const handleProgramEditorSave = useCallback(async (programData: any) => {
     if (!user) {
       alert('Ошибка: пользователь не авторизован');
@@ -77,7 +76,6 @@ const App: React.FC = () => {
         user_id: user.id
       };
       
-      // Если есть current_program - редактируем, иначе создаём
       if (state.current_program) {
         console.log('✏️ Updating program:', state.current_program.id);
         await updateProgram(state.current_program.id, dataWithUserId);
@@ -119,7 +117,7 @@ const App: React.FC = () => {
   }, [user, copyTemplate, loadPrograms, setLoading, clearError, setError, setScreen]);
 
   const handleEditProgram = useCallback((program: Program) => {
-    setCurrentProgram(program); // ✅ Устанавливаем программу для редактирования
+    setCurrentProgram(program);
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
 
@@ -137,11 +135,25 @@ const App: React.FC = () => {
     }
   }, [deleteProgram, setLoading, clearError, setError, setScreen]);
 
+  // ✅ НОВОЕ: Начать тренировку
   const handleStartWorkout = useCallback((program: Program) => {
+    console.log('🏋️ Starting workout:', program);
     startWorkout(program);
     setScreen(AppScreen.WORKOUT_LOGGER);
-    alert('Экран тренировки в разработке');
   }, [startWorkout, setScreen]);
+
+  // ✅ НОВОЕ: Завершить тренировку
+  const handleFinishWorkout = useCallback(() => {
+    console.log('✅ Workout finished');
+    // TODO: Сохранить логи в БД
+    setScreen(AppScreen.PROGRAM_SELECTOR);
+  }, [setScreen]);
+
+  // ✅ НОВОЕ: Отменить тренировку
+  const handleCancelWorkout = useCallback(() => {
+    console.log('❌ Workout cancelled');
+    setScreen(AppScreen.PROGRAM_SELECTOR);
+  }, [setScreen]);
 
   const handleBack = useCallback(() => {
     setScreen(AppScreen.PROGRAM_SELECTOR);
@@ -203,21 +215,21 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ ОБНОВЛЕНО: Передаём initialData если редактируем */}
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
           onBack={handleBack}
-          initialData={state.current_program} // ✅ Передаём данные программы
+          initialData={state.current_program}
         />
       )}
 
-      {state.screen === AppScreen.WORKOUT_LOGGER && (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          <h2>Экран тренировки</h2>
-          <p>В разработке...</p>
-          <button onClick={handleBack}>Назад</button>
-        </div>
+      {/* ✅ НОВОЕ: Экран тренировки */}
+      {state.screen === AppScreen.WORKOUT_LOGGER && state.workout_session && (
+        <WorkoutLogger
+          session={state.workout_session}
+          onFinish={handleFinishWorkout}
+          onCancel={handleCancelWorkout}
+        />
       )}
     </div>
   );
