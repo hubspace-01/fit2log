@@ -60,15 +60,81 @@ class SupabaseService {
     return data || [];
   }
 
-  async copyTemplate(templateId: string) {
+  async copyTemplate(templateId: string, userId: string) {
     try {
-      const { data, error } = await supabase.functions.invoke('copy-template', {
-        body: { templateId }
-      });
+      console.log('Copying template:', templateId, 'for user:', userId);
 
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error || 'Failed to copy template');
-      return data.program;
+      // Получаем шаблон с упражнениями
+      const { data: template, error: templateError } = await supabase
+        .from('program_templates')
+        .select('*, template_exercises (*)')
+        .eq('id', templateId)
+        .single();
+
+      if (templateError) {
+        console.error('Template fetch error:', templateError);
+        throw templateError;
+      }
+
+      console.log('Template found:', template);
+
+      // Создаем новую программу
+      const { data: newProgram, error: programError } = await supabase
+        .from('programs')
+        .insert({
+          user_id: userId,
+          program_name: template.template_name,
+          is_template: false
+        })
+        .select()
+        .single();
+
+      if (programError) {
+        console.error('Program create error:', programError);
+        throw programError;
+      }
+
+      console.log('Program created:', newProgram);
+
+      // Копируем упражнения если есть
+      if (template.template_exercises && template.template_exercises.length > 0) {
+        const exercises = template.template_exercises.map((ex: any) => ({
+          program_id: newProgram.id,
+          user_id: userId,
+          exercise_name: ex.exercise_name,
+          target_sets: ex.target_sets,
+          target_reps: ex.target_reps,
+          target_weight: ex.target_weight,
+          order_index: ex.order_index,
+          notes: ex.notes
+        }));
+
+        console.log('Creating exercises:', exercises);
+
+        const { error: exercisesError } = await supabase
+          .from('exercises')
+          .insert(exercises);
+
+        if (exercisesError) {
+          console.error('Exercises create error:', exercisesError);
+          throw exercisesError;
+        }
+      }
+
+      // Получаем полную программу с упражнениями
+      const { data: completeProgram, error: fetchError } = await supabase
+        .from('programs')
+        .select('*, exercises (*)')
+        .eq('id', newProgram.id)
+        .single();
+
+      if (fetchError) {
+        console.error('Fetch complete program error:', fetchError);
+        throw fetchError;
+      }
+
+      console.log('Complete program:', completeProgram);
+      return completeProgram;
     } catch (error) {
       console.error('Copy template error:', error);
       throw error;

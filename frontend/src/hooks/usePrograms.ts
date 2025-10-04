@@ -52,8 +52,8 @@ export const usePrograms = () => {
     return newProgram;
   }, [loadPrograms]);
 
-  const copyTemplate = useCallback(async (templateId: string) => {
-    const newProgram = await supabaseService.copyTemplate(templateId);
+  const copyTemplate = useCallback(async (templateId: string, userId: string) => {
+    const newProgram = await supabaseService.copyTemplate(templateId, userId);
     await loadPrograms();
     return newProgram;
   }, [loadPrograms]);

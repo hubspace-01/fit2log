@@ -55,6 +55,7 @@ const App: React.FC = () => {
       setScreen(AppScreen.PROGRAM_SELECTOR);
       alert('Программа успешно создана!');
     } catch (error) {
+      console.error('Save error:', error);
       setError('Ошибка при сохранении программы');
       alert('Ошибка при сохранении программы');
     } finally {
@@ -63,19 +64,23 @@ const App: React.FC = () => {
   }, [user, createProgram, setLoading, clearError, setError, setScreen]);
 
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
+    if (!user) return;
+
     try {
       setLoading(true);
       clearError();
-      await copyTemplate(template.id);
+      console.log('Copying template:', template.id, 'for user:', user.id);
+      await copyTemplate(template.id, user.id);
       setScreen(AppScreen.PROGRAM_SELECTOR);
       alert(`Программа "${template.template_name}" добавлена!`);
     } catch (error) {
+      console.error('Copy template error:', error);
       setError('Ошибка при копировании шаблона');
-      alert('Ошибка при копировании шаблона');
+      alert(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setLoading(false);
     }
-  }, [copyTemplate, setLoading, clearError, setError, setScreen]);
+  }, [user, copyTemplate, setLoading, clearError, setError, setScreen]);
 
   const handleBack = useCallback(() => {
     setScreen(AppScreen.PROGRAM_SELECTOR);
