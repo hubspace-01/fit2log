@@ -51,11 +51,7 @@ export const TemplateList: React.FC<Props> = ({
           {templates.map((template) => (
             <Card 
               key={template.id} 
-              style={{ 
-                width: '100%',
-                cursor: 'pointer'
-              }}
-              onClick={() => onSelectTemplate(template)}
+              style={{ width: '100%' }}
             >
               <div style={{ padding: '14px' }}>
                 <div style={{ marginBottom: '8px' }}>
@@ -90,10 +86,7 @@ export const TemplateList: React.FC<Props> = ({
                     size="s" 
                     mode="filled" 
                     style={{ fontSize: '13px' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectTemplate(template);
-                    }}
+                    onClick={() => onSelectTemplate(template)}
                   >
                     Добавить
                   </Button>
