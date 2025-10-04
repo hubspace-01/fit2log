@@ -6,7 +6,8 @@ import {
   Text,
   List,
   Cell,
-  Placeholder
+  Placeholder,
+  Caption
 } from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
 import { telegramService } from '../lib/telegram';
@@ -110,11 +111,29 @@ export const ProgramDetails: React.FC<Props> = ({
                   </div>
                 }
                 subtitle={
-                  <div style={{ marginTop: '4px' }}>
-                    <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+                  <div>
+                    {/* Основная информация: подходы и повторения */}
+                    <Text style={{ 
+                      color: 'var(--tg-theme-hint-color)',
+                      display: 'block',
+                      marginTop: '4px'
+                    }}>
                       {exercise.target_sets} подходов • {exercise.target_reps} повторений
-                      {exercise.target_weight > 0 && ` • ${exercise.target_weight} кг`}
                     </Text>
+                    
+                    {/* Вес - второстепенная информация (Caption) */}
+                    {exercise.target_weight > 0 && (
+                      <Caption 
+                        level="1"
+                        weight="3"
+                        style={{ 
+                          display: 'block',
+                          marginTop: '2px'
+                        }}
+                      >
+                        Вес: {exercise.target_weight} кг
+                      </Caption>
+                    )}
                   </div>
                 }
               >
