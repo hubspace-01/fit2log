@@ -6,15 +6,37 @@ import {
   Button
 } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
+import type { Program } from '../types';
 
 interface Props {
   onSave: (data: any) => void;
   onBack: () => void;
+  initialData?: Program; // ✅ НОВОЕ: Опциональные данные для редактирования
 }
 
-export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
+export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) => {
   const [programName, setProgramName] = useState('');
   const [exercises, setExercises] = useState<any[]>([]);
+
+  // ✅ НОВОЕ: Загружаем данные при редактировании
+  useEffect(() => {
+    if (initialData) {
+      setProgramName(initialData.program_name);
+      
+      // Сортируем упражнения по order_index и загружаем
+      const sortedExercises = [...(initialData.exercises || [])].sort(
+        (a, b) => a.order_index - b.order_index
+      );
+      
+      setExercises(sortedExercises.map(ex => ({
+        exercise_name: ex.exercise_name,
+        target_sets: ex.target_sets,
+        target_reps: ex.target_reps,
+        target_weight: ex.target_weight,
+        notes: ex.notes || ''
+      })));
+    }
+  }, [initialData]);
 
   const addExercise = () => {
     setExercises([...exercises, {
@@ -42,7 +64,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
     }
   };
 
-  // Показываем BackButton для возврата
   useEffect(() => {
     telegramService.showBackButton(() => {
       onBack();
@@ -52,6 +73,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
       telegramService.hideBackButton();
     };
   }, [onBack]);
+
+  // ✅ НОВОЕ: Разные заголовки для создания/редактирования
+  const title = initialData ? '✏️ Редактирование программы' : '➕ Новая программа';
 
   return (
     <div style={{ 
@@ -66,7 +90,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
         marginBottom: '20px'
       }}>
         <Title level="2" weight="2" style={{ fontSize: '24px' }}>
-          ➕ Новая программа
+          {title}
         </Title>
       </div>
 
@@ -280,7 +304,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
               </div>
             ))}
 
-            {/* Кнопка сохранить после списка упражнений */}
+            {/* Кнопка сохранить */}
             <div style={{ marginTop: '8px' }}>
               <Button 
                 size="l"
