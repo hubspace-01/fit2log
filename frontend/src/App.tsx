@@ -1,7 +1,14 @@
 import React, { useEffect, useCallback } from 'react';
 import { Spinner } from '@telegram-apps/telegram-ui';
 import { useAuth, useAppState, usePrograms } from './hooks';
-import { ProgramSelector, TemplateList, ProgramEditor, ProgramDetails, WorkoutLogger } from './components';
+import { 
+  ProgramSelector, 
+  TemplateList, 
+  ProgramEditor, 
+  ProgramDetails, 
+  WorkoutLogger,
+  WorkoutSummary 
+} from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate } from './types';
 
@@ -13,6 +20,7 @@ const App: React.FC = () => {
     setPrograms, 
     setCurrentProgram, 
     startWorkout,
+    setWorkoutSummary,
     setLoading, 
     setError, 
     clearError 
@@ -141,13 +149,21 @@ const App: React.FC = () => {
     setScreen(AppScreen.WORKOUT_LOGGER);
   }, [startWorkout, setScreen]);
 
-  const handleFinishWorkout = useCallback(() => {
-    console.log('✅ Workout finished');
-    setScreen(AppScreen.PROGRAM_SELECTOR);
-  }, [setScreen]);
+  // ✅ ОБНОВЛЕНО: Переход на экран итогов
+  const handleFinishWorkout = useCallback((completedSets: any[], duration: number) => {
+    console.log('✅ Workout finished:', completedSets, duration);
+    setWorkoutSummary(completedSets, duration);
+    setScreen(AppScreen.WORKOUT_SUMMARY);
+  }, [setWorkoutSummary, setScreen]);
 
   const handleCancelWorkout = useCallback(() => {
     console.log('❌ Workout cancelled');
+    setScreen(AppScreen.PROGRAM_SELECTOR);
+  }, [setScreen]);
+
+  // ✅ НОВОЕ: Завершение с экрана итогов
+  const handleCompleteSummary = useCallback(() => {
+    console.log('✅ Summary completed');
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
@@ -225,6 +241,20 @@ const App: React.FC = () => {
           userId={user.id}
           onFinish={handleFinishWorkout}
           onCancel={handleCancelWorkout}
+        />
+      )}
+
+      {/* ✅ НОВОЕ: Экран итогов тренировки */}
+      {state.screen === AppScreen.WORKOUT_SUMMARY && 
+       state.workout_session && 
+       state.workout_completed_sets && 
+       state.workout_duration !== undefined && (
+        <WorkoutSummary
+          programName={state.workout_session.program_name}
+          completedSets={state.workout_completed_sets}
+          duration={state.workout_duration}
+          totalExercises={state.workout_session.exercises.length}
+          onFinish={handleCompleteSummary}
         />
       )}
     </div>

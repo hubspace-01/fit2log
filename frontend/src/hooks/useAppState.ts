@@ -25,12 +25,21 @@ export const useAppState = () => {
     const session: WorkoutSession = {
       program_id: program.id,
       program_name: program.program_name,
-      started_at: new Date().toISOString(), // ✅ ИСПРАВЛЕНО: started_at вместо start_time
+      started_at: new Date().toISOString(),
       exercises: program.exercises || [],
       current_exercise_index: 0,
       logs: []
     };
     setState(prev => ({ ...prev, workout_session: session }));
+  }, []);
+
+  // ✅ НОВОЕ: Сохранить данные для экрана итогов
+  const setWorkoutSummary = useCallback((completedSets: any[], duration: number) => {
+    setState(prev => ({
+      ...prev,
+      workout_completed_sets: completedSets,
+      workout_duration: duration
+    }));
   }, []);
 
   const setLoading = useCallback((loading: boolean) => {
@@ -51,6 +60,7 @@ export const useAppState = () => {
     setPrograms,
     setCurrentProgram,
     startWorkout,
+    setWorkoutSummary,
     setLoading,
     setError,
     clearError,

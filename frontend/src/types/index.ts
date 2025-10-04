@@ -69,34 +69,27 @@ export interface WorkoutSession {
   started_at: string;
   exercises: Exercise[];
   current_exercise_index: number;
-  logs: Partial<LogItem>[];
-}
-
-export interface AuthData {
-  user: User;
-  access_token: string;
-  expires_at: string;
-}
-
-// ✅ ДОБАВИЛИ НОВЫЙ ЭКРАН
-export enum AppScreen {
-  LOADING = 'loading',
-  AUTH_ERROR = 'auth_error',
-  PROGRAM_SELECTOR = 'program_selector',
-  PROGRAM_DETAILS = 'program_details', // 👈 НОВЫЙ ЭКРАН
-  TEMPLATE_LIST = 'template_list',
-  PROGRAM_EDITOR = 'program_editor',
-  WORKOUT_LOGGER = 'workout_logger',
-  PROGRESS_VIEW = 'progress_view',
+  logs: LogItem[];
 }
 
 export interface AppState {
   screen: AppScreen;
-  user?: User;
-  access_token?: string;
   programs: Program[];
   current_program?: Program;
   workout_session?: WorkoutSession;
+  workout_completed_sets?: any[];
+  workout_duration?: number;
   loading: boolean;
   error?: string;
+}
+
+export enum AppScreen {
+  LOADING = 'LOADING',
+  AUTH_ERROR = 'AUTH_ERROR',
+  PROGRAM_SELECTOR = 'PROGRAM_SELECTOR',
+  PROGRAM_EDITOR = 'PROGRAM_EDITOR',
+  PROGRAM_DETAILS = 'PROGRAM_DETAILS',
+  TEMPLATE_LIST = 'TEMPLATE_LIST',
+  WORKOUT_LOGGER = 'WORKOUT_LOGGER',
+  WORKOUT_SUMMARY = 'WORKOUT_SUMMARY'
 }
