@@ -16,11 +16,23 @@ class TelegramService {
   }
 
   getInitData(): string {
-    return window.Telegram?.WebApp?.initData || '';
+    try {
+      return window.Telegram?.WebApp?.initData || '';
+    } catch (error) {
+      console.error('Failed to get initData:', error);
+      return '';
+    }
   }
 
   getUser(): any {
-    return window.Telegram?.WebApp?.initDataUnsafe?.user;
+    try {
+      const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      console.log('Telegram user:', user);
+      return user;
+    } catch (error) {
+      console.error('Failed to get user:', error);
+      return null;
+    }
   }
 
   isInTelegram(): boolean {
@@ -28,11 +40,19 @@ class TelegramService {
   }
 
   ready(): void {
-    window.Telegram?.WebApp?.ready();
+    try {
+      window.Telegram?.WebApp?.ready();
+    } catch (error) {
+      console.error('Ready failed:', error);
+    }
   }
 
   expand(): void {
-    window.Telegram?.WebApp?.expand();
+    try {
+      window.Telegram?.WebApp?.expand();
+    } catch (error) {
+      console.error('Expand failed:', error);
+    }
   }
 }
 
