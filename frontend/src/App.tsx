@@ -187,10 +187,11 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Редактор программы - только onSave */}
+      {/* Редактор программы - требует onSave и onBack */}
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
+          onBack={handleBack}
         />
       )}
 
