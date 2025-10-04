@@ -23,7 +23,8 @@ const App: React.FC = () => {
     loading: programsLoading, 
     loadPrograms, 
     loadTemplates, 
-    createProgram, 
+    createProgram,
+    updateProgram, // ✅ ДОБАВИЛИ updateProgram
     copyTemplate,
     deleteProgram
   } = usePrograms();
@@ -43,8 +44,9 @@ const App: React.FC = () => {
   }, [programs, setPrograms, state.programs]);
 
   const handleCreateProgram = useCallback(() => {
+    setCurrentProgram(undefined); // ✅ Очищаем current_program для создания
     setScreen(AppScreen.PROGRAM_EDITOR);
-  }, [setScreen]);
+  }, [setCurrentProgram, setScreen]);
 
   const handleSelectTemplate = useCallback(async () => {
     if (templates.length === 0) {
@@ -58,7 +60,7 @@ const App: React.FC = () => {
     setScreen(AppScreen.PROGRAM_DETAILS);
   }, [setCurrentProgram, setScreen]);
 
-  // ✅ ИСПРАВЛЕНО: добавляем user_id в programData
+  // ✅ ОБНОВЛЕНО: Обработка создания И редактирования
   const handleProgramEditorSave = useCallback(async (programData: any) => {
     if (!user) {
       alert('Ошибка: пользователь не авторизован');
@@ -66,22 +68,23 @@ const App: React.FC = () => {
     }
     
     try {
-      console.log('🔍 Saving program with data:', programData);
-      console.log('🔍 User ID:', user.id);
-      
+      console.log('🔍 Saving program:', programData);
       setLoading(true);
       clearError();
       
-      // Добавляем user_id к данным программы
       const dataWithUserId = {
         ...programData,
         user_id: user.id
       };
       
-      console.log('🔍 Final data:', dataWithUserId);
-      
-      const result = await createProgram(dataWithUserId);
-      console.log('✅ Program created:', result);
+      // Если есть current_program - редактируем, иначе создаём
+      if (state.current_program) {
+        console.log('✏️ Updating program:', state.current_program.id);
+        await updateProgram(state.current_program.id, dataWithUserId);
+      } else {
+        console.log('➕ Creating new program');
+        await createProgram(dataWithUserId);
+      }
       
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
@@ -92,7 +95,7 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, createProgram, loadPrograms, setLoading, clearError, setError, setScreen]);
+  }, [user, state.current_program, createProgram, updateProgram, loadPrograms, setLoading, clearError, setError, setScreen]);
 
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
     if (!user) return;
@@ -116,7 +119,7 @@ const App: React.FC = () => {
   }, [user, copyTemplate, loadPrograms, setLoading, clearError, setError, setScreen]);
 
   const handleEditProgram = useCallback((program: Program) => {
-    setCurrentProgram(program);
+    setCurrentProgram(program); // ✅ Устанавливаем программу для редактирования
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
 
@@ -200,10 +203,12 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* ✅ ОБНОВЛЕНО: Передаём initialData если редактируем */}
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
           onBack={handleBack}
+          initialData={state.current_program} // ✅ Передаём данные программы
         />
       )}
 
