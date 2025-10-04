@@ -42,34 +42,16 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
     }
   };
 
-  // Настройка MainButton и BackButton при монтировании
+  // Показываем BackButton для возврата
   useEffect(() => {
-    // Показываем BackButton
     telegramService.showBackButton(() => {
       onBack();
     });
 
-    // Показываем MainButton
-    telegramService.showMainButton('💾 Сохранить программу', () => {
-      handleSave();
-    });
-
-    // При размонтировании скрываем кнопки
     return () => {
-      telegramService.hideMainButton();
       telegramService.hideBackButton();
     };
   }, [onBack]);
-
-  // Обновляем состояние MainButton при изменении данных
-  useEffect(() => {
-    const isValid = programName.trim() && exercises.length > 0;
-    if (isValid) {
-      telegramService.enableMainButton();
-    } else {
-      telegramService.disableMainButton();
-    }
-  }, [programName, exercises]);
 
   return (
     <div style={{ 
@@ -164,7 +146,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
             </Text>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
             {exercises.map((ex, i) => (
               <div 
                 key={i} 
@@ -297,6 +279,20 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
                 </div>
               </div>
             ))}
+
+            {/* Кнопка сохранить после списка упражнений */}
+            <div style={{ marginTop: '8px' }}>
+              <Button 
+                size="l"
+                stretched
+                mode="filled"
+                onClick={handleSave}
+                disabled={!programName.trim() || exercises.length === 0}
+                style={{ fontSize: '16px' }}
+              >
+                💾 Сохранить программу
+              </Button>
+            </div>
           </div>
         )}
       </div>
