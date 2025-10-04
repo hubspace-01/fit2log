@@ -20,7 +20,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 }) => {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(session.current_exercise_index || 0);
   const [completedSets, setCompletedSets] = useState<any[]>([]);
-  const [skippedSets, setSkippedSets] = useState<Set<string>>(new Set()); // ✅ НОВОЕ: Трекинг пропущенных подходов
+  const [skippedSets, setSkippedSets] = useState<Set<string>>(new Set());
+  const [extraSets, setExtraSets] = useState<Map<string, number>>(new Map()); // ✅ НОВОЕ: Доп подходы
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [rpe, setRpe] = useState(8);
@@ -34,13 +35,16 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     set => set.exercise_id === currentExercise?.id
   );
   
-  // ✅ ИСПРАВЛЕНО: Учитываем пропущенные подходы
   const exerciseSkippedCount = Array.from(skippedSets).filter(
     key => key.startsWith(`${currentExercise?.id}_`)
   ).length;
   
+  // ✅ НОВОЕ: Учитываем дополнительные подходы
+  const exerciseExtraSets = extraSets.get(currentExercise?.id || '') || 0;
+  const effectiveTargetSets = (currentExercise?.target_sets || 0) + exerciseExtraSets;
+  
   const currentSetNumber = exerciseCompletedSets.length + exerciseSkippedCount + 1;
-  const isLastSetOfExercise = currentSetNumber >= (currentExercise?.target_sets || 0);
+  const isLastSetOfExercise = currentSetNumber >= effectiveTargetSets;
 
   useEffect(() => {
     if (currentExercise) {
@@ -85,6 +89,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  // ✅ НОВОЕ: Добавить подход
+  const handleAddSet = () => {
+    if (!currentExercise) return;
+    const current = extraSets.get(currentExercise.id) || 0;
+    setExtraSets(new Map(extraSets.set(currentExercise.id, current + 1)));
+  };
+
   const handleCompleteSet = async () => {
     if (saving || !currentExercise) return;
 
@@ -118,8 +129,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
 
-      // Проверяем завершено ли упражнение
-      if (currentSetNumber >= currentExercise.target_sets) {
+      if (currentSetNumber >= effectiveTargetSets) {
         if (currentExerciseIndex < totalExercises - 1) {
           telegramService.showConfirm(
             'Упражнение завершено! Перейти к следующему?',
@@ -144,16 +154,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const handleNextExercise = () => {
     if (currentExerciseIndex < totalExercises - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
-      // Очищаем пропущенные подходы для нового упражнения
       setSkippedSets(new Set());
     }
   };
 
-  // ✅ ИСПРАВЛЕНО: Пропустить подход
   const handleSkipSet = () => {
     if (!currentExercise) return;
 
-    // Если это последний подход упражнения
     if (isLastSetOfExercise) {
       if (currentExerciseIndex < totalExercises - 1) {
         telegramService.showConfirm(
@@ -175,19 +182,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         );
       }
     } else {
-      // ✅ НОВОЕ: Отмечаем подход как пропущенный
       const skipKey = `${currentExercise.id}_${currentSetNumber}`;
       setSkippedSets(prev => new Set([...prev, skipKey]));
-      console.log(`⏭️ Skipped set ${currentSetNumber} of exercise ${currentExercise.exercise_name}`);
-    }
-  };
-
-  const handleRepeatSet = () => {
-    if (exerciseCompletedSets.length > 0) {
-      const lastSet = exerciseCompletedSets[exerciseCompletedSets.length - 1];
-      setReps(lastSet.reps);
-      setWeight(lastSet.weight);
-      setRpe(lastSet.rpe);
+      console.log(`⏭️ Skipped set ${currentSetNumber}`);
     }
   };
 
@@ -271,7 +268,31 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Section>
       )}
 
-      <Section header={`Подход ${currentSetNumber} из ${currentExercise.target_sets}`}>
+      {/* ✅ ОБНОВЛЕНО: Header с кнопкой +1 */}
+      <Section 
+        header={
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: '0 16px'
+          }}>
+            <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
+            <Button
+              size="s"
+              mode="bezeled"
+              onClick={handleAddSet}
+              style={{ 
+                fontSize: '14px',
+                padding: '4px 12px',
+                minHeight: '28px'
+              }}
+            >
+              +1 подход
+            </Button>
+          </div>
+        }
+      >
         <div style={{ padding: '0 16px' }}>
           <Stepper
             label="Повторения"
@@ -319,6 +340,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       <Divider />
 
+      {/* ✅ ОБНОВЛЕНО: Убрана кнопка "Повторить" */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Button
           size="l"
@@ -331,27 +353,16 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           {saving ? '⏳ Сохранение...' : '✅ Выполнить подход'}
         </Button>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <Button
-            size="m"
-            mode="outline"
-            onClick={handleSkipSet}
-            disabled={saving}
-            style={{ fontSize: '14px' }}
-          >
-            {isLastSetOfExercise ? '⏩ Следующее' : '⏭️ Пропустить'}
-          </Button>
-
-          <Button
-            size="m"
-            mode="outline"
-            onClick={handleRepeatSet}
-            disabled={exerciseCompletedSets.length === 0 || saving}
-            style={{ fontSize: '14px' }}
-          >
-            🔄 Повторить
-          </Button>
-        </div>
+        <Button
+          size="m"
+          stretched
+          mode="outline"
+          onClick={handleSkipSet}
+          disabled={saving}
+          style={{ fontSize: '14px' }}
+        >
+          {isLastSetOfExercise ? '⏩ Следующее упражнение' : '⏭️ Пропустить подход'}
+        </Button>
       </div>
     </div>
   );
