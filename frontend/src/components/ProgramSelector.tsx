@@ -25,9 +25,14 @@ export const ProgramSelector: React.FC<Props> = ({
   onSelectProgram
 }) => {
   return (
-    <div className="app-container fade-in" style={{ padding: '12px', paddingBottom: '24px' }}>
-      <div style={{ marginBottom: '20px', padding: '4px' }}>
-        <Title level="2" weight="2" style={{ marginBottom: '4px', fontSize: '24px' }}>
+    <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
+      {/* Приветствие по центру */}
+      <div style={{ 
+        marginBottom: '28px', 
+        padding: '8px',
+        textAlign: 'center'
+      }}>
+        <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
           Привет, {userName}! 👋
         </Title>
         <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
@@ -37,12 +42,17 @@ export const ProgramSelector: React.FC<Props> = ({
 
       {programs.length === 0 ? (
         <Section>
-          <Card style={{ textAlign: 'center', padding: '24px 12px' }}>
-            <div style={{ fontSize: '40px', marginBottom: '12px' }}>💪</div>
-            <Title level="3" weight="2" style={{ marginBottom: '6px', fontSize: '18px' }}>
+          <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
+            <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Начни свой путь
             </Title>
-            <Text style={{ color: 'var(--tg-theme-hint-color)', marginBottom: '20px', fontSize: '14px' }}>
+            <Text style={{ 
+              color: 'var(--tg-theme-hint-color)', 
+              marginBottom: '24px', 
+              fontSize: '14px',
+              display: 'block'
+            }}>
               У тебя пока нет программ тренировок
             </Text>
             
@@ -50,9 +60,9 @@ export const ProgramSelector: React.FC<Props> = ({
               size="m" 
               stretched 
               onClick={onSelectTemplate}
-              style={{ marginBottom: '10px', fontSize: '15px' }}
+              style={{ marginBottom: '12px', fontSize: '15px' }}
             >
-              📋 Выбрать готовую
+              📋 Выбрать готовую программу
             </Button>
             
             <Button 
@@ -62,46 +72,75 @@ export const ProgramSelector: React.FC<Props> = ({
               onClick={onCreateProgram}
               style={{ fontSize: '15px' }}
             >
-              ✏️ Создать свою
+              ✏️ Создать свою программу
             </Button>
           </Card>
         </Section>
       ) : (
         <>
+          {/* Список программ - одинаковая ширина */}
           <Section 
             header={
-              <Title level="3" weight="2" style={{ fontSize: '18px', padding: '0 4px' }}>
-                Мои программы ({programs.length})
+              <Title level="3" weight="2" style={{ fontSize: '18px', marginBottom: '12px' }}>
+                Мои программы
               </Title>
             }
           >
-            {programs.map((program) => (
-              <Card key={program.id} style={{ marginBottom: '8px', overflow: 'hidden' }}>
-                <Cell
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {programs.map((program) => (
+                <Card 
+                  key={program.id} 
+                  style={{ 
+                    width: '100%',
+                    cursor: 'pointer'
+                  }}
                   onClick={() => onSelectProgram(program)}
-                  subtitle={`${program.exercises?.length || 0} упражнений`}
-                  after={
-                    <Button size="s" mode="filled" style={{ fontSize: '13px', padding: '6px 12px' }}>
-                      Начать
-                    </Button>
-                  }
-                  style={{ fontSize: '15px' }}
                 >
                   <div style={{ 
-                    overflow: 'hidden', 
-                    textOverflow: 'ellipsis', 
-                    whiteSpace: 'nowrap',
-                    maxWidth: '180px'
+                    padding: '14px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px'
                   }}>
-                    {program.program_name}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text weight="2" style={{ 
+                        fontSize: '16px',
+                        display: 'block',
+                        marginBottom: '4px'
+                      }}>
+                        {program.program_name}
+                      </Text>
+                      <Text style={{ 
+                        fontSize: '13px',
+                        color: 'var(--tg-theme-hint-color)'
+                      }}>
+                        {program.exercises?.length || 0} упражнений
+                      </Text>
+                    </div>
+                    <Button 
+                      size="s" 
+                      mode="filled" 
+                      style={{ 
+                        fontSize: '13px',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectProgram(program);
+                      }}
+                    >
+                      Начать 🏋️
+                    </Button>
                   </div>
-                </Cell>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </Section>
 
-          <Section style={{ marginTop: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {/* Кнопки действий */}
+          <Section style={{ marginTop: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <Button 
                 size="m" 
                 stretched 

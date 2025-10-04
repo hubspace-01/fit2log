@@ -44,124 +44,192 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack }) => {
   };
 
   return (
-    <div className="app-container fade-in" style={{ padding: '12px', paddingBottom: '100px' }}>
-      <Title level="2" weight="2" style={{ marginBottom: '20px', fontSize: '24px', padding: '4px' }}>
-        ➕ Новая программа
-      </Title>
+    <div className="app-container fade-in" style={{ 
+      padding: '16px', 
+      paddingBottom: '120px',
+      minHeight: '100vh'
+    }}>
+      {/* Заголовок */}
+      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+        <Title level="2" weight="2" style={{ fontSize: '24px' }}>
+          ➕ Новая программа
+        </Title>
+      </div>
 
-      <Section>
-        <Input
-          header="Название программы"
-          placeholder="Введите название"
-          value={programName}
-          onChange={(e) => setProgramName(e.target.value)}
-          style={{ fontSize: '15px' }}
-        />
+      {/* Название программы */}
+      <Section style={{ marginBottom: '20px' }}>
+        <Card style={{ padding: '16px' }}>
+          <Text weight="2" style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+            Название программы
+          </Text>
+          <Input
+            placeholder="Введите название"
+            value={programName}
+            onChange={(e) => setProgramName(e.target.value)}
+            style={{ fontSize: '15px', width: '100%' }}
+          />
+        </Card>
       </Section>
 
-      <Section 
-        header={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
-            <Title level="3" weight="2" style={{ fontSize: '17px' }}>
-              Упражнения ({exercises.length})
-            </Title>
-            <Button size="s" mode="filled" onClick={addExercise} style={{ fontSize: '13px' }}>
-              + Добавить
-            </Button>
-          </div>
-        }
-      >
+      {/* Список упражнений */}
+      <Section>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <Title level="3" weight="2" style={{ fontSize: '18px' }}>
+            Упражнения ({exercises.length})
+          </Title>
+          <Button 
+            size="s" 
+            mode="filled" 
+            onClick={addExercise} 
+            style={{ fontSize: '14px' }}
+          >
+            + Добавить
+          </Button>
+        </div>
+
         {exercises.length === 0 ? (
-          <Card style={{ textAlign: 'center', padding: '24px 12px' }}>
-            <div style={{ fontSize: '36px', marginBottom: '10px' }}>💪</div>
-            <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
-              Добавьте упражнения
+          <Card style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>💪</div>
+            <Text style={{ 
+              color: 'var(--tg-theme-hint-color)', 
+              fontSize: '14px',
+              marginBottom: '8px',
+              display: 'block'
+            }}>
+              Добавьте упражнения в программу
+            </Text>
+            <Text style={{ 
+              color: 'var(--tg-theme-hint-color)', 
+              fontSize: '12px'
+            }}>
+              Нажмите кнопку "+ Добавить"
             </Text>
           </Card>
         ) : (
-          exercises.map((ex, i) => (
-            <Card key={i} style={{ marginBottom: '10px', padding: '12px' }}>
-              <Input
-                header="Упражнение"
-                placeholder="Название"
-                value={ex.exercise_name}
-                onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
-                style={{ marginBottom: '10px', fontSize: '14px' }}
-              />
-              
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 1fr 1fr', 
-                gap: '6px',
-                marginBottom: '10px'
-              }}>
-                <Input
-                  header="Подходы"
-                  type="number"
-                  value={ex.target_sets}
-                  onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
-                  style={{ fontSize: '14px' }}
-                />
-                <Input
-                  header="Повторы"
-                  type="number"
-                  value={ex.target_reps}
-                  onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
-                  style={{ fontSize: '14px' }}
-                />
-                <Input
-                  header="Вес"
-                  type="number"
-                  value={ex.target_weight}
-                  onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
-                  style={{ fontSize: '14px' }}
-                />
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {exercises.map((ex, i) => (
+              <Card key={i} style={{ padding: '16px' }}>
+                {/* Номер упражнения */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '12px'
+                }}>
+                  <Text weight="2" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+                    Упражнение #{i + 1}
+                  </Text>
+                  <Button 
+                    size="s" 
+                    mode="outline"
+                    onClick={() => removeExercise(i)}
+                    style={{ 
+                      color: 'var(--tg-theme-destructive-text-color)',
+                      borderColor: 'var(--tg-theme-destructive-text-color)',
+                      fontSize: '12px',
+                      padding: '4px 12px'
+                    }}
+                  >
+                    🗑️ Удалить
+                  </Button>
+                </div>
 
-              <Button 
-                size="s" 
-                mode="outline" 
-                stretched
-                onClick={() => removeExercise(i)}
-                style={{ color: 'var(--tg-theme-destructive-text-color)', fontSize: '13px' }}
-              >
-                🗑️ Удалить
-              </Button>
-            </Card>
-          ))
+                {/* Название упражнения */}
+                <div style={{ marginBottom: '12px' }}>
+                  <Text weight="2" style={{ fontSize: '13px', marginBottom: '6px', display: 'block' }}>
+                    Название
+                  </Text>
+                  <Input
+                    placeholder="Например: Жим лежа"
+                    value={ex.exercise_name}
+                    onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
+                    style={{ fontSize: '15px', width: '100%' }}
+                  />
+                </div>
+                
+                {/* Параметры */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr 1fr', 
+                  gap: '10px'
+                }}>
+                  <div>
+                    <Text weight="2" style={{ fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                      Подходы
+                    </Text>
+                    <Input
+                      type="number"
+                      value={ex.target_sets}
+                      onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
+                      style={{ fontSize: '14px', width: '100%', textAlign: 'center' }}
+                    />
+                  </div>
+                  <div>
+                    <Text weight="2" style={{ fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                      Повторы
+                    </Text>
+                    <Input
+                      type="number"
+                      value={ex.target_reps}
+                      onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
+                      style={{ fontSize: '14px', width: '100%', textAlign: 'center' }}
+                    />
+                  </div>
+                  <div>
+                    <Text weight="2" style={{ fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                      Вес (кг)
+                    </Text>
+                    <Input
+                      type="number"
+                      value={ex.target_weight}
+                      onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
+                      style={{ fontSize: '14px', width: '100%', textAlign: 'center' }}
+                    />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
       </Section>
 
+      {/* Нижняя панель с кнопками */}
       <div style={{ 
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        padding: '12px',
+        padding: '16px',
         backgroundColor: 'var(--tg-theme-bg-color)',
         borderTop: '1px solid var(--tg-theme-section-separator-color)',
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '10px'
+        boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+        zIndex: 100
       }}>
-        <Button 
-          size="m"
-          stretched
-          mode="filled"
-          onClick={handleSave}
-          disabled={!programName.trim() || exercises.length === 0}
-          style={{ fontSize: '15px' }}
-        >
-          💾 Сохранить
-        </Button>
-        <Button 
-          size="m"
-          mode="outline"
-          onClick={onBack}
-          style={{ fontSize: '15px' }}
-        >
-          Отмена
-        </Button>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+          <Button 
+            size="l"
+            stretched
+            mode="filled"
+            onClick={handleSave}
+            disabled={!programName.trim() || exercises.length === 0}
+            style={{ fontSize: '15px' }}
+          >
+            💾 Сохранить
+          </Button>
+          <Button 
+            size="l"
+            mode="outline"
+            onClick={onBack}
+            style={{ fontSize: '15px' }}
+          >
+            Отмена
+          </Button>
+        </div>
       </div>
     </div>
   );
