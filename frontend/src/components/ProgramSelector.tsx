@@ -142,14 +142,16 @@ export const ProgramSelector: React.FC<Props> = ({
                     style={{ 
                       width: '100%',
                       position: 'relative',
-                      border: inProgress ? '2px solid #FF9500' : undefined
+                      border: inProgress ? '2px solid #FF9500' : undefined,
+                      padding: '14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
                     }}
                   >
                     {inProgress && (
                       <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        left: '10px',
+                        alignSelf: 'flex-start',
                         backgroundColor: '#FF9500',
                         color: '#FFFFFF',
                         padding: '4px 10px',
@@ -164,20 +166,14 @@ export const ProgramSelector: React.FC<Props> = ({
                     )}
 
                     <div style={{ 
-                      padding: '14px',
-                      paddingTop: inProgress ? '36px' : '14px',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '12px',
-                      minHeight: '60px'
+                      gap: '12px'
                     }}>
                       <div style={{ 
                         flex: 1, 
-                        minWidth: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center'
+                        minWidth: 0
                       }}>
                         <Text weight="2" style={{ 
                           fontSize: '16px',
@@ -198,8 +194,7 @@ export const ProgramSelector: React.FC<Props> = ({
                         mode="filled"
                         style={{ 
                           fontSize: '13px',
-                          whiteSpace: 'nowrap',
-                          alignSelf: 'center'
+                          whiteSpace: 'nowrap'
                         }}
                         onClick={() => onSelectProgram(program)}
                       >
