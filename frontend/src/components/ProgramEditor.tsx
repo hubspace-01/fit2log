@@ -99,6 +99,20 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
 
   const title = initialData ? '✏️ Редактирование программы' : '➕ Новая программа';
 
+  // ✅ НОВОЕ: Функция для получения плейсхолдера
+  const getPlaceholder = (type: string) => {
+    switch(type) {
+      case 'reps':
+        return 'Например: Жим лежа';
+      case 'time':
+        return 'Например: Планка';
+      case 'distance':
+        return 'Например: Бег';
+      default:
+        return 'Введите название';
+    }
+  };
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -280,7 +294,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                     Название упражнения
                   </Text>
                   <Input
-                    placeholder="Например: Жим лежа"
+                    placeholder={getPlaceholder(ex.exercise_type)}
                     value={ex.exercise_name}
                     onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
                     style={{ 
