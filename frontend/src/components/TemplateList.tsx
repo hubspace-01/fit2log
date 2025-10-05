@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   Section, 
   Button, 
@@ -11,6 +11,7 @@ import {
   Modal
 } from '@telegram-apps/telegram-ui';
 import type { ProgramTemplate } from '../types';
+import { telegramService } from '../lib/telegram'; // ✅ НОВОЕ
 
 interface Props {
   templates: ProgramTemplate[];
@@ -26,6 +27,14 @@ export const TemplateList: React.FC<Props> = ({
   onBack
 }) => {
   const [previewTemplate, setPreviewTemplate] = useState<ProgramTemplate | null>(null);
+
+  // ✅ НОВОЕ: BackButton вместо кнопки снизу
+  useEffect(() => {
+    telegramService.showBackButton(onBack);
+    return () => {
+      // Не скрываем при unmount — следующий экран переопределит
+    };
+  }, [onBack]);
 
   const groupedTemplates = useMemo(() => {
     const groups: Record<string, ProgramTemplate[]> = {};
@@ -97,7 +106,6 @@ export const TemplateList: React.FC<Props> = ({
             <Section 
               key={category}
               header={
-                // ✅ ИСПРАВЛЕНО: Заголовок категории по центру
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -219,17 +227,7 @@ export const TemplateList: React.FC<Props> = ({
           );
         })}
 
-        <Section style={{ marginTop: '24px' }}>
-          <Button 
-            size="m" 
-            stretched 
-            mode="outline"
-            onClick={onBack}
-            style={{ fontSize: '15px' }}
-          >
-            ← Назад
-          </Button>
-        </Section>
+        {/* ✅ УДАЛЕНО: Кнопка "← Назад" */}
       </div>
 
       {/* Modal с превью программы */}
@@ -238,7 +236,6 @@ export const TemplateList: React.FC<Props> = ({
           open={!!previewTemplate}
           onOpenChange={(open) => !open && setPreviewTemplate(null)}
           header={
-            // ✅ ИСПРАВЛЕНО: Название программы по центру в modal
             <div style={{ textAlign: 'center', width: '100%' }}>
               <Title level="2" weight="2" style={{ fontSize: '20px' }}>
                 {previewTemplate.template_name}
@@ -247,7 +244,6 @@ export const TemplateList: React.FC<Props> = ({
           }
         >
           <div style={{ padding: '16px' }}>
-            {/* ✅ ИСПРАВЛЕНО: Описание по центру */}
             {previewTemplate.description && (
               <Text style={{ 
                 fontSize: '14px', 
