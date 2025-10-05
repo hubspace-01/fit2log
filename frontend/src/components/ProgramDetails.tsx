@@ -16,7 +16,7 @@ import { supabaseService } from '../lib/supabase';
 
 interface Props {
   program: Program;
-  userId: string; // ✅ НОВОЕ
+  userId: string;
   onBack: () => void;
   onEdit: (program: Program) => void;
   onDelete: (programId: string) => void;
@@ -41,7 +41,6 @@ export const ProgramDetails: React.FC<Props> = ({
     };
   }, [onBack]);
 
-  // ✅ НОВОЕ: Проверяем незавершённую сессию
   useEffect(() => {
     const checkInProgressSession = async () => {
       try {
@@ -163,19 +162,20 @@ export const ProgramDetails: React.FC<Props> = ({
           textAlign: 'center',
           position: 'relative'
         }}>
-          {/* ✅ НОВОЕ: Бейдж незавершённой тренировки */}
           {hasInProgressSession && (
             <div style={{
               display: 'inline-block',
-              backgroundColor: 'var(--tg-theme-button-color)',
-              color: 'var(--tg-theme-button-text-color)',
-              padding: '6px 12px',
-              borderRadius: '16px',
-              fontSize: '13px',
+              backgroundColor: '#FF9500',
+              color: '#FFFFFF',
+              padding: '6px 14px',
+              borderRadius: '12px',
+              fontSize: '12px',
               fontWeight: '600',
-              marginBottom: '12px'
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
-              🔄 Тренировка в процессе
+              Тренировка в процессе
             </div>
           )}
           
@@ -265,11 +265,8 @@ export const ProgramDetails: React.FC<Props> = ({
             size="l"
             stretched
             onClick={() => onStartWorkout(program)}
-            style={{
-              backgroundColor: hasInProgressSession ? 'var(--tg-theme-button-color)' : undefined
-            }}
           >
-            {hasInProgressSession ? '▶️ Продолжить тренировку' : '🏋️ Начать тренировку'}
+            {hasInProgressSession ? 'Продолжить тренировку' : 'Начать тренировку'}
           </Button>
         )}
 

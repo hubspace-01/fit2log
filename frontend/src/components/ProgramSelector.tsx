@@ -13,7 +13,7 @@ import { supabaseService } from '../lib/supabase';
 interface Props {
   programs: Program[];
   userName: string;
-  userId: string; // ✅ НОВОЕ
+  userId: string;
   onCreateProgram: () => void;
   onSelectTemplate: () => void;
   onSelectProgram: (program: Program) => void;
@@ -30,7 +30,6 @@ export const ProgramSelector: React.FC<Props> = ({
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // ✅ НОВОЕ: Загружаем незавершённые сессии
   useEffect(() => {
     const loadInProgressSessions = async () => {
       try {
@@ -143,37 +142,36 @@ export const ProgramSelector: React.FC<Props> = ({
                     style={{ 
                       width: '100%',
                       position: 'relative',
-                      border: inProgress ? '2px solid var(--tg-theme-button-color)' : undefined
+                      border: inProgress ? '2px solid #FF9500' : undefined
                     }}
                   >
-                    {/* ✅ НОВОЕ: Бейдж незавершённой тренировки */}
                     {inProgress && (
                       <div style={{
                         position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        backgroundColor: 'var(--tg-theme-button-color)',
-                        color: 'var(--tg-theme-button-text-color)',
-                        padding: '4px 8px',
-                        borderRadius: '12px',
+                        top: '10px',
+                        left: '10px',
+                        backgroundColor: '#FF9500',
+                        color: '#FFFFFF',
+                        padding: '4px 10px',
+                        borderRadius: '8px',
                         fontSize: '11px',
                         fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
                       }}>
-                        🔄 В процессе
+                        В процессе
                       </div>
                     )}
 
                     <div style={{ 
                       padding: '14px',
+                      paddingTop: inProgress ? '36px' : '14px',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       gap: '12px'
                     }}>
-                      <div style={{ flex: 1, minWidth: 0, paddingRight: inProgress ? '80px' : '0' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text weight="2" style={{ 
                           fontSize: '16px',
                           display: 'block',
@@ -190,15 +188,14 @@ export const ProgramSelector: React.FC<Props> = ({
                       </div>
                       <Button 
                         size="s" 
-                        mode={inProgress ? 'filled' : 'filled'}
+                        mode="filled"
                         style={{ 
                           fontSize: '13px',
-                          whiteSpace: 'nowrap',
-                          backgroundColor: inProgress ? 'var(--tg-theme-button-color)' : undefined
+                          whiteSpace: 'nowrap'
                         }}
                         onClick={() => onSelectProgram(program)}
                       >
-                        {inProgress ? '▶️ Продолжить' : 'Начать 🏋️'}
+                        {inProgress ? 'Продолжить' : 'Начать'}
                       </Button>
                     </div>
                   </Card>

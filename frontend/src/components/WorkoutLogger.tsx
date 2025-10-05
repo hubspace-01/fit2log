@@ -35,7 +35,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [initializing, setInitializing] = useState(true);
 
   const startTimeRef = useRef(new Date(session.started_at).getTime());
-  const backButtonInitialized = useRef(false); // ✅ НОВОЕ: Флаг инициализации BackButton
   
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
@@ -56,7 +55,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const exerciseType = currentExercise?.exercise_type || 'reps';
 
-  // ✅ ОБНОВЛЕНО: Восстановление текущего упражнения
+  // Инициализация сессии
   useEffect(() => {
     const initializeSession = async () => {
       try {
@@ -78,21 +77,17 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             setCompletedSets(logs);
             startTimeRef.current = new Date(existingSession.started_at).getTime();
             
-            // ✅ НОВОЕ: Определяем текущее упражнение
             const lastLog = logs[logs.length - 1];
             const lastExerciseId = lastLog.exercise_id;
             
-            // Находим индекс последнего упражнения
             const lastExerciseIndex = session.exercises.findIndex(
               ex => ex.id === lastExerciseId
             );
             
             if (lastExerciseIndex !== -1) {
-              // Проверяем сколько подходов выполнено для последнего упражнения
               const setsForLastEx = logs.filter(l => l.exercise_id === lastExerciseId).length;
               const targetSets = session.exercises[lastExerciseIndex].target_sets;
               
-              // Если все подходы выполнены — переходим к следующему упражнению
               if (setsForLastEx >= targetSets && lastExerciseIndex < session.exercises.length - 1) {
                 setCurrentExerciseIndex(lastExerciseIndex + 1);
                 console.log(`✅ Resuming from exercise ${lastExerciseIndex + 2}`);
@@ -148,9 +143,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ ИСПРАВЛЕНО: BackButton инициализируется только один раз
+  // ✅ ИСПРАВЛЕНО: BackButton показываем только после инициализации
   useEffect(() => {
-    if (backButtonInitialized.current || initializing) return;
+    // Ждём завершения инициализации
+    if (initializing) return;
 
     const handleBack = () => {
       telegramService.showConfirm(
@@ -178,11 +174,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     };
 
     telegramService.showBackButton(handleBack);
-    backButtonInitialized.current = true;
 
     return () => {
       telegramService.hideBackButton();
-      backButtonInitialized.current = false;
     };
   }, [initializing, onCancel, sessionId, elapsedTime]);
 
