@@ -16,7 +16,6 @@ export interface Program {
   exercises?: Exercise[];
 }
 
-// ✅ НОВОЕ: Тип упражнения
 export type ExerciseType = 'reps' | 'time' | 'distance';
 
 export interface Exercise {
@@ -24,12 +23,12 @@ export interface Exercise {
   program_id: string;
   user_id: string;
   exercise_name: string;
-  exercise_type?: ExerciseType; // ✅ НОВОЕ: опциональное поле (по умолчанию 'reps')
+  exercise_type?: ExerciseType;
   target_sets: number;
   target_reps: number;
   target_weight: number;
-  duration?: number; // ✅ НОВОЕ: для time-based (секунды)
-  distance?: number; // ✅ НОВОЕ: для distance-based (метры)
+  duration?: number;
+  distance?: number;
   order_index: number;
   notes?: string;
 }
@@ -39,14 +38,15 @@ export interface LogItem {
   user_id: string;
   program_id?: string;
   exercise_id?: string;
+  session_id?: string; // ✅ НОВОЕ: Связь с сессией
   datetime: string;
   exercise_name: string;
   set_no: number;
   reps: number;
   weight: number;
   rpe?: number;
-  duration?: number; // ✅ НОВОЕ: фактическое время выполнения
-  distance?: number; // ✅ НОВОЕ: фактическое расстояние
+  duration?: number;
+  distance?: number;
   comments?: string;
 }
 
@@ -64,17 +64,32 @@ export interface TemplateExercise {
   id: string;
   template_id: string;
   exercise_name: string;
-  exercise_type?: ExerciseType; // ✅ НОВОЕ
+  exercise_type?: ExerciseType;
   target_sets: number;
   target_reps: number;
   target_weight: number;
-  duration?: number; // ✅ НОВОЕ
-  distance?: number; // ✅ НОВОЕ
+  duration?: number;
+  distance?: number;
   order_index: number;
   notes?: string;
 }
 
+// ✅ НОВОЕ: Интерфейс для workout_session из БД
+export interface WorkoutSessionDB {
+  id: string;
+  user_id: string;
+  program_id: string;
+  program_name: string;
+  started_at: string;
+  completed_at?: string;
+  status: 'in_progress' | 'completed' | 'cancelled';
+  total_duration?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WorkoutSession {
+  id?: string; // ✅ НОВОЕ: ID сессии из БД
   program_id: string;
   program_name: string;
   started_at: string;

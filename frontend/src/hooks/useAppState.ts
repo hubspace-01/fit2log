@@ -21,8 +21,9 @@ export const useAppState = () => {
     setState(prev => ({ ...prev, current_program: program }));
   }, []);
 
-  const startWorkout = useCallback((program: Program) => {
+  const startWorkout = useCallback((program: Program, sessionId?: string) => {
     const session: WorkoutSession = {
+      id: sessionId, // ✅ НОВОЕ: ID из БД
       program_id: program.id,
       program_name: program.program_name,
       started_at: new Date().toISOString(),
@@ -33,7 +34,6 @@ export const useAppState = () => {
     setState(prev => ({ ...prev, workout_session: session }));
   }, []);
 
-  // ✅ НОВОЕ: Сохранить данные для экрана итогов
   const setWorkoutSummary = useCallback((completedSets: any[], duration: number) => {
     setState(prev => ({
       ...prev,

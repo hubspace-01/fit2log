@@ -104,12 +104,12 @@ class SupabaseService {
           program_id: program.id,
           user_id: userId,
           exercise_name: ex.exercise_name,
-          exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
+          exercise_type: ex.exercise_type || 'reps',
           target_sets: ex.target_sets,
           target_reps: ex.target_reps,
           target_weight: ex.target_weight || 0,
-          duration: ex.duration || 0, // ✅ НОВОЕ
-          distance: ex.distance || 0, // ✅ НОВОЕ
+          duration: ex.duration || 0,
+          distance: ex.distance || 0,
           order_index: ex.order_index,
           notes: ex.notes || ''
         }));
@@ -154,12 +154,12 @@ class SupabaseService {
         program_id: program.id,
         user_id: user_id,
         exercise_name: ex.exercise_name,
-        exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ: дефолт 'reps'
+        exercise_type: ex.exercise_type || 'reps',
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight || 0,
-        duration: ex.duration || 0, // ✅ НОВОЕ
-        distance: ex.distance || 0, // ✅ НОВОЕ
+        duration: ex.duration || 0,
+        distance: ex.distance || 0,
         order_index: index,
         notes: ex.notes || ''
       }));
@@ -206,12 +206,12 @@ class SupabaseService {
         program_id: programId,
         user_id: user_id,
         exercise_name: ex.exercise_name,
-        exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
+        exercise_type: ex.exercise_type || 'reps',
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight || 0,
-        duration: ex.duration || 0, // ✅ НОВОЕ
-        distance: ex.distance || 0, // ✅ НОВОЕ
+        duration: ex.duration || 0,
+        distance: ex.distance || 0,
         order_index: index,
         notes: ex.notes || ''
       }));
@@ -244,6 +244,77 @@ class SupabaseService {
     return { success: true };
   }
 
+  // ✅ НОВОЕ: Создание workout session
+  async createWorkoutSession(sessionData: {
+    user_id: string;
+    program_id: string;
+    program_name: string;
+    started_at: string;
+  }) {
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .insert({
+        user_id: sessionData.user_id,
+        program_id: sessionData.program_id,
+        program_name: sessionData.program_name,
+        started_at: sessionData.started_at,
+        status: 'in_progress'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✅ Workout session created:', data.id);
+    return data;
+  }
+
+  // ✅ НОВОЕ: Обновление workout session
+  async updateWorkoutSession(sessionId: string, updates: {
+    status?: 'in_progress' | 'completed' | 'cancelled';
+    completed_at?: string;
+    total_duration?: number;
+  }) {
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .update(updates)
+      .eq('id', sessionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    console.log('✅ Workout session updated:', sessionId, updates.status);
+    return data;
+  }
+
+  // ✅ НОВОЕ: Получение незавершённых сессий
+  async getInProgressSession(userId: string, programId: string) {
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('program_id', programId)
+      .eq('status', 'in_progress')
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // ✅ НОВОЕ: Получение логов для сессии
+  async getSessionLogs(sessionId: string) {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('datetime', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  // ✅ ОБНОВЛЕНО: Добавлен session_id
   async saveWorkoutLog(logData: {
     user_id: string;
     program_id: string;
@@ -254,9 +325,10 @@ class SupabaseService {
     weight: number;
     rpe?: number;
     datetime: string;
-    duration?: number; // ✅ НОВОЕ
-    distance?: number; // ✅ НОВОЕ
+    duration?: number;
+    distance?: number;
     comments?: string;
+    session_id?: string; // ✅ НОВОЕ
   }) {
     const { data, error } = await supabase
       .from('logs')
@@ -269,10 +341,11 @@ class SupabaseService {
         reps: logData.reps,
         weight: logData.weight,
         rpe: logData.rpe || null,
-        duration: logData.duration || 0, // ✅ НОВОЕ
-        distance: logData.distance || 0, // ✅ НОВОЕ
+        duration: logData.duration || 0,
+        distance: logData.distance || 0,
         datetime: logData.datetime,
-        comments: logData.comments || null
+        comments: logData.comments || null,
+        session_id: logData.session_id || null // ✅ НОВОЕ
       })
       .select()
       .single();
@@ -339,12 +412,12 @@ class SupabaseService {
       program_id: programId,
       user_id: userId,
       exercise_name: ex.exercise_name,
-      exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
+      exercise_type: ex.exercise_type || 'reps',
       target_sets: ex.target_sets,
       target_reps: ex.target_reps,
       target_weight: ex.target_weight || 0,
-      duration: ex.duration || 0, // ✅ НОВОЕ
-      distance: ex.distance || 0, // ✅ НОВОЕ
+      duration: ex.duration || 0,
+      distance: ex.distance || 0,
       order_index: index,
       notes: ex.notes || ''
     }));
