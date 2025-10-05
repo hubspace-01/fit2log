@@ -22,9 +22,18 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [completedSets, setCompletedSets] = useState<any[]>([]);
   const [skippedSets, setSkippedSets] = useState<Set<string>>(new Set());
   const [extraSets, setExtraSets] = useState<Map<string, number>>(new Map());
+  
+  // ✅ Для reps-based
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [rpe, setRpe] = useState(8);
+  
+  // ✅ НОВОЕ: Для time-based (секунды)
+  const [duration, setDuration] = useState(0);
+  
+  // ✅ НОВОЕ: Для distance-based (метры)
+  const [distance, setDistance] = useState(0);
+  
   const [elapsedTime, setElapsedTime] = useState(0);
   const [saving, setSaving] = useState(false);
 
@@ -45,13 +54,24 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const currentSetNumber = exerciseCompletedSets.length + exerciseSkippedCount + 1;
   const isLastSetOfExercise = currentSetNumber >= effectiveTargetSets;
 
+  // ✅ НОВОЕ: Определяем тип упражнения
+  const exerciseType = currentExercise?.exercise_type || 'reps';
+
   useEffect(() => {
     if (currentExercise) {
-      setReps(currentExercise.target_reps);
-      setWeight(currentExercise.target_weight);
-      setRpe(8);
+      // ✅ Инициализация в зависимости от типа
+      if (exerciseType === 'reps') {
+        setReps(currentExercise.target_reps);
+        setWeight(currentExercise.target_weight);
+        setRpe(8);
+      } else if (exerciseType === 'time') {
+        setDuration(currentExercise.duration || 60);
+        setRpe(8);
+      } else if (exerciseType === 'distance') {
+        setDistance(currentExercise.distance || 1000);
+      }
     }
-  }, [currentExerciseIndex, currentExercise]);
+  }, [currentExerciseIndex, currentExercise, exerciseType]);
 
   useEffect(() => {
     const startTime = new Date(session.started_at).getTime();
@@ -64,27 +84,21 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, [session.started_at]);
 
-  // ✅ ИСПРАВЛЕНО: Правильная работа BackButton
   useEffect(() => {
-    // Создаём функцию-обработчик для BackButton
     const handleBack = () => {
       telegramService.showConfirm(
         'Вы уверены, что хотите завершить тренировку? Прогресс будет потерян.',
         (confirmed: boolean) => {
           if (confirmed) {
-            // Только если подтвердили - скрываем кнопку и выходим
             telegramService.hideBackButton();
             onCancel();
           }
-          // Если отменили - ничего не делаем, остаёмся на экране
         }
       );
     };
 
-    // Показываем BackButton с обработчиком
     telegramService.showBackButton(handleBack);
 
-    // При размонтировании компонента - ОБЯЗАТЕЛЬНО скрываем
     return () => {
       telegramService.hideBackButton();
     };
@@ -106,15 +120,28 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const handleCompleteSet = async () => {
     if (saving || !currentExercise) return;
 
-    const newSet = {
+    const newSet: any = {
       exercise_id: currentExercise.id,
       exercise_name: currentExercise.exercise_name,
       set_no: currentSetNumber,
-      reps,
-      weight,
-      rpe,
       timestamp: new Date().toISOString()
     };
+
+    // ✅ НОВОЕ: Разные поля в зависимости от типа
+    if (exerciseType === 'reps') {
+      newSet.reps = reps;
+      newSet.weight = weight;
+      newSet.rpe = rpe;
+    } else if (exerciseType === 'time') {
+      newSet.duration = duration;
+      newSet.rpe = rpe;
+      newSet.reps = 0;
+      newSet.weight = 0;
+    } else if (exerciseType === 'distance') {
+      newSet.distance = distance;
+      newSet.reps = 0;
+      newSet.weight = 0;
+    }
 
     try {
       setSaving(true);
@@ -125,9 +152,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         exercise_id: currentExercise.id,
         exercise_name: currentExercise.exercise_name,
         set_no: currentSetNumber,
-        reps,
-        weight,
-        rpe,
+        reps: newSet.reps || 0,
+        weight: newSet.weight || 0,
+        rpe: newSet.rpe,
+        duration: newSet.duration || 0,
+        distance: newSet.distance || 0,
         datetime: newSet.timestamp
       });
 
@@ -195,6 +224,18 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   };
 
+  // ✅ НОВОЕ: Функция для отображения цели
+  const getTargetDescription = () => {
+    if (exerciseType === 'reps') {
+      return `${currentExercise.target_sets} подхода × ${currentExercise.target_reps} повторений`;
+    } else if (exerciseType === 'time') {
+      return `${currentExercise.target_sets} подхода × ${currentExercise.duration}с`;
+    } else if (exerciseType === 'distance') {
+      return `${currentExercise.distance}м`;
+    }
+    return '';
+  };
+
   if (!currentExercise) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -254,10 +295,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       <div style={{ padding: '16px', textAlign: 'center' }}>
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
-          💪 {currentExercise.exercise_name}
+          {exerciseType === 'reps' ? '💪' : exerciseType === 'time' ? '⏱' : '🏃'} {currentExercise.exercise_name}
         </Title>
         <Caption level="1" style={{ fontSize: '15px', color: 'var(--tg-theme-hint-color)' }}>
-          {currentExercise.target_sets} подхода × {currentExercise.target_reps} повторений
+          {getTargetDescription()}
         </Caption>
       </div>
 
@@ -284,64 +325,118 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             padding: '0 16px'
           }}>
             <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
-            <Button
-              size="s"
-              mode="bezeled"
-              onClick={handleAddSet}
-              style={{ 
-                fontSize: '11px', // ✅ ЕЩЁ МЕНЬШЕ: было 12px
-                padding: '3px 8px',
-                minHeight: '24px',
-                lineHeight: '1'
-              }}
-            >
-              +1 подход
-            </Button>
+            {exerciseType !== 'distance' && (
+              <Button
+                size="s"
+                mode="bezeled"
+                onClick={handleAddSet}
+                style={{ 
+                  fontSize: '11px',
+                  padding: '3px 8px',
+                  minHeight: '24px',
+                  lineHeight: '1'
+                }}
+              >
+                +1 подход
+              </Button>
+            )}
           </div>
         }
       >
         <div style={{ padding: '0 16px' }}>
-          <Stepper
-            label="Повторения"
-            value={reps}
-            onChange={setReps}
-            min={1}
-            max={50}
-            step={1}
-          />
+          {/* ✅ УСЛОВНЫЕ ПОЛЯ */}
+          
+          {exerciseType === 'reps' && (
+            <>
+              <Stepper
+                label="Повторения"
+                value={reps}
+                onChange={setReps}
+                min={1}
+                max={50}
+                step={1}
+              />
 
-          <Stepper
-            label="Вес (кг)"
-            value={weight}
-            onChange={setWeight}
-            min={0}
-            max={500}
-            step={2.5}
-            suffix=" кг"
-          />
+              <Stepper
+                label="Вес (кг)"
+                value={weight}
+                onChange={setWeight}
+                min={0}
+                max={500}
+                step={2.5}
+                suffix=" кг"
+              />
 
-          <Stepper
-            label="RPE (1-10)"
-            value={rpe}
-            onChange={setRpe}
-            min={1}
-            max={10}
-            step={1}
-          />
+              <Stepper
+                label="RPE (1-10)"
+                value={rpe}
+                onChange={setRpe}
+                min={1}
+                max={10}
+                step={1}
+              />
+            </>
+          )}
+
+          {exerciseType === 'time' && (
+            <>
+              <Stepper
+                label="Время (сек)"
+                value={duration}
+                onChange={setDuration}
+                min={5}
+                max={600}
+                step={5}
+                suffix=" сек"
+              />
+
+              <Stepper
+                label="RPE (1-10)"
+                value={rpe}
+                onChange={setRpe}
+                min={1}
+                max={10}
+                step={1}
+              />
+            </>
+          )}
+
+          {exerciseType === 'distance' && (
+            <Stepper
+              label="Расстояние (м)"
+              value={distance}
+              onChange={setDistance}
+              min={100}
+              max={50000}
+              step={100}
+              suffix=" м"
+            />
+          )}
         </div>
       </Section>
 
       {exerciseCompletedSets.length > 0 && (
         <Section header="История подходов">
-          {exerciseCompletedSets.map((set, index) => (
-            <Cell
-              key={index}
-              before="✅"
-              subtitle={`${set.reps} повт • ${set.weight} кг • RPE ${set.rpe}`}
-            >
-              Подход {set.set_no}
-            </Cell>
-          ))}
+          {exerciseCompletedSets.map((set, index) => {
+            let subtitle = '';
+            if (exerciseType === 'reps') {
+              subtitle = `${set.reps} повт • ${set.weight} кг • RPE ${set.rpe}`;
+            } else if (exerciseType === 'time') {
+              subtitle = `${set.duration} сек • RPE ${set.rpe}`;
+            } else if (exerciseType === 'distance') {
+              subtitle = `${set.distance} м`;
+            }
+
+            return (
+              <Cell
+                key={index}
+                before="✅"
+                subtitle={subtitle}
+              >
+                Подход {set.set_no}
+              </Cell>
+            );
+          })}
         </Section>
       )}
 
