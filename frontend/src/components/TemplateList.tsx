@@ -39,7 +39,6 @@ export const TemplateList: React.FC<Props> = ({
     return groups;
   }, [templates]);
 
-  // ✅ ИСПРАВЛЕНО: Всё на русском
   const categoryConfig: Record<string, { icon: string; name: string; color: string }> = {
     'Beginner': { icon: '🌱', name: 'Для новичков', color: '#4ade80' },
     'Strength': { icon: '💪', name: 'Сила', color: '#f97316' },
@@ -98,9 +97,11 @@ export const TemplateList: React.FC<Props> = ({
             <Section 
               key={category}
               header={
+                // ✅ ИСПРАВЛЕНО: Заголовок категории по центру
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
+                  justifyContent: 'center',
                   gap: '8px',
                   padding: '8px 0'
                 }}>
@@ -146,7 +147,6 @@ export const TemplateList: React.FC<Props> = ({
                           </Text>
                         )}
                         
-                        {/* ✅ ИСПРАВЛЕНО: Бейджи на русском */}
                         <div style={{ 
                           display: 'flex', 
                           gap: '6px',
@@ -232,30 +232,39 @@ export const TemplateList: React.FC<Props> = ({
         </Section>
       </div>
 
-      {/* ✅ НОВОЕ: Modal с превью программы */}
+      {/* Modal с превью программы */}
       {previewTemplate && (
         <Modal
           open={!!previewTemplate}
           onOpenChange={(open) => !open && setPreviewTemplate(null)}
           header={
-            <Title level="2" weight="2" style={{ fontSize: '20px' }}>
-              {previewTemplate.template_name}
-            </Title>
+            // ✅ ИСПРАВЛЕНО: Название программы по центру в modal
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <Title level="2" weight="2" style={{ fontSize: '20px' }}>
+                {previewTemplate.template_name}
+              </Title>
+            </div>
           }
         >
           <div style={{ padding: '16px' }}>
+            {/* ✅ ИСПРАВЛЕНО: Описание по центру */}
             {previewTemplate.description && (
               <Text style={{ 
                 fontSize: '14px', 
                 color: 'var(--tg-theme-hint-color)',
                 marginBottom: '16px',
-                display: 'block'
+                display: 'block',
+                textAlign: 'center'
               }}>
                 {previewTemplate.description}
               </Text>
             )}
 
-            <Section header="Упражнения">
+            <Section header={
+              <div style={{ textAlign: 'center', width: '100%' }}>
+                УПРАЖНЕНИЯ
+              </div>
+            }>
               {(previewTemplate.template_exercises || [])
                 .sort((a, b) => a.order_index - b.order_index)
                 .map((exercise, index) => {
