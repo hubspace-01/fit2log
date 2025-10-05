@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -27,6 +27,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [rpe, setRpe] = useState(8);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  // ✅ НОВОЕ: Ref для отслеживания обработчика BackButton
+  const backButtonHandlerRef = useRef<(() => void) | null>(null);
 
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
@@ -64,26 +67,30 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, [session.started_at]);
 
-  // ✅ ИСПРАВЛЕНО: BackButton с правильным callback
-  const handleBackButtonClick = useCallback(() => {
-    telegramService.showConfirm(
-      'Вы уверены, что хотите завершить тренировку? Прогресс будет потерян.',
-      (confirmed: boolean) => {
-        if (confirmed) {
-          onCancel();
-        }
-        // Если отменил - просто закрываем диалог, ничего не делаем
-      }
-    );
-  }, [onCancel]);
-
+  // ✅ ИСПРАВЛЕНО: BackButton с правильной очисткой обработчика
   useEffect(() => {
-    telegramService.showBackButton(handleBackButtonClick);
+    const handleBackClick = () => {
+      telegramService.showConfirm(
+        'Вы уверены, что хотите завершить тренировку? Прогресс будет потерян.',
+        (confirmed: boolean) => {
+          if (confirmed) {
+            onCancel();
+          }
+        }
+      );
+    };
+
+    // Сохраняем ссылку на обработчик
+    backButtonHandlerRef.current = handleBackClick;
+
+    // Показываем кнопку с обработчиком
+    telegramService.showBackButton(handleBackClick);
 
     return () => {
+      // Очищаем при размонтировании
       telegramService.hideBackButton();
     };
-  }, [handleBackButtonClick]);
+  }, [onCancel]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -270,7 +277,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Section>
       )}
 
-      {/* ✅ ИСПРАВЛЕНО: Уменьшена кнопка +1 */}
       <Section 
         header={
           <div style={{ 
@@ -285,13 +291,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               mode="bezeled"
               onClick={handleAddSet}
               style={{ 
-                fontSize: '12px',
-                padding: '2px 8px',
-                minHeight: '24px',
-                lineHeight: '1'
+                fontSize: '12px', // ✅ УМЕНЬШЕНО: было 14px
+                padding: '4px 10px',
+                minHeight: '28px'
               }}
             >
-              +1
+              +1 подход
             </Button>
           </div>
         }
