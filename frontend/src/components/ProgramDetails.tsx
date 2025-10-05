@@ -57,7 +57,6 @@ export const ProgramDetails: React.FC<Props> = ({
     }
   };
 
-  // ✅ НОВОЕ: Функция для отображения параметров упражнения
   const getExerciseInfo = (exercise: any) => {
     const type = exercise.exercise_type || 'reps';
     
@@ -108,7 +107,6 @@ export const ProgramDetails: React.FC<Props> = ({
     }
   };
 
-  // ✅ НОВОЕ: Иконка в зависимости от типа
   const getExerciseIcon = (exercise: any) => {
     const type = exercise.exercise_type || 'reps';
     if (type === 'time') return '⏱';
@@ -145,7 +143,7 @@ export const ProgramDetails: React.FC<Props> = ({
       {exercises.length > 0 ? (
         <Section header="Упражнения">
           <List>
-            {exercises.map((exercise, index) => (
+            {exercises.map((exercise) => (
               <Cell
                 key={exercise.id}
                 before={
