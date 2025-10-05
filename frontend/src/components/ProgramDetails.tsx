@@ -34,11 +34,10 @@ export const ProgramDetails: React.FC<Props> = ({
   const [hasInProgressSession, setHasInProgressSession] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // ✅ ИСПРАВЛЕНО: Не скрываем BackButton при unmount
   useEffect(() => {
     telegramService.showBackButton(onBack);
-    return () => {
-      telegramService.hideBackButton();
-    };
+    // Cleanup удалён - BackButton остаётся видимым
   }, [onBack]);
 
   useEffect(() => {

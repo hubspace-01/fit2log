@@ -36,7 +36,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const startTimeRef = useRef(new Date(session.started_at).getTime());
   const sessionIdRef = useRef<string | null>(null);
-  const backButtonMountedRef = useRef(false); // ✅ НОВОЕ: Флаг монтирования BackButton
   
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
@@ -60,6 +59,41 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   useEffect(() => {
     sessionIdRef.current = sessionId;
   }, [sessionId]);
+
+  // ✅ НОВОЕ: Сразу переопределяем BackButton при монтировании
+  useEffect(() => {
+    const handleBack = () => {
+      telegramService.showConfirm(
+        'Отменить тренировку? Прогресс будет сохранён.',
+        async (confirmed: boolean) => {
+          if (confirmed) {
+            try {
+              if (sessionIdRef.current) {
+                const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+                await supabaseService.updateWorkoutSession(sessionIdRef.current, {
+                  status: 'cancelled',
+                  completed_at: new Date().toISOString(),
+                  total_duration: currentElapsed
+                });
+                console.log('✅ Session marked as cancelled');
+              }
+            } catch (error) {
+              console.error('❌ Cancel session error:', error);
+            } finally {
+              onCancel();
+            }
+          }
+        }
+      );
+    };
+
+    // Переопределяем обработчик сразу без скрытия кнопки
+    telegramService.showBackButton(handleBack);
+
+    return () => {
+      // Не скрываем BackButton при unmount
+    };
+  }, [onCancel]);
 
   // Инициализация сессии
   useEffect(() => {
@@ -148,48 +182,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
     return () => clearInterval(interval);
   }, []);
-
-  // ✅ ИСПРАВЛЕНО: BackButton устанавливается только один раз после инициализации
-  useEffect(() => {
-    if (initializing || backButtonMountedRef.current) return;
-
-    const handleBack = () => {
-      telegramService.showConfirm(
-        'Отменить тренировку? Прогресс будет сохранён.',
-        async (confirmed: boolean) => {
-          if (confirmed) {
-            try {
-              if (sessionIdRef.current) {
-                const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-                await supabaseService.updateWorkoutSession(sessionIdRef.current, {
-                  status: 'cancelled',
-                  completed_at: new Date().toISOString(),
-                  total_duration: currentElapsed
-                });
-                console.log('✅ Session marked as cancelled');
-              }
-            } catch (error) {
-              console.error('❌ Cancel session error:', error);
-            } finally {
-              telegramService.hideBackButton();
-              backButtonMountedRef.current = false;
-              onCancel();
-            }
-          }
-        }
-      );
-    };
-
-    telegramService.showBackButton(handleBack);
-    backButtonMountedRef.current = true;
-
-    return () => {
-      if (backButtonMountedRef.current) {
-        telegramService.hideBackButton();
-        backButtonMountedRef.current = false;
-      }
-    };
-  }, [initializing, onCancel]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
