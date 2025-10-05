@@ -16,14 +16,20 @@ export interface Program {
   exercises?: Exercise[];
 }
 
+// ✅ НОВОЕ: Тип упражнения
+export type ExerciseType = 'reps' | 'time' | 'distance';
+
 export interface Exercise {
   id: string;
   program_id: string;
   user_id: string;
   exercise_name: string;
+  exercise_type?: ExerciseType; // ✅ НОВОЕ: опциональное поле (по умолчанию 'reps')
   target_sets: number;
   target_reps: number;
   target_weight: number;
+  duration?: number; // ✅ НОВОЕ: для time-based (секунды)
+  distance?: number; // ✅ НОВОЕ: для distance-based (метры)
   order_index: number;
   notes?: string;
 }
@@ -39,6 +45,8 @@ export interface LogItem {
   reps: number;
   weight: number;
   rpe?: number;
+  duration?: number; // ✅ НОВОЕ: фактическое время выполнения
+  distance?: number; // ✅ НОВОЕ: фактическое расстояние
   comments?: string;
 }
 
@@ -56,9 +64,12 @@ export interface TemplateExercise {
   id: string;
   template_id: string;
   exercise_name: string;
+  exercise_type?: ExerciseType; // ✅ НОВОЕ
   target_sets: number;
   target_reps: number;
   target_weight: number;
+  duration?: number; // ✅ НОВОЕ
+  distance?: number; // ✅ НОВОЕ
   order_index: number;
   notes?: string;
 }
