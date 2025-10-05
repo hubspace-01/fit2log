@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Section,
   Button,
@@ -7,13 +7,16 @@ import {
   List,
   Cell,
   Placeholder,
-  Caption
+  Caption,
+  Spinner
 } from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
 import { telegramService } from '../lib/telegram';
+import { supabaseService } from '../lib/supabase';
 
 interface Props {
   program: Program;
+  userId: string; // ✅ НОВОЕ
   onBack: () => void;
   onEdit: (program: Program) => void;
   onDelete: (programId: string) => void;
@@ -22,17 +25,39 @@ interface Props {
 
 export const ProgramDetails: React.FC<Props> = ({
   program,
+  userId,
   onBack,
   onEdit,
   onDelete,
   onStartWorkout
 }) => {
+  const [hasInProgressSession, setHasInProgressSession] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     telegramService.showBackButton(onBack);
     return () => {
       telegramService.hideBackButton();
     };
   }, [onBack]);
+
+  // ✅ НОВОЕ: Проверяем незавершённую сессию
+  useEffect(() => {
+    const checkInProgressSession = async () => {
+      try {
+        const session = await supabaseService.getInProgressSession(userId, program.id);
+        setHasInProgressSession(!!session);
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId && program.id) {
+      checkInProgressSession();
+    }
+  }, [userId, program.id]);
 
   const exercises = [...(program.exercises || [])].sort(
     (a, b) => a.order_index - b.order_index
@@ -114,6 +139,19 @@ export const ProgramDetails: React.FC<Props> = ({
     return '💪';
   };
 
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <Spinner size="m" />
+      </div>
+    );
+  }
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -122,8 +160,25 @@ export const ProgramDetails: React.FC<Props> = ({
       <Section>
         <div style={{ 
           padding: '20px 0',
-          textAlign: 'center'
+          textAlign: 'center',
+          position: 'relative'
         }}>
+          {/* ✅ НОВОЕ: Бейдж незавершённой тренировки */}
+          {hasInProgressSession && (
+            <div style={{
+              display: 'inline-block',
+              backgroundColor: 'var(--tg-theme-button-color)',
+              color: 'var(--tg-theme-button-text-color)',
+              padding: '6px 12px',
+              borderRadius: '16px',
+              fontSize: '13px',
+              fontWeight: '600',
+              marginBottom: '12px'
+            }}>
+              🔄 Тренировка в процессе
+            </div>
+          )}
+          
           <Title 
             level="1" 
             weight="2"
@@ -210,8 +265,11 @@ export const ProgramDetails: React.FC<Props> = ({
             size="l"
             stretched
             onClick={() => onStartWorkout(program)}
+            style={{
+              backgroundColor: hasInProgressSession ? 'var(--tg-theme-button-color)' : undefined
+            }}
           >
-            🏋️ Начать тренировку
+            {hasInProgressSession ? '▶️ Продолжить тренировку' : '🏋️ Начать тренировку'}
           </Button>
         )}
 

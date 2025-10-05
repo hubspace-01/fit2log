@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Section, 
   Button, 
   Title, 
   Text,
-  Card
+  Card,
+  Spinner
 } from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
+import { supabaseService } from '../lib/supabase';
 
 interface Props {
   programs: Program[];
   userName: string;
+  userId: string; // ✅ НОВОЕ
   onCreateProgram: () => void;
   onSelectTemplate: () => void;
   onSelectProgram: (program: Program) => void;
@@ -19,13 +22,59 @@ interface Props {
 export const ProgramSelector: React.FC<Props> = ({
   programs,
   userName,
+  userId,
   onCreateProgram,
   onSelectTemplate,
   onSelectProgram
 }) => {
+  const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  // ✅ НОВОЕ: Загружаем незавершённые сессии
+  useEffect(() => {
+    const loadInProgressSessions = async () => {
+      try {
+        const { data } = await supabaseService.supabase
+          .from('workout_sessions')
+          .select('program_id')
+          .eq('user_id', userId)
+          .eq('status', 'in_progress');
+
+        if (data) {
+          const sessionSet = new Set(data.map((s: any) => s.program_id));
+          setInProgressSessions(sessionSet);
+        }
+      } catch (error) {
+        console.error('Error loading in-progress sessions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      loadInProgressSessions();
+    }
+  }, [userId, programs]);
+
+  const hasInProgressSession = (programId: string) => {
+    return inProgressSessions.has(programId);
+  };
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <Spinner size="m" />
+      </div>
+    );
+  }
+
   return (
     <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
-      {/* Приветствие по центру */}
       <div style={{ 
         marginBottom: '28px', 
         padding: '8px',
@@ -77,7 +126,6 @@ export const ProgramSelector: React.FC<Props> = ({
         </Section>
       ) : (
         <>
-          {/* Список программ - клик только на кнопке */}
           <Section 
             header={
               <Title level="3" weight="2" style={{ fontSize: '18px', marginBottom: '12px' }}>
@@ -86,51 +134,79 @@ export const ProgramSelector: React.FC<Props> = ({
             }
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {programs.map((program) => (
-                <Card 
-                  key={program.id} 
-                  style={{ width: '100%' }}
-                >
-                  <div style={{ 
-                    padding: '14px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px'
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text weight="2" style={{ 
-                        fontSize: '16px',
-                        display: 'block',
-                        marginBottom: '4px'
+              {programs.map((program) => {
+                const inProgress = hasInProgressSession(program.id);
+                
+                return (
+                  <Card 
+                    key={program.id} 
+                    style={{ 
+                      width: '100%',
+                      position: 'relative',
+                      border: inProgress ? '2px solid var(--tg-theme-button-color)' : undefined
+                    }}
+                  >
+                    {/* ✅ НОВОЕ: Бейдж незавершённой тренировки */}
+                    {inProgress && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        backgroundColor: 'var(--tg-theme-button-color)',
+                        color: 'var(--tg-theme-button-text-color)',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}>
-                        {program.program_name}
-                      </Text>
-                      <Text style={{ 
-                        fontSize: '13px',
-                        color: 'var(--tg-theme-hint-color)'
-                      }}>
-                        {program.exercises?.length || 0} упражнений
-                      </Text>
+                        🔄 В процессе
+                      </div>
+                    )}
+
+                    <div style={{ 
+                      padding: '14px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0, paddingRight: inProgress ? '80px' : '0' }}>
+                        <Text weight="2" style={{ 
+                          fontSize: '16px',
+                          display: 'block',
+                          marginBottom: '4px'
+                        }}>
+                          {program.program_name}
+                        </Text>
+                        <Text style={{ 
+                          fontSize: '13px',
+                          color: 'var(--tg-theme-hint-color)'
+                        }}>
+                          {program.exercises?.length || 0} упражнений
+                        </Text>
+                      </div>
+                      <Button 
+                        size="s" 
+                        mode={inProgress ? 'filled' : 'filled'}
+                        style={{ 
+                          fontSize: '13px',
+                          whiteSpace: 'nowrap',
+                          backgroundColor: inProgress ? 'var(--tg-theme-button-color)' : undefined
+                        }}
+                        onClick={() => onSelectProgram(program)}
+                      >
+                        {inProgress ? '▶️ Продолжить' : 'Начать 🏋️'}
+                      </Button>
                     </div>
-                    <Button 
-                      size="s" 
-                      mode="filled" 
-                      style={{ 
-                        fontSize: '13px',
-                        whiteSpace: 'nowrap'
-                      }}
-                      onClick={() => onSelectProgram(program)}
-                    >
-                      Начать 🏋️
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           </Section>
 
-          {/* Кнопки действий */}
           <Section style={{ marginTop: '24px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <Button 

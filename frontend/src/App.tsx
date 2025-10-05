@@ -144,14 +144,12 @@ const App: React.FC = () => {
     }
   }, [deleteProgram, setLoading, clearError, setError, setScreen]);
 
-  // ✅ ОБНОВЛЕНО: Проверка незавершённой сессии
   const handleStartWorkout = useCallback(async (program: Program) => {
     if (!user) return;
     
     try {
       console.log('🏋️ Starting workout:', program);
       
-      // Проверяем есть ли незавершённая сессия
       const existingSession = await supabaseService.getInProgressSession(
         user.id,
         program.id
@@ -219,19 +217,21 @@ const App: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      {state.screen === AppScreen.PROGRAM_SELECTOR && (
+      {state.screen === AppScreen.PROGRAM_SELECTOR && user && (
         <ProgramSelector
           programs={state.programs}
           userName={user?.first_name || 'Друг'}
+          userId={user.id}
           onCreateProgram={handleCreateProgram}
           onSelectTemplate={handleSelectTemplate}
           onSelectProgram={handleSelectProgram}
         />
       )}
 
-      {state.screen === AppScreen.PROGRAM_DETAILS && state.current_program && (
+      {state.screen === AppScreen.PROGRAM_DETAILS && state.current_program && user && (
         <ProgramDetails
           program={state.current_program}
+          userId={user.id}
           onBack={handleBack}
           onEdit={handleEditProgram}
           onDelete={handleDeleteProgram}

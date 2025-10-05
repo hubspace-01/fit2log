@@ -16,6 +16,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 class SupabaseService {
+  // ✅ НОВОЕ: Публичный доступ к supabase client
+  public supabase = supabase;
+
   async validateTelegramInitData(initData: string) {
     try {
       const { data, error } = await supabase.functions.invoke('validate-telegram', {
@@ -244,7 +247,6 @@ class SupabaseService {
     return { success: true };
   }
 
-  // ✅ НОВОЕ: Создание workout session
   async createWorkoutSession(sessionData: {
     user_id: string;
     program_id: string;
@@ -268,7 +270,6 @@ class SupabaseService {
     return data;
   }
 
-  // ✅ НОВОЕ: Обновление workout session
   async updateWorkoutSession(sessionId: string, updates: {
     status?: 'in_progress' | 'completed' | 'cancelled';
     completed_at?: string;
@@ -286,7 +287,6 @@ class SupabaseService {
     return data;
   }
 
-  // ✅ НОВОЕ: Получение незавершённых сессий
   async getInProgressSession(userId: string, programId: string) {
     const { data, error } = await supabase
       .from('workout_sessions')
@@ -302,7 +302,6 @@ class SupabaseService {
     return data;
   }
 
-  // ✅ НОВОЕ: Получение логов для сессии
   async getSessionLogs(sessionId: string) {
     const { data, error } = await supabase
       .from('logs')
@@ -314,7 +313,6 @@ class SupabaseService {
     return data || [];
   }
 
-  // ✅ ОБНОВЛЕНО: Добавлен session_id
   async saveWorkoutLog(logData: {
     user_id: string;
     program_id: string;
@@ -328,7 +326,7 @@ class SupabaseService {
     duration?: number;
     distance?: number;
     comments?: string;
-    session_id?: string; // ✅ НОВОЕ
+    session_id?: string;
   }) {
     const { data, error } = await supabase
       .from('logs')
@@ -345,7 +343,7 @@ class SupabaseService {
         distance: logData.distance || 0,
         datetime: logData.datetime,
         comments: logData.comments || null,
-        session_id: logData.session_id || null // ✅ НОВОЕ
+        session_id: logData.session_id || null
       })
       .select()
       .single();
