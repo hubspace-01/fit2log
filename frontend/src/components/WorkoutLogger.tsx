@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -21,7 +21,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(session.current_exercise_index || 0);
   const [completedSets, setCompletedSets] = useState<any[]>([]);
   const [skippedSets, setSkippedSets] = useState<Set<string>>(new Set());
-  const [extraSets, setExtraSets] = useState<Map<string, number>>(new Map()); // ✅ НОВОЕ: Доп подходы
+  const [extraSets, setExtraSets] = useState<Map<string, number>>(new Map());
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
   const [rpe, setRpe] = useState(8);
@@ -39,7 +39,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     key => key.startsWith(`${currentExercise?.id}_`)
   ).length;
   
-  // ✅ НОВОЕ: Учитываем дополнительные подходы
   const exerciseExtraSets = extraSets.get(currentExercise?.id || '') || 0;
   const effectiveTargetSets = (currentExercise?.target_sets || 0) + exerciseExtraSets;
   
@@ -65,22 +64,26 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, [session.started_at]);
 
-  useEffect(() => {
-    telegramService.showBackButton(() => {
-      telegramService.showConfirm(
-        'Вы уверены, что хотите завершить тренировку? Прогресс будет потерян.',
-        (confirmed: boolean) => {
-          if (confirmed) {
-            onCancel();
-          }
+  // ✅ ИСПРАВЛЕНО: BackButton с правильным callback
+  const handleBackButtonClick = useCallback(() => {
+    telegramService.showConfirm(
+      'Вы уверены, что хотите завершить тренировку? Прогресс будет потерян.',
+      (confirmed: boolean) => {
+        if (confirmed) {
+          onCancel();
         }
-      );
-    });
+        // Если отменил - просто закрываем диалог, ничего не делаем
+      }
+    );
+  }, [onCancel]);
+
+  useEffect(() => {
+    telegramService.showBackButton(handleBackButtonClick);
 
     return () => {
       telegramService.hideBackButton();
     };
-  }, [onCancel]);
+  }, [handleBackButtonClick]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -89,7 +92,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // ✅ НОВОЕ: Добавить подход
   const handleAddSet = () => {
     if (!currentExercise) return;
     const current = extraSets.get(currentExercise.id) || 0;
@@ -268,7 +270,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </Section>
       )}
 
-      {/* ✅ ОБНОВЛЕНО: Header с кнопкой +1 */}
+      {/* ✅ ИСПРАВЛЕНО: Уменьшена кнопка +1 */}
       <Section 
         header={
           <div style={{ 
@@ -283,12 +285,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               mode="bezeled"
               onClick={handleAddSet}
               style={{ 
-                fontSize: '14px',
-                padding: '4px 12px',
-                minHeight: '28px'
+                fontSize: '12px',
+                padding: '2px 8px',
+                minHeight: '24px',
+                lineHeight: '1'
               }}
             >
-              +1 подход
+              +1
             </Button>
           </div>
         }
@@ -340,7 +343,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
       <Divider />
 
-      {/* ✅ ОБНОВЛЕНО: Убрана кнопка "Повторить" */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Button
           size="l"
