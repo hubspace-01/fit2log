@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { telegramService } from '../lib/telegram';
-import { supabaseService } from '../lib/supabase';
 import type { User } from '../types';
 
 export const useAuth = () => {
@@ -19,10 +18,9 @@ export const useAuth = () => {
         const telegramUser = telegramService.getUser();
         
         if (telegramUser) {
-          // Получаем или создаём пользователя в БД
           const userId = telegramUser.id.toString();
           
-          // ✅ НОВОЕ: Сохраняем userId в localStorage
+          // ✅ Сохраняем userId в localStorage
           localStorage.setItem('userId', userId);
           console.log('✅ UserId saved to localStorage:', userId);
           
@@ -34,7 +32,6 @@ export const useAuth = () => {
             language_code: telegramUser.language_code
           });
         } else {
-          // Тестовый пользователь
           const testUserId = '12345';
           localStorage.setItem('userId', testUserId);
           
@@ -49,7 +46,6 @@ export const useAuth = () => {
       } catch (err) {
         console.error('Auth error:', err);
         
-        // Даже при ошибке создаём тестового пользователя
         const testUserId = '12345';
         localStorage.setItem('userId', testUserId);
         
