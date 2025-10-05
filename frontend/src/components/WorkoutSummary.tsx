@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Section, Cell, Title, Caption, Button, Card } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
 
@@ -29,6 +29,8 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   totalExercises,
   onFinish
 }) => {
+  const [expandedExercises, setExpandedExercises] = useState<Set<number>>(new Set());
+
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
@@ -79,7 +81,8 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         totalReps,
         maxWeight,
         totalDuration,
-        totalDistance: totalDist
+        totalDistance: totalDist,
+        details: sets.sort((a, b) => a.set_no - b.set_no)
       };
     });
 
@@ -124,13 +127,23 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
     return '💪';
   };
 
+  const toggleExercise = (index: number) => {
+    const newExpanded = new Set(expandedExercises);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedExercises(newExpanded);
+  };
+
   return (
     <div style={{ 
       minHeight: '100vh',
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      {/* ✅ ИСПРАВЛЕНО: Старый стиль header без gradient */}
+      {/* ✅ ИСПРАВЛЕНО: Убрали первые 2 черных квадрата */}
       <div style={{
         padding: '32px 16px 24px',
         textAlign: 'center',
@@ -141,7 +154,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           marginBottom: '16px',
           lineHeight: '1'
         }}>
-          �� 🏋️ 🎉
+          🎉 🏋️ 🎉
         </div>
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
           {randomTitle}
@@ -151,14 +164,12 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Caption>
       </div>
 
-      {/* Grid Stats Cards (2x2) */}
       <div style={{ 
         padding: '16px',
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: '12px'
       }}>
-        {/* Card 1: Время */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -175,7 +186,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
-        {/* Card 2: Упражнения */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -192,7 +202,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
-        {/* Card 3: Подходы */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -209,7 +218,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
-        {/* ✅ НОВОЕ: Card 4 - Умная метрика с деталями */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -217,7 +225,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           border: '1px solid var(--tg-theme-section-separator-color)',
           borderRadius: '12px'
         }}>
-          {/* Если только один тип - показываем его крупно */}
           {stats.repsCount > 0 && stats.timeCount === 0 && stats.distanceCount === 0 && (
             <>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏋️</div>
@@ -225,7 +232,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                 {Math.round(stats.totalWeight)} кг
               </Title>
               <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)' }}>
-                из {stats.repsCount} reps подх.
+                из {stats.repsCount} подходов
               </Caption>
             </>
           )}
@@ -237,24 +244,23 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                 {formatDuration(stats.totalTimeUnderTension)}
               </Title>
               <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)' }}>
-                из {stats.timeCount} time подх.
+                под нагрузкой
               </Caption>
             </>
           )}
           
           {stats.distanceCount > 0 && stats.repsCount === 0 && stats.timeCount === 0 && (
             <>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏃</div>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>��</div>
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {stats.totalDistance} м
               </Title>
               <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)' }}>
-                из {stats.distanceCount} distance подх.
+                дистанция
               </Caption>
             </>
           )}
 
-          {/* ✅ НОВОЕ: Если смешанная тренировка - показываем все компактно */}
           {((stats.repsCount > 0 && stats.timeCount > 0) ||
             (stats.repsCount > 0 && stats.distanceCount > 0) ||
             (stats.timeCount > 0 && stats.distanceCount > 0)) && (
@@ -276,63 +282,104 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                 )}
               </div>
               <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)', marginTop: '4px' }}>
-                Смешанная тренировка
+                Смешанная
               </Caption>
             </>
           )}
         </Card>
       </div>
 
-      {/* ✅ ИСПРАВЛЕНО: Header по центру */}
+      {/* ✅ ИСПРАВЛЕНО: Убрали эмодзи из header */}
       <Section 
         header={
           <div style={{ textAlign: 'center', width: '100%', padding: '8px 0' }}>
-            💪 ДЕТАЛИ УПРАЖНЕНИЙ
+            ДЕТАЛИ УПРАЖНЕНИЙ
           </div>
         }
         style={{ marginTop: '16px' }}
       >
         {stats.exerciseStats.map((exercise, index) => {
-          let subtitle = '';
+          const isExpanded = expandedExercises.has(index);
           
+          // ✅ НОВОЕ: Компактное описание
+          let compactSubtitle = '';
           if (exercise.type === 'reps') {
-            subtitle = `${exercise.sets} × ${exercise.totalReps} повт`;
+            compactSubtitle = `${exercise.sets} подходов • ${exercise.totalReps} повт`;
             if (exercise.maxWeight > 0) {
-              subtitle += ` • ${exercise.maxWeight} кг`;
+              compactSubtitle += ` • Макс: ${exercise.maxWeight} кг`;
             }
           } else if (exercise.type === 'time') {
-            subtitle = `${exercise.sets} подхода • ${formatDuration(exercise.totalDuration)}`;
+            compactSubtitle = `${exercise.sets} подходов • ${formatDuration(exercise.totalDuration)}`;
           } else if (exercise.type === 'distance') {
-            subtitle = `${exercise.totalDistance} м`;
+            compactSubtitle = `${exercise.totalDistance} м`;
           }
 
           return (
-            <Cell
-              key={index}
-              before={
+            <div key={index}>
+              <Cell
+                onClick={() => toggleExercise(index)}
+                before={
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    minWidth: '40px',
+                    borderRadius: '50%',
+                    background: exercise.type === 'reps' 
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : exercise.type === 'time'
+                      ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                      : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px'
+                  }}>
+                    {getTypeIcon(exercise.type)}
+                  </div>
+                }
+                after={isExpanded ? '▲' : '▼'}
+                subtitle={compactSubtitle}
+              >
+                {exercise.name}
+              </Cell>
+
+              {/* ✅ НОВОЕ: Раскрывающиеся детали */}
+              {isExpanded && (
                 <div style={{
-                  width: '40px',
-                  height: '40px',
-                  minWidth: '40px',
-                  borderRadius: '50%',
-                  background: exercise.type === 'reps' 
-                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    : exercise.type === 'time'
-                    ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-                    : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '20px'
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--tg-theme-bg-color)',
+                  borderTop: '0.5px solid var(--tg-theme-section-separator-color)'
                 }}>
-                  {getTypeIcon(exercise.type)}
+                  {exercise.details.map((set, setIndex) => {
+                    let setInfo = '';
+                    if (exercise.type === 'reps') {
+                      setInfo = `${set.reps} повт × ${set.weight} кг`;
+                    } else if (exercise.type === 'time') {
+                      setInfo = `${set.duration}с`;
+                    } else if (exercise.type === 'distance') {
+                      setInfo = `${set.distance} м`;
+                    }
+
+                    return (
+                      <div
+                        key={setIndex}
+                        style={{
+                          padding: '8px 0',
+                          fontSize: '14px',
+                          color: 'var(--tg-theme-text-color)',
+                          display: 'flex',
+                          justifyContent: 'space-between'
+                        }}
+                      >
+                        <span>✅ Подход {set.set_no}:</span>
+                        <span style={{ fontWeight: '500' }}>{setInfo}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              }
-              subtitle={subtitle}
-            >
-              {exercise.name}
-            </Cell>
+              )}
+            </div>
           );
         })}
       </Section>
