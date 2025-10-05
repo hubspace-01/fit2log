@@ -1,5 +1,6 @@
 class TelegramService {
   private initialized = false;
+  private currentBackHandler: (() => void) | null = null; // ✅ НОВОЕ: Храним текущий обработчик
 
   async init(): Promise<void> {
     if (this.initialized) return;
@@ -105,12 +106,24 @@ class TelegramService {
     }
   }
 
+  // ✅ ИСПРАВЛЕНО: Правильная работа с BackButton
   showBackButton(onClick: () => void): void {
     try {
       const backButton = window.Telegram?.WebApp?.BackButton;
       if (backButton) {
+        // Удаляем предыдущий обработчик если есть
+        if (this.currentBackHandler) {
+          backButton.offClick(this.currentBackHandler);
+        }
+        
+        // Сохраняем новый обработчик
+        this.currentBackHandler = onClick;
+        
+        // Устанавливаем новый обработчик
         backButton.onClick(onClick);
         backButton.show();
+        
+        console.log('✅ BackButton handler installed');
       }
     } catch (error) {
       console.error('Show BackButton failed:', error);
@@ -119,37 +132,42 @@ class TelegramService {
 
   hideBackButton(): void {
     try {
-      window.Telegram?.WebApp?.BackButton?.hide();
+      const backButton = window.Telegram?.WebApp?.BackButton;
+      if (backButton) {
+        // Удаляем обработчик перед скрытием
+        if (this.currentBackHandler) {
+          backButton.offClick(this.currentBackHandler);
+          this.currentBackHandler = null;
+          console.log('✅ BackButton handler removed');
+        }
+        
+        backButton.hide();
+      }
     } catch (error) {
       console.error('Hide BackButton failed:', error);
     }
   }
 
-  // ✅ НОВОЕ: Показать нативное подтверждение Telegram
   showConfirm(message: string, callback: (confirmed: boolean) => void): void {
     try {
       if (window.Telegram?.WebApp?.showConfirm) {
         window.Telegram.WebApp.showConfirm(message, callback);
       } else {
-        // Fallback на window.confirm если Telegram API недоступен
         const confirmed = window.confirm(message);
         callback(confirmed);
       }
     } catch (error) {
       console.error('Show confirm failed:', error);
-      // Fallback
       const confirmed = window.confirm(message);
       callback(confirmed);
     }
   }
 
-  // ✅ НОВОЕ: Показать нативный alert Telegram
   showAlert(message: string, callback?: () => void): void {
     try {
       if (window.Telegram?.WebApp?.showAlert) {
         window.Telegram.WebApp.showAlert(message, callback);
       } else {
-        // Fallback на window.alert
         window.alert(message);
         if (callback) callback();
       }
