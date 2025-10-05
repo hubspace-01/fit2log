@@ -9,6 +9,7 @@ import {
 } from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
 import { supabaseService } from '../lib/supabase';
+import { telegramService } from '../lib/telegram'; // ✅ НОВОЕ
 
 interface Props {
   programs: Program[];
@@ -29,6 +30,11 @@ export const ProgramSelector: React.FC<Props> = ({
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+
+  // ✅ НОВОЕ: Скрываем BackButton на главной странице
+  useEffect(() => {
+    telegramService.hideBackButton();
+  }, []);
 
   useEffect(() => {
     const loadInProgressSessions = async () => {
@@ -144,7 +150,6 @@ export const ProgramSelector: React.FC<Props> = ({
                       paddingTop: inProgress ? '12px' : '0'
                     }}
                   >
-                    {/* ✅ ИСПРАВЛЕНО: Бейдж теперь в контейнере с overflow visible */}
                     {inProgress && (
                       <div style={{
                         position: 'absolute',
