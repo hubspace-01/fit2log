@@ -11,6 +11,7 @@ import {
 } from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate } from './types';
+import { supabaseService } from './lib/supabase';
 
 const App: React.FC = () => {
   const { user, loading: authLoading, error: authError } = useAuth();
@@ -143,13 +144,34 @@ const App: React.FC = () => {
     }
   }, [deleteProgram, setLoading, clearError, setError, setScreen]);
 
-  const handleStartWorkout = useCallback((program: Program) => {
-    console.log('🏋️ Starting workout:', program);
-    startWorkout(program);
-    setScreen(AppScreen.WORKOUT_LOGGER);
-  }, [startWorkout, setScreen]);
+  // ✅ ОБНОВЛЕНО: Проверка незавершённой сессии
+  const handleStartWorkout = useCallback(async (program: Program) => {
+    if (!user) return;
+    
+    try {
+      console.log('🏋️ Starting workout:', program);
+      
+      // Проверяем есть ли незавершённая сессия
+      const existingSession = await supabaseService.getInProgressSession(
+        user.id,
+        program.id
+      );
+      
+      if (existingSession) {
+        console.log('✅ Found existing session, resuming');
+        startWorkout(program, existingSession.id);
+      } else {
+        console.log('✅ Starting new session');
+        startWorkout(program);
+      }
+      
+      setScreen(AppScreen.WORKOUT_LOGGER);
+    } catch (error) {
+      console.error('❌ Start workout error:', error);
+      alert('Ошибка при запуске тренировки');
+    }
+  }, [user, startWorkout, setScreen]);
 
-  // ✅ ОБНОВЛЕНО: Переход на экран итогов
   const handleFinishWorkout = useCallback((completedSets: any[], duration: number) => {
     console.log('✅ Workout finished:', completedSets, duration);
     setWorkoutSummary(completedSets, duration);
@@ -161,7 +183,6 @@ const App: React.FC = () => {
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
-  // ✅ НОВОЕ: Завершение с экрана итогов
   const handleCompleteSummary = useCallback(() => {
     console.log('✅ Summary completed');
     setScreen(AppScreen.PROGRAM_SELECTOR);
@@ -244,7 +265,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ НОВОЕ: Экран итогов тренировки */}
       {state.screen === AppScreen.WORKOUT_SUMMARY && 
        state.workout_session && 
        state.workout_completed_sets && 
