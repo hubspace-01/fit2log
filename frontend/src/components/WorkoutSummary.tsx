@@ -31,15 +31,11 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
 }) => {
   useEffect(() => {
     telegramService.hideBackButton();
-    
-    // ✅ НОВОЕ: Haptic feedback при открытии
-    telegramService.hapticFeedback('success');
   }, []);
 
   const stats = useMemo(() => {
     const totalSets = completedSets.length;
     
-    // Разделяем упражнения по типам
     const repsSets = completedSets.filter(s => s.reps > 0);
     const timeSets = completedSets.filter(s => (s.duration || 0) > 0);
     const distanceSets = completedSets.filter(s => (s.distance || 0) > 0);
@@ -64,7 +60,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
 
     const exerciseStats = Array.from(exerciseMap.values()).map(sets => {
       const firstSet = sets[0];
-      const isReps = sets.some(s => s.reps > 0);
       const isTime = sets.some(s => (s.duration || 0) > 0);
       const isDistance = sets.some(s => (s.distance || 0) > 0);
 
@@ -110,7 +105,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
     else return `${s}с`;
   };
 
-  // ✅ НОВОЕ: Рандомный заголовок
   const celebrationTitles = [
     'Отличная работа!',
     'Круто!',
@@ -121,7 +115,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   ];
   const randomTitle = celebrationTitles[Math.floor(Math.random() * celebrationTitles.length)];
 
-  // ✅ НОВОЕ: Иконка типа упражнения
   const getTypeIcon = (type: string) => {
     if (type === 'time') return '⏱';
     if (type === 'distance') return '🏃';
@@ -134,7 +127,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      {/* ✅ НОВОЕ: Gradient Header с анимацией */}
       <div style={{
         padding: '40px 16px 32px',
         textAlign: 'center',
@@ -142,7 +134,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Confetti effect (simple emoji burst) */}
         <div style={{
           position: 'absolute',
           top: '10px',
@@ -179,7 +170,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Caption>
       </div>
 
-      {/* ✅ НОВОЕ: Grid Stats Cards (2x2) */}
       <div style={{ 
         padding: '16px',
         display: 'grid',
@@ -187,7 +177,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         gap: '12px',
         marginTop: '-16px'
       }}>
-        {/* Card 1: Время */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -204,7 +193,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
-        {/* Card 2: Упражнения */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -221,7 +209,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
-        {/* Card 3: Подходы */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -238,7 +225,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
-        {/* Card 4: Общий объем (динамический) */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -282,7 +268,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Card>
       </div>
 
-      {/* ✅ НОВОЕ: Детали упражнений с иконками типов */}
       <Section header="💪 Детали упражнений" style={{ marginTop: '16px' }}>
         {stats.exerciseStats.map((exercise, index) => {
           let subtitle = '';
@@ -329,7 +314,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         })}
       </Section>
 
-      {/* CTA Button */}
       <div style={{ padding: '24px 16px' }}>
         <Button
           size="l"
@@ -342,7 +326,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Button>
       </div>
 
-      {/* ✅ Inline animations */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
