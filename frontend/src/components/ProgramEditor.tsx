@@ -7,7 +7,7 @@ import {
   Button
 } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
-import type { Program, ExerciseType } from '../types';
+import type { Program } from '../types';
 
 interface Props {
   onSave: (data: any) => void;
@@ -29,12 +29,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
       
       setExercises(sortedExercises.map(ex => ({
         exercise_name: ex.exercise_name,
-        exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
+        exercise_type: ex.exercise_type || 'reps',
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight,
-        duration: ex.duration || 0, // ✅ НОВОЕ
-        distance: ex.distance || 0, // ✅ НОВОЕ
+        duration: ex.duration || 0,
+        distance: ex.distance || 0,
         notes: ex.notes || ''
       })));
     }
@@ -43,12 +43,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
   const addExercise = () => {
     setExercises([...exercises, {
       exercise_name: '',
-      exercise_type: 'reps', // ✅ НОВОЕ: дефолт
+      exercise_type: 'reps',
       target_sets: 3,
       target_reps: 10,
       target_weight: 0,
-      duration: 0, // ✅ НОВОЕ
-      distance: 0, // ✅ НОВОЕ
+      duration: 0,
+      distance: 0,
       notes: ''
     }]);
   };
@@ -57,7 +57,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
     const updated = [...exercises];
     updated[index][field] = value;
     
-    // ✅ НОВОЕ: При смене типа - обнуляем ненужные поля
     if (field === 'exercise_type') {
       if (value === 'reps') {
         updated[index].duration = 0;
@@ -226,7 +225,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </Button>
                 </div>
 
-                {/* ✅ НОВОЕ: Выбор типа упражнения */}
+                {/* Выбор типа упражнения */}
                 <div style={{ marginBottom: '14px' }}>
                   <Text weight="2" style={{ 
                     fontSize: '13px', 
@@ -292,8 +291,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   />
                 </div>
 
-                {/* ✅ УСЛОВНЫЕ ПОЛЯ в зависимости от типа */}
-                
                 {/* Для reps-based */}
                 {ex.exercise_type === 'reps' && (
                   <div style={{ 
