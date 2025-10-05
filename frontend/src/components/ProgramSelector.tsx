@@ -169,9 +169,16 @@ export const ProgramSelector: React.FC<Props> = ({
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '12px'
+                      gap: '12px',
+                      minHeight: '60px'
                     }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ 
+                        flex: 1, 
+                        minWidth: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center'
+                      }}>
                         <Text weight="2" style={{ 
                           fontSize: '16px',
                           display: 'block',
@@ -191,7 +198,8 @@ export const ProgramSelector: React.FC<Props> = ({
                         mode="filled"
                         style={{ 
                           fontSize: '13px',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          alignSelf: 'center'
                         }}
                         onClick={() => onSelectProgram(program)}
                       >
