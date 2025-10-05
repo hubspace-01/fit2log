@@ -145,7 +145,7 @@ export const ProgramSelector: React.FC<Props> = ({
                       border: inProgress ? '2px solid #FF9500' : undefined
                     }}
                   >
-                    {/* ✅ ОБНОВЛЕНО: Бейдж на границе карточки */}
+                    {/* ✅ ИСПРАВЛЕНО: Бейдж поверх карточки без отступа внутри */}
                     {inProgress && (
                       <div style={{
                         position: 'absolute',
@@ -165,10 +165,8 @@ export const ProgramSelector: React.FC<Props> = ({
                       </div>
                     )}
 
-                    {/* ✅ ОБНОВЛЕНО: Кнопка по центру всей карточки */}
                     <div style={{ 
                       padding: '14px',
-                      paddingTop: inProgress ? '20px' : '14px',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
