@@ -142,16 +142,15 @@ export const ProgramSelector: React.FC<Props> = ({
                     style={{ 
                       width: '100%',
                       position: 'relative',
-                      border: inProgress ? '2px solid #FF9500' : undefined,
-                      padding: '14px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px'
+                      border: inProgress ? '2px solid #FF9500' : undefined
                     }}
                   >
+                    {/* ✅ ОБНОВЛЕНО: Бейдж на границе карточки */}
                     {inProgress && (
                       <div style={{
-                        alignSelf: 'flex-start',
+                        position: 'absolute',
+                        top: '-12px',
+                        left: '10px',
                         backgroundColor: '#FF9500',
                         color: '#FFFFFF',
                         padding: '4px 10px',
@@ -159,22 +158,23 @@ export const ProgramSelector: React.FC<Props> = ({
                         fontSize: '11px',
                         fontWeight: '600',
                         textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.5px',
+                        zIndex: 1
                       }}>
                         В процессе
                       </div>
                     )}
 
+                    {/* ✅ ОБНОВЛЕНО: Кнопка по центру всей карточки */}
                     <div style={{ 
+                      padding: '14px',
+                      paddingTop: inProgress ? '20px' : '14px',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       gap: '12px'
                     }}>
-                      <div style={{ 
-                        flex: 1, 
-                        minWidth: 0
-                      }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Text weight="2" style={{ 
                           fontSize: '16px',
                           display: 'block',
