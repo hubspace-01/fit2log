@@ -137,19 +137,18 @@ export const ProgramSelector: React.FC<Props> = ({
                 const inProgress = hasInProgressSession(program.id);
                 
                 return (
-                  <Card 
-                    key={program.id} 
+                  <div 
+                    key={program.id}
                     style={{ 
-                      width: '100%',
                       position: 'relative',
-                      border: inProgress ? '2px solid #FF9500' : undefined
+                      paddingTop: inProgress ? '12px' : '0'
                     }}
                   >
-                    {/* ✅ ИСПРАВЛЕНО: Бейдж поверх карточки без отступа внутри */}
+                    {/* ✅ ИСПРАВЛЕНО: Бейдж теперь в контейнере с overflow visible */}
                     {inProgress && (
                       <div style={{
                         position: 'absolute',
-                        top: '-12px',
+                        top: '0',
                         left: '10px',
                         backgroundColor: '#FF9500',
                         color: '#FFFFFF',
@@ -165,41 +164,48 @@ export const ProgramSelector: React.FC<Props> = ({
                       </div>
                     )}
 
-                    <div style={{ 
-                      padding: '14px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '12px'
-                    }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Text weight="2" style={{ 
-                          fontSize: '16px',
-                          display: 'block',
-                          marginBottom: '4px'
-                        }}>
-                          {program.program_name}
-                        </Text>
-                        <Text style={{ 
-                          fontSize: '13px',
-                          color: 'var(--tg-theme-hint-color)'
-                        }}>
-                          {program.exercises?.length || 0} упражнений
-                        </Text>
+                    <Card 
+                      style={{ 
+                        width: '100%',
+                        border: inProgress ? '2px solid #FF9500' : undefined
+                      }}
+                    >
+                      <div style={{ 
+                        padding: '14px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Text weight="2" style={{ 
+                            fontSize: '16px',
+                            display: 'block',
+                            marginBottom: '4px'
+                          }}>
+                            {program.program_name}
+                          </Text>
+                          <Text style={{ 
+                            fontSize: '13px',
+                            color: 'var(--tg-theme-hint-color)'
+                          }}>
+                            {program.exercises?.length || 0} упражнений
+                          </Text>
+                        </div>
+                        <Button 
+                          size="s" 
+                          mode="filled"
+                          style={{ 
+                            fontSize: '13px',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={() => onSelectProgram(program)}
+                        >
+                          {inProgress ? 'Продолжить' : 'Начать'}
+                        </Button>
                       </div>
-                      <Button 
-                        size="s" 
-                        mode="filled"
-                        style={{ 
-                          fontSize: '13px',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onClick={() => onSelectProgram(program)}
-                      >
-                        {inProgress ? 'Продолжить' : 'Начать'}
-                      </Button>
-                    </div>
-                  </Card>
+                    </Card>
+                  </div>
                 );
               })}
             </div>
