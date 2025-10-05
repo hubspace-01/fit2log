@@ -7,7 +7,7 @@ import {
   Button
 } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
-import type { Program } from '../types';
+import type { Program, ExerciseType } from '../types';
 
 interface Props {
   onSave: (data: any) => void;
@@ -29,10 +29,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
       
       setExercises(sortedExercises.map(ex => ({
         exercise_name: ex.exercise_name,
+        exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight,
-        notes: ex.notes || '' // ✅ Загружаем заметки
+        duration: ex.duration || 0, // ✅ НОВОЕ
+        distance: ex.distance || 0, // ✅ НОВОЕ
+        notes: ex.notes || ''
       })));
     }
   }, [initialData]);
@@ -40,16 +43,37 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
   const addExercise = () => {
     setExercises([...exercises, {
       exercise_name: '',
+      exercise_type: 'reps', // ✅ НОВОЕ: дефолт
       target_sets: 3,
       target_reps: 10,
       target_weight: 0,
-      notes: '' // ✅ Добавили поле notes
+      duration: 0, // ✅ НОВОЕ
+      distance: 0, // ✅ НОВОЕ
+      notes: ''
     }]);
   };
 
   const updateExercise = (index: number, field: string, value: any) => {
     const updated = [...exercises];
     updated[index][field] = value;
+    
+    // ✅ НОВОЕ: При смене типа - обнуляем ненужные поля
+    if (field === 'exercise_type') {
+      if (value === 'reps') {
+        updated[index].duration = 0;
+        updated[index].distance = 0;
+      } else if (value === 'time') {
+        updated[index].target_reps = 0;
+        updated[index].distance = 0;
+        updated[index].duration = updated[index].duration || 60;
+      } else if (value === 'distance') {
+        updated[index].target_reps = 0;
+        updated[index].target_weight = 0;
+        updated[index].duration = 0;
+        updated[index].distance = updated[index].distance || 1000;
+      }
+    }
+    
     setExercises(updated);
   };
 
@@ -82,7 +106,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      {/* Заголовок */}
       <div style={{ 
         padding: '16px',
         textAlign: 'center',
@@ -93,7 +116,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </Title>
       </div>
 
-      {/* Название программы */}
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
         <div style={{ 
           backgroundColor: 'var(--tg-theme-secondary-bg-color)',
@@ -123,7 +145,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </div>
       </div>
 
-      {/* Список упражнений */}
       <div style={{ padding: '0 16px' }}>
         <div style={{ 
           display: 'flex', 
@@ -205,6 +226,49 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </Button>
                 </div>
 
+                {/* ✅ НОВОЕ: Выбор типа упражнения */}
+                <div style={{ marginBottom: '14px' }}>
+                  <Text weight="2" style={{ 
+                    fontSize: '13px', 
+                    marginBottom: '8px', 
+                    display: 'block',
+                    color: 'var(--tg-theme-text-color)',
+                    textAlign: 'center'
+                  }}>
+                    Тип упражнения
+                  </Text>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gap: '8px'
+                  }}>
+                    <Button
+                      size="s"
+                      mode={ex.exercise_type === 'reps' ? 'filled' : 'outline'}
+                      onClick={() => updateExercise(i, 'exercise_type', 'reps')}
+                      style={{ fontSize: '11px' }}
+                    >
+                      💪 Повт
+                    </Button>
+                    <Button
+                      size="s"
+                      mode={ex.exercise_type === 'time' ? 'filled' : 'outline'}
+                      onClick={() => updateExercise(i, 'exercise_type', 'time')}
+                      style={{ fontSize: '11px' }}
+                    >
+                      ⏱ Время
+                    </Button>
+                    <Button
+                      size="s"
+                      mode={ex.exercise_type === 'distance' ? 'filled' : 'outline'}
+                      onClick={() => updateExercise(i, 'exercise_type', 'distance')}
+                      style={{ fontSize: '11px' }}
+                    >
+                      🏃 Расст
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Название упражнения */}
                 <div style={{ marginBottom: '14px' }}>
                   <Text weight="2" style={{ 
@@ -227,83 +291,168 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                     }}
                   />
                 </div>
-                
-                {/* Параметры: подходы, повторы, вес */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr 1fr', 
-                  gap: '10px',
-                  marginBottom: '14px'
-                }}>
-                  <div>
-                    <Text weight="2" style={{ 
-                      fontSize: '12px', 
-                      marginBottom: '8px', 
-                      display: 'block',
-                      color: 'var(--tg-theme-text-color)',
-                      textAlign: 'center'
-                    }}>
-                      Подходы
-                    </Text>
-                    <Input
-                      type="number"
-                      value={ex.target_sets}
-                      onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
-                      style={{ 
-                        fontSize: '14px', 
-                        width: '100%', 
-                        textAlign: 'center',
-                        backgroundColor: 'var(--tg-theme-bg-color)'
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Text weight="2" style={{ 
-                      fontSize: '12px', 
-                      marginBottom: '8px', 
-                      display: 'block',
-                      color: 'var(--tg-theme-text-color)',
-                      textAlign: 'center'
-                    }}>
-                      Повторы
-                    </Text>
-                    <Input
-                      type="number"
-                      value={ex.target_reps}
-                      onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
-                      style={{ 
-                        fontSize: '14px', 
-                        width: '100%', 
-                        textAlign: 'center',
-                        backgroundColor: 'var(--tg-theme-bg-color)'
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Text weight="2" style={{ 
-                      fontSize: '12px', 
-                      marginBottom: '8px', 
-                      display: 'block',
-                      color: 'var(--tg-theme-text-color)',
-                      textAlign: 'center'
-                    }}>
-                      Вес (кг)
-                    </Text>
-                    <Input
-                      type="number"
-                      value={ex.target_weight}
-                      onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
-                      style={{ 
-                        fontSize: '14px', 
-                        width: '100%', 
-                        textAlign: 'center',
-                        backgroundColor: 'var(--tg-theme-bg-color)'
-                      }}
-                    />
-                  </div>
-                </div>
 
-                {/* ✅ НОВОЕ: Поле для заметок */}
+                {/* ✅ УСЛОВНЫЕ ПОЛЯ в зависимости от типа */}
+                
+                {/* Для reps-based */}
+                {ex.exercise_type === 'reps' && (
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gap: '10px',
+                    marginBottom: '14px'
+                  }}>
+                    <div>
+                      <Text weight="2" style={{ 
+                        fontSize: '12px', 
+                        marginBottom: '8px', 
+                        display: 'block',
+                        color: 'var(--tg-theme-text-color)',
+                        textAlign: 'center'
+                      }}>
+                        Подходы
+                      </Text>
+                      <Input
+                        type="number"
+                        value={ex.target_sets}
+                        onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
+                        style={{ 
+                          fontSize: '14px', 
+                          width: '100%', 
+                          textAlign: 'center',
+                          backgroundColor: 'var(--tg-theme-bg-color)'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Text weight="2" style={{ 
+                        fontSize: '12px', 
+                        marginBottom: '8px', 
+                        display: 'block',
+                        color: 'var(--tg-theme-text-color)',
+                        textAlign: 'center'
+                      }}>
+                        Повторы
+                      </Text>
+                      <Input
+                        type="number"
+                        value={ex.target_reps}
+                        onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
+                        style={{ 
+                          fontSize: '14px', 
+                          width: '100%', 
+                          textAlign: 'center',
+                          backgroundColor: 'var(--tg-theme-bg-color)'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Text weight="2" style={{ 
+                        fontSize: '12px', 
+                        marginBottom: '8px', 
+                        display: 'block',
+                        color: 'var(--tg-theme-text-color)',
+                        textAlign: 'center'
+                      }}>
+                        Вес (кг)
+                      </Text>
+                      <Input
+                        type="number"
+                        value={ex.target_weight}
+                        onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
+                        style={{ 
+                          fontSize: '14px', 
+                          width: '100%', 
+                          textAlign: 'center',
+                          backgroundColor: 'var(--tg-theme-bg-color)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Для time-based */}
+                {ex.exercise_type === 'time' && (
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '10px',
+                    marginBottom: '14px'
+                  }}>
+                    <div>
+                      <Text weight="2" style={{ 
+                        fontSize: '12px', 
+                        marginBottom: '8px', 
+                        display: 'block',
+                        color: 'var(--tg-theme-text-color)',
+                        textAlign: 'center'
+                      }}>
+                        Подходы
+                      </Text>
+                      <Input
+                        type="number"
+                        value={ex.target_sets}
+                        onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
+                        style={{ 
+                          fontSize: '14px', 
+                          width: '100%', 
+                          textAlign: 'center',
+                          backgroundColor: 'var(--tg-theme-bg-color)'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Text weight="2" style={{ 
+                        fontSize: '12px', 
+                        marginBottom: '8px', 
+                        display: 'block',
+                        color: 'var(--tg-theme-text-color)',
+                        textAlign: 'center'
+                      }}>
+                        Время (сек)
+                      </Text>
+                      <Input
+                        type="number"
+                        value={ex.duration}
+                        onChange={(e) => updateExercise(i, 'duration', parseInt(e.target.value) || 0)}
+                        style={{ 
+                          fontSize: '14px', 
+                          width: '100%', 
+                          textAlign: 'center',
+                          backgroundColor: 'var(--tg-theme-bg-color)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Для distance-based */}
+                {ex.exercise_type === 'distance' && (
+                  <div style={{ marginBottom: '14px' }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '12px', 
+                      marginBottom: '8px', 
+                      display: 'block',
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
+                    }}>
+                      Расстояние (метры)
+                    </Text>
+                    <Input
+                      type="number"
+                      value={ex.distance}
+                      onChange={(e) => updateExercise(i, 'distance', parseInt(e.target.value) || 0)}
+                      style={{ 
+                        fontSize: '14px', 
+                        width: '100%', 
+                        textAlign: 'center',
+                        backgroundColor: 'var(--tg-theme-bg-color)'
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Заметки */}
                 <div>
                   <Text weight="2" style={{ 
                     fontSize: '13px', 
@@ -329,7 +478,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
               </div>
             ))}
 
-            {/* Кнопка сохранить */}
             <div style={{ marginTop: '8px' }}>
               <Button 
                 size="l"
