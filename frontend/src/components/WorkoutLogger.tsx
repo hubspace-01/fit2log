@@ -35,6 +35,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [initializing, setInitializing] = useState(true);
 
   const startTimeRef = useRef(new Date(session.started_at).getTime());
+  const backButtonInitialized = useRef(false); // ✅ НОВОЕ: Флаг инициализации BackButton
+  
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
   
@@ -54,13 +56,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const exerciseType = currentExercise?.exercise_type || 'reps';
 
-  // ✅ НОВОЕ: Инициализация сессии
+  // ✅ ОБНОВЛЕНО: Восстановление текущего упражнения
   useEffect(() => {
     const initializeSession = async () => {
       try {
         setInitializing(true);
 
-        // Проверяем незавершённую сессию
         const existingSession = await supabaseService.getInProgressSession(
           userId,
           session.program_id
@@ -70,17 +71,38 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           console.log('✅ Found existing session:', existingSession.id);
           setSessionId(existingSession.id);
           
-          // Загружаем существующие логи
           const logs = await supabaseService.getSessionLogs(existingSession.id);
           console.log('✅ Loaded logs:', logs.length);
           
           if (logs.length > 0) {
             setCompletedSets(logs);
-            // Обновляем startTime на время начала существующей сессии
             startTimeRef.current = new Date(existingSession.started_at).getTime();
+            
+            // ✅ НОВОЕ: Определяем текущее упражнение
+            const lastLog = logs[logs.length - 1];
+            const lastExerciseId = lastLog.exercise_id;
+            
+            // Находим индекс последнего упражнения
+            const lastExerciseIndex = session.exercises.findIndex(
+              ex => ex.id === lastExerciseId
+            );
+            
+            if (lastExerciseIndex !== -1) {
+              // Проверяем сколько подходов выполнено для последнего упражнения
+              const setsForLastEx = logs.filter(l => l.exercise_id === lastExerciseId).length;
+              const targetSets = session.exercises[lastExerciseIndex].target_sets;
+              
+              // Если все подходы выполнены — переходим к следующему упражнению
+              if (setsForLastEx >= targetSets && lastExerciseIndex < session.exercises.length - 1) {
+                setCurrentExerciseIndex(lastExerciseIndex + 1);
+                console.log(`✅ Resuming from exercise ${lastExerciseIndex + 2}`);
+              } else {
+                setCurrentExerciseIndex(lastExerciseIndex);
+                console.log(`✅ Resuming from exercise ${lastExerciseIndex + 1}`);
+              }
+            }
           }
         } else {
-          // Создаём новую сессию
           const newSession = await supabaseService.createWorkoutSession({
             user_id: userId,
             program_id: session.program_id,
@@ -99,9 +121,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     };
 
     initializeSession();
-  }, [userId, session.program_id, session.program_name, session.started_at]);
+  }, [userId, session.program_id, session.program_name, session.started_at, session.exercises]);
 
-  // Инициализация полей упражнения
   useEffect(() => {
     if (currentExercise) {
       if (exerciseType === 'reps') {
@@ -117,7 +138,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   }, [currentExerciseIndex, currentExercise, exerciseType]);
 
-  // Таймер
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -128,16 +148,17 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ ОБНОВЛЕНО: BackButton с отменой сессии
+  // ✅ ИСПРАВЛЕНО: BackButton инициализируется только один раз
   useEffect(() => {
+    if (backButtonInitialized.current || initializing) return;
+
     const handleBack = () => {
       telegramService.showConfirm(
-        'Отменить тренировку? Все данные будут сохранены как "отменено".',
+        'Отменить тренировку? Прогресс будет сохранён.',
         async (confirmed: boolean) => {
           if (confirmed) {
             try {
               if (sessionId) {
-                // Помечаем сессию как cancelled
                 await supabaseService.updateWorkoutSession(sessionId, {
                   status: 'cancelled',
                   completed_at: new Date().toISOString(),
@@ -157,11 +178,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     };
 
     telegramService.showBackButton(handleBack);
+    backButtonInitialized.current = true;
 
     return () => {
       telegramService.hideBackButton();
+      backButtonInitialized.current = false;
     };
-  }, [onCancel, sessionId, elapsedTime]);
+  }, [initializing, onCancel, sessionId, elapsedTime]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -176,11 +199,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     setExtraSets(new Map(extraSets.set(currentExercise.id, current + 1)));
   };
 
-  // ✅ ОБНОВЛЕНО: Сохранение с session_id
   const handleCompleteSet = async () => {
     if (saving || !currentExercise || !sessionId) return;
 
-    // ✅ НОВОЕ: Валидация данных
     if (exerciseType === 'reps' && reps <= 0) {
       telegramService.showAlert('Введите количество повторений больше 0');
       return;
@@ -231,7 +252,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         duration: newSet.duration || 0,
         distance: newSet.distance || 0,
         datetime: newSet.timestamp,
-        session_id: sessionId // ✅ НОВОЕ
+        session_id: sessionId
       });
 
       console.log('✅ Set saved to DB:', newSet);
@@ -239,7 +260,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
 
-      // ✅ ИСПРАВЛЕНО: Confirm после setSaving(false)
     } catch (error) {
       console.error('❌ Failed to save set:', error);
       telegramService.showAlert('Ошибка сохранения. Попробуйте ещё раз.');
@@ -248,7 +268,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       setSaving(false);
     }
 
-    // ✅ Переход к следующему упражнению
     if (currentSetNumber >= effectiveTargetSets) {
       if (currentExerciseIndex < totalExercises - 1) {
         telegramService.showConfirm(
@@ -302,7 +321,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   };
 
-  // ✅ НОВОЕ: Завершение тренировки
   const handleFinishWorkout = async () => {
     try {
       if (sessionId) {
