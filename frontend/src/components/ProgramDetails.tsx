@@ -57,12 +57,70 @@ export const ProgramDetails: React.FC<Props> = ({
     }
   };
 
+  // ✅ НОВОЕ: Функция для отображения параметров упражнения
+  const getExerciseInfo = (exercise: any) => {
+    const type = exercise.exercise_type || 'reps';
+    
+    if (type === 'reps') {
+      return (
+        <>
+          <Text style={{ 
+            color: 'var(--tg-theme-hint-color)',
+            display: 'block',
+            marginTop: '4px'
+          }}>
+            {exercise.target_sets} × {exercise.target_reps} повт
+          </Text>
+          {exercise.target_weight > 0 && (
+            <Caption 
+              level="1"
+              weight="3"
+              style={{ 
+                display: 'block',
+                marginTop: '2px'
+              }}
+            >
+              Вес: {exercise.target_weight} кг
+            </Caption>
+          )}
+        </>
+      );
+    } else if (type === 'time') {
+      return (
+        <Text style={{ 
+          color: 'var(--tg-theme-hint-color)',
+          display: 'block',
+          marginTop: '4px'
+        }}>
+          {exercise.target_sets} × {exercise.duration}с
+        </Text>
+      );
+    } else if (type === 'distance') {
+      return (
+        <Text style={{ 
+          color: 'var(--tg-theme-hint-color)',
+          display: 'block',
+          marginTop: '4px'
+        }}>
+          {exercise.distance} м
+        </Text>
+      );
+    }
+  };
+
+  // ✅ НОВОЕ: Иконка в зависимости от типа
+  const getExerciseIcon = (exercise: any) => {
+    const type = exercise.exercise_type || 'reps';
+    if (type === 'time') return '⏱';
+    if (type === 'distance') return '🏃';
+    return '💪';
+  };
+
   return (
     <div style={{ 
       minHeight: '100vh',
       paddingBottom: '120px'
     }}>
-      {/* Заголовок программы */}
       <Section>
         <div style={{ 
           padding: '20px 0',
@@ -84,7 +142,6 @@ export const ProgramDetails: React.FC<Props> = ({
         </div>
       </Section>
 
-      {/* Список упражнений или Placeholder */}
       {exercises.length > 0 ? (
         <Section header="Упражнения">
           <List>
@@ -107,33 +164,12 @@ export const ProgramDetails: React.FC<Props> = ({
                       fontSize: '17px'
                     }}
                   >
-                    {index + 1}
+                    {getExerciseIcon(exercise)}
                   </div>
                 }
                 subtitle={
                   <div>
-                    {/* Основная информация: подходы и повторения */}
-                    <Text style={{ 
-                      color: 'var(--tg-theme-hint-color)',
-                      display: 'block',
-                      marginTop: '4px'
-                    }}>
-                      {exercise.target_sets} подходов • {exercise.target_reps} повторений
-                    </Text>
-                    
-                    {/* Вес - второстепенная информация (Caption) */}
-                    {exercise.target_weight > 0 && (
-                      <Caption 
-                        level="1"
-                        weight="3"
-                        style={{ 
-                          display: 'block',
-                          marginTop: '2px'
-                        }}
-                      >
-                        Вес: {exercise.target_weight} кг
-                      </Caption>
-                    )}
+                    {getExerciseInfo(exercise)}
                   </div>
                 }
               >
@@ -157,7 +193,6 @@ export const ProgramDetails: React.FC<Props> = ({
         </Section>
       )}
 
-      {/* Кнопки действий */}
       <div
         style={{
           position: 'fixed',
@@ -172,7 +207,6 @@ export const ProgramDetails: React.FC<Props> = ({
           gap: '8px'
         }}
       >
-        {/* Главная кнопка */}
         {exercises.length > 0 && (
           <Button
             size="l"
@@ -183,7 +217,6 @@ export const ProgramDetails: React.FC<Props> = ({
           </Button>
         )}
 
-        {/* Дополнительные действия */}
         <div style={{ display: 'flex', gap: '8px' }}>
           <Button
             size="m"
