@@ -35,6 +35,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [initializing, setInitializing] = useState(true);
 
   const startTimeRef = useRef(new Date(session.started_at).getTime());
+  const sessionIdRef = useRef<string | null>(null); // ✅ НОВОЕ: Ref для sessionId
   
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
@@ -54,6 +55,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const isLastSetOfExercise = currentSetNumber >= effectiveTargetSets;
 
   const exerciseType = currentExercise?.exercise_type || 'reps';
+
+  // ✅ НОВОЕ: Обновляем ref при изменении sessionId
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   // Инициализация сессии
   useEffect(() => {
@@ -143,9 +149,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ ИСПРАВЛЕНО: BackButton показываем только после инициализации
+  // ✅ ИСПРАВЛЕНО: BackButton без зависимости от elapsedTime
   useEffect(() => {
-    // Ждём завершения инициализации
     if (initializing) return;
 
     const handleBack = () => {
@@ -154,11 +159,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         async (confirmed: boolean) => {
           if (confirmed) {
             try {
-              if (sessionId) {
-                await supabaseService.updateWorkoutSession(sessionId, {
+              // ✅ Используем ref вместо state
+              if (sessionIdRef.current) {
+                const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+                await supabaseService.updateWorkoutSession(sessionIdRef.current, {
                   status: 'cancelled',
                   completed_at: new Date().toISOString(),
-                  total_duration: elapsedTime
+                  total_duration: currentElapsed
                 });
                 console.log('✅ Session marked as cancelled');
               }
@@ -178,7 +185,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return () => {
       telegramService.hideBackButton();
     };
-  }, [initializing, onCancel, sessionId, elapsedTime]);
+  }, [initializing, onCancel]); // ✅ Убрали sessionId и elapsedTime
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
