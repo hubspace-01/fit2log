@@ -104,9 +104,12 @@ class SupabaseService {
           program_id: program.id,
           user_id: userId,
           exercise_name: ex.exercise_name,
+          exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
           target_sets: ex.target_sets,
           target_reps: ex.target_reps,
           target_weight: ex.target_weight || 0,
+          duration: ex.duration || 0, // ✅ НОВОЕ
+          distance: ex.distance || 0, // ✅ НОВОЕ
           order_index: ex.order_index,
           notes: ex.notes || ''
         }));
@@ -151,9 +154,12 @@ class SupabaseService {
         program_id: program.id,
         user_id: user_id,
         exercise_name: ex.exercise_name,
+        exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ: дефолт 'reps'
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight || 0,
+        duration: ex.duration || 0, // ✅ НОВОЕ
+        distance: ex.distance || 0, // ✅ НОВОЕ
         order_index: index,
         notes: ex.notes || ''
       }));
@@ -200,9 +206,12 @@ class SupabaseService {
         program_id: programId,
         user_id: user_id,
         exercise_name: ex.exercise_name,
+        exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight || 0,
+        duration: ex.duration || 0, // ✅ НОВОЕ
+        distance: ex.distance || 0, // ✅ НОВОЕ
         order_index: index,
         notes: ex.notes || ''
       }));
@@ -235,7 +244,6 @@ class SupabaseService {
     return { success: true };
   }
 
-  // ✅ НОВОЕ: Сохранить один лог подхода
   async saveWorkoutLog(logData: {
     user_id: string;
     program_id: string;
@@ -246,6 +254,8 @@ class SupabaseService {
     weight: number;
     rpe?: number;
     datetime: string;
+    duration?: number; // ✅ НОВОЕ
+    distance?: number; // ✅ НОВОЕ
     comments?: string;
   }) {
     const { data, error } = await supabase
@@ -259,6 +269,8 @@ class SupabaseService {
         reps: logData.reps,
         weight: logData.weight,
         rpe: logData.rpe || null,
+        duration: logData.duration || 0, // ✅ НОВОЕ
+        distance: logData.distance || 0, // ✅ НОВОЕ
         datetime: logData.datetime,
         comments: logData.comments || null
       })
@@ -269,7 +281,6 @@ class SupabaseService {
     return data;
   }
 
-  // ✅ НОВОЕ: Batch-сохранение логов (все подходы за тренировку)
   async saveWorkoutLogs(logs: any[]) {
     if (logs.length === 0) return [];
 
@@ -282,7 +293,6 @@ class SupabaseService {
     return data || [];
   }
 
-  // ✅ НОВОЕ: Получить историю тренировок по программе
   async getWorkoutHistory(programId: string, limit = 10) {
     const { data, error } = await supabase
       .from('logs')
@@ -295,7 +305,6 @@ class SupabaseService {
     return data || [];
   }
 
-  // ✅ НОВОЕ: Получить историю по конкретному упражнению
   async getExerciseHistory(exerciseId: string, limit = 5) {
     const { data, error } = await supabase
       .from('logs')
@@ -308,7 +317,6 @@ class SupabaseService {
     return data || [];
   }
 
-  // ✅ НОВОЕ: Получить последнюю тренировку
   async getLastWorkout(userId: string, programId: string) {
     const { data, error } = await supabase
       .from('logs')
@@ -331,9 +339,12 @@ class SupabaseService {
       program_id: programId,
       user_id: userId,
       exercise_name: ex.exercise_name,
+      exercise_type: ex.exercise_type || 'reps', // ✅ НОВОЕ
       target_sets: ex.target_sets,
       target_reps: ex.target_reps,
       target_weight: ex.target_weight || 0,
+      duration: ex.duration || 0, // ✅ НОВОЕ
+      distance: ex.distance || 0, // ✅ НОВОЕ
       order_index: index,
       notes: ex.notes || ''
     }));
