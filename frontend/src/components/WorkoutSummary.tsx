@@ -91,7 +91,10 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       totalTimeUnderTension,
       totalDistance,
       completedExercises,
-      exerciseStats
+      exerciseStats,
+      repsCount: repsSets.length,
+      timeCount: timeSets.length,
+      distanceCount: distanceSets.length
     };
   }, [completedSets]);
 
@@ -127,56 +130,35 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
+      {/* ✅ ИСПРАВЛЕНО: Старый стиль header без gradient */}
       <div style={{
-        padding: '40px 16px 32px',
+        padding: '32px 16px 24px',
         textAlign: 'center',
-        background: 'linear-gradient(135deg, var(--tg-theme-button-color) 0%, var(--tg-theme-link-color) 100%)',
-        position: 'relative',
-        overflow: 'hidden'
+        backgroundColor: 'var(--tg-theme-secondary-bg-color)'
       }}>
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '0',
-          right: '0',
-          fontSize: '24px',
-          opacity: 0.4,
-          letterSpacing: '20px',
-          animation: 'fadeIn 0.5s ease-in'
-        }}>
-          🎉 🎊 ✨ 🏆 💪 🔥
-        </div>
-        
         <div style={{ 
-          fontSize: '56px', 
-          marginBottom: '12px',
-          lineHeight: '1',
-          animation: 'bounce 0.6s ease-out'
+          fontSize: '48px', 
+          marginBottom: '16px',
+          lineHeight: '1'
         }}>
-          🎉
+          �� 🏋️ 🎉
         </div>
-        <Title level="1" weight="2" style={{ 
-          fontSize: '28px', 
-          marginBottom: '8px',
-          color: 'white'
-        }}>
+        <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
           {randomTitle}
         </Title>
-        <Caption level="1" style={{ 
-          fontSize: '15px', 
-          color: 'rgba(255,255,255,0.8)'
-        }}>
+        <Caption level="1" style={{ fontSize: '15px', color: 'var(--tg-theme-hint-color)' }}>
           {programName}
         </Caption>
       </div>
 
+      {/* Grid Stats Cards (2x2) */}
       <div style={{ 
         padding: '16px',
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '12px',
-        marginTop: '-16px'
+        gap: '12px'
       }}>
+        {/* Card 1: Время */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -193,6 +175,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
+        {/* Card 2: Упражнения */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -209,6 +192,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
+        {/* Card 3: Подходы */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -225,6 +209,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           </Caption>
         </Card>
 
+        {/* ✅ НОВОЕ: Card 4 - Умная метрика с деталями */}
         <Card style={{
           padding: '16px',
           textAlign: 'center',
@@ -232,43 +217,81 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           border: '1px solid var(--tg-theme-section-separator-color)',
           borderRadius: '12px'
         }}>
-          {stats.totalWeight > 0 && (
+          {/* Если только один тип - показываем его крупно */}
+          {stats.repsCount > 0 && stats.timeCount === 0 && stats.distanceCount === 0 && (
             <>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏋️</div>
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {Math.round(stats.totalWeight)} кг
               </Title>
-              <Caption level="1" style={{ fontSize: '13px' }}>
-                Общий вес
+              <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)' }}>
+                из {stats.repsCount} reps подх.
               </Caption>
             </>
           )}
-          {stats.totalTimeUnderTension > 0 && stats.totalWeight === 0 && (
+          
+          {stats.timeCount > 0 && stats.repsCount === 0 && stats.distanceCount === 0 && (
             <>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏱</div>
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {formatDuration(stats.totalTimeUnderTension)}
               </Title>
-              <Caption level="1" style={{ fontSize: '13px' }}>
-                Под нагрузкой
+              <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)' }}>
+                из {stats.timeCount} time подх.
               </Caption>
             </>
           )}
-          {stats.totalDistance > 0 && stats.totalWeight === 0 && stats.totalTimeUnderTension === 0 && (
+          
+          {stats.distanceCount > 0 && stats.repsCount === 0 && stats.timeCount === 0 && (
             <>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏃</div>
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {stats.totalDistance} м
               </Title>
-              <Caption level="1" style={{ fontSize: '13px' }}>
-                Дистанция
+              <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)' }}>
+                из {stats.distanceCount} distance подх.
+              </Caption>
+            </>
+          )}
+
+          {/* ✅ НОВОЕ: Если смешанная тренировка - показываем все компактно */}
+          {((stats.repsCount > 0 && stats.timeCount > 0) ||
+            (stats.repsCount > 0 && stats.distanceCount > 0) ||
+            (stats.timeCount > 0 && stats.distanceCount > 0)) && (
+            <>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📊</div>
+              <div style={{ 
+                fontSize: '12px', 
+                lineHeight: '1.6',
+                color: 'var(--tg-theme-text-color)'
+              }}>
+                {stats.totalWeight > 0 && (
+                  <div>🏋️ {Math.round(stats.totalWeight)} кг</div>
+                )}
+                {stats.totalTimeUnderTension > 0 && (
+                  <div>⏱ {formatDuration(stats.totalTimeUnderTension)}</div>
+                )}
+                {stats.totalDistance > 0 && (
+                  <div>🏃 {stats.totalDistance} м</div>
+                )}
+              </div>
+              <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)', marginTop: '4px' }}>
+                Смешанная тренировка
               </Caption>
             </>
           )}
         </Card>
       </div>
 
-      <Section header="💪 Детали упражнений" style={{ marginTop: '16px' }}>
+      {/* ✅ ИСПРАВЛЕНО: Header по центру */}
+      <Section 
+        header={
+          <div style={{ textAlign: 'center', width: '100%', padding: '8px 0' }}>
+            💪 ДЕТАЛИ УПРАЖНЕНИЙ
+          </div>
+        }
+        style={{ marginTop: '16px' }}
+      >
         {stats.exerciseStats.map((exercise, index) => {
           let subtitle = '';
           
@@ -325,17 +348,6 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           ✅ Завершить
         </Button>
       </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 0.4; transform: translateY(0); }
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-      `}</style>
     </div>
   );
 };
