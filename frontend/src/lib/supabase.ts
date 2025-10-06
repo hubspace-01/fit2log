@@ -69,6 +69,7 @@ class SupabaseService {
     return data || [];
   }
 
+  // ✅ ИСПРАВЛЕНО: Явно устанавливаем day_order = null
   async copyTemplate(templateId: string, userId: string) {
     try {
       console.log('🔍 Copying template:', templateId, 'for user:', userId);
@@ -92,7 +93,9 @@ class SupabaseService {
         .insert({
           user_id: userId,
           program_name: template.template_name,
-          is_template: false
+          is_template: false,
+          day_order: null,      // ✅ Явно NULL
+          weekday_hint: null    // ✅ Явно NULL
         })
         .select()
         .single();
@@ -132,7 +135,6 @@ class SupabaseService {
     }
   }
 
-  // ✅ ИСПРАВЛЕНО: Поддержка NULL для day_order
   async createProgram(programData: any) {
     const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
@@ -179,7 +181,6 @@ class SupabaseService {
     return program;
   }
 
-  // ✅ ИСПРАВЛЕНО: Поддержка NULL для day_order
   async updateProgram(programId: string, programData: any) {
     const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
