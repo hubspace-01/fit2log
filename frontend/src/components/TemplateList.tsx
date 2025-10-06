@@ -280,7 +280,7 @@ export const TemplateList: React.FC<Props> = ({
 
                   return (
                     <Cell
-                      key={index}
+                      key={exercise.id}
                       before={
                         <div style={{
                           width: '36px',

@@ -315,7 +315,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           }
 
           return (
-            <div key={index}>
+            <div key={`exercise-${index}`}>
               <Cell
                 onClick={() => toggleExercise(index)}
                 before={

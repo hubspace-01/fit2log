@@ -550,7 +550,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
             return (
               <Cell
-                key={index}
+                key={`set-${index}`}
                 before="✅"
                 subtitle={subtitle}
               >
