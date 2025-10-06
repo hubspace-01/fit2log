@@ -60,13 +60,11 @@ export const ProgramSelector: React.FC<Props> = ({
     }
   }, [userId, programs]);
 
-  // ✅ ИСПРАВЛЕНО: Убрана проверка на day_order === 0
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
       .filter(p => p.day_order && p.day_order > 0)
       .sort((a, b) => (a.day_order || 0) - (b.day_order || 0));
     
-    // ✅ Только программы с day_order = null или undefined
     const others = programs
       .filter(p => !p.day_order);
     
@@ -90,16 +88,18 @@ export const ProgramSelector: React.FC<Props> = ({
     );
   }
 
-  const renderProgramCard = (program: Program, isInSplit: boolean) => {
+  const renderProgramCard = (program: Program, isInSplit: boolean, index?: number) => {
     const inProgress = hasInProgressSession(program.id);
     const hasDayOrder = program.day_order && program.day_order > 0;
+    const showNumber = !isInSplit && index !== undefined;
+    const displayNumber = showNumber ? index + 1 : program.day_order;
     
     return (
       <div 
         key={program.id}
         style={{ 
           position: 'relative',
-          paddingTop: (hasDayOrder || inProgress) ? '12px' : '0'
+          paddingTop: (hasDayOrder || showNumber) ? '12px' : '0'
         }}
       >
         {hasDayOrder && (
@@ -140,23 +140,41 @@ export const ProgramSelector: React.FC<Props> = ({
           </div>
         )}
 
-        {!hasDayOrder && inProgress && (
+        {showNumber && (
           <div style={{
             position: 'absolute',
             top: '0',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: '#FF9500',
-            color: '#FFFFFF',
-            padding: '4px 10px',
-            borderRadius: '8px',
-            fontSize: '11px',
-            fontWeight: '600',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            left: '10px',
+            display: 'flex',
+            gap: '5px',
+            alignItems: 'center',
             zIndex: 1
           }}>
-            В ПРОЦЕССЕ
+            <div style={{
+              backgroundColor: inProgress ? '#FF9500' : '#808080',
+              color: '#FFFFFF',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: '600'
+            }}>
+              {displayNumber}
+            </div>
+
+            {inProgress && (
+              <div style={{
+                backgroundColor: '#FF9500',
+                color: '#FFFFFF',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                В ПРОЦЕССЕ
+              </div>
+            )}
           </div>
         )}
 
@@ -306,7 +324,7 @@ export const ProgramSelector: React.FC<Props> = ({
               }
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {otherPrograms.map((program) => renderProgramCard(program, false))}
+                {otherPrograms.map((program, index) => renderProgramCard(program, false, index))}
               </div>
             </Section>
           )}
