@@ -132,7 +132,7 @@ class SupabaseService {
     }
   }
 
-  // ✅ ОБНОВЛЕНО: Добавлена поддержка day_order и weekday_hint
+  // ✅ ИСПРАВЛЕНО: Поддержка NULL для day_order
   async createProgram(programData: any) {
     const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
@@ -146,7 +146,7 @@ class SupabaseService {
         user_id: user_id,
         program_name,
         is_template: false,
-        day_order: day_order || 0,
+        day_order: day_order !== undefined && day_order !== null ? day_order : null,
         weekday_hint: weekday_hint || null
       })
       .select()
@@ -179,7 +179,7 @@ class SupabaseService {
     return program;
   }
 
-  // ✅ ОБНОВЛЕНО: Добавлена поддержка day_order и weekday_hint
+  // ✅ ИСПРАВЛЕНО: Поддержка NULL для day_order
   async updateProgram(programId: string, programData: any) {
     const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
@@ -191,7 +191,7 @@ class SupabaseService {
       .from('programs')
       .update({
         program_name,
-        day_order: day_order !== undefined ? day_order : 0,
+        day_order: day_order !== undefined && day_order !== null ? day_order : null,
         weekday_hint: weekday_hint || null,
         updated_at: new Date().toISOString()
       })

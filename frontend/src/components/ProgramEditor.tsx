@@ -26,7 +26,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
   const [weekdayHint, setWeekdayHint] = useState<string>('');
   const [existingPrograms, setExistingPrograms] = useState<Program[]>([]);
 
-  // ✅ НОВОЕ: Загружаем существующие программы для валидации
   useEffect(() => {
     const loadPrograms = async () => {
       try {
@@ -106,13 +105,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
     setExercises(exercises.filter((_, i) => i !== index));
   };
 
-  // ✅ НОВОЕ: Валидация дублей day_order
   const validateDayOrder = (): boolean => {
     if (!isInWeeklySplit) return true;
     
     const duplicate = existingPrograms.find(p => 
       p.day_order === dayOrder && 
-      p.id !== initialData?.id // Исключаем текущую программу при редактировании
+      p.id !== initialData?.id
     );
     
     if (duplicate) {
@@ -134,17 +132,17 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
       return;
     }
     
-    // ✅ Валидация дублей
     if (!validateDayOrder()) {
       return;
     }
     
     const validExercises = exercises.filter(ex => ex.exercise_name.trim());
     
+    // ✅ ИСПРАВЛЕНО: NULL вместо 0
     onSave({ 
       program_name: programName, 
       exercises: validExercises,
-      day_order: isInWeeklySplit ? dayOrder : 0,
+      day_order: isInWeeklySplit ? dayOrder : null,
       weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : null
     });
   };
@@ -190,7 +188,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </Title>
       </div>
 
-      {/* Название программы */}
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
         <div style={{ 
           backgroundColor: 'var(--tg-theme-secondary-bg-color)',
@@ -220,7 +217,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </div>
       </div>
 
-      {/* Секция недельного сплита */}
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
         <div style={{ 
           backgroundColor: 'var(--tg-theme-secondary-bg-color)',
@@ -319,7 +315,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </div>
       </div>
 
-      {/* Упражнения - остальной код без изменений */}
       <div style={{ padding: '0 16px' }}>
         <div style={{ 
           display: 'flex', 
@@ -438,7 +433,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                       onClick={() => updateExercise(i, 'exercise_type', 'distance')}
                       style={{ fontSize: '11px' }}
                     >
-                      🏃 Расст
+                      �� Расст
                     </Button>
                   </div>
                 </div>
