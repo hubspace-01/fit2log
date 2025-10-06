@@ -60,7 +60,6 @@ export const ProgramSelector: React.FC<Props> = ({
     }
   }, [userId, programs]);
 
-  // ✅ НОВОЕ: Разделяем программы на сплит и остальные
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
       .filter(p => p.day_order && p.day_order > 0)
@@ -89,25 +88,25 @@ export const ProgramSelector: React.FC<Props> = ({
     );
   }
 
-  // ✅ НОВОЕ: Рендер карточки программы
   const renderProgramCard = (program: Program, isInSplit: boolean) => {
     const inProgress = hasInProgressSession(program.id);
+    const hasDayOrder = program.day_order && program.day_order > 0;
     
     return (
       <div 
         key={program.id}
         style={{ 
           position: 'relative',
-          paddingTop: (program.day_order || inProgress) ? '12px' : '0'
+          paddingTop: (hasDayOrder || inProgress) ? '12px' : '0'
         }}
       >
-        {/* Бейдж номера тренировки (слева) */}
-        {program.day_order && program.day_order > 0 && (
+        {/* ✅ Бейдж номера тренировки - зелёный/оранжевый */}
+        {hasDayOrder && (
           <div style={{
             position: 'absolute',
             top: '0',
             left: '10px',
-            backgroundColor: '#3B82F6',
+            backgroundColor: inProgress ? '#FF9500' : '#10B981', // ✅ Оранжевый если в процессе
             color: '#FFFFFF',
             padding: '4px 10px',
             borderRadius: '8px',
@@ -119,12 +118,13 @@ export const ProgramSelector: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Бейдж "В ПРОЦЕССЕ" (справа) */}
+        {/* ✅ Бейдж "В ПРОЦЕССЕ" - всегда по центру сверху */}
         {inProgress && (
           <div style={{
             position: 'absolute',
             top: '0',
-            right: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)', // ✅ Центрирование
             backgroundColor: '#FF9500',
             color: '#FFFFFF',
             padding: '4px 10px',
@@ -135,17 +135,17 @@ export const ProgramSelector: React.FC<Props> = ({
             letterSpacing: '0.5px',
             zIndex: 1
           }}>
-            В процессе
+            В ПРОЦЕССЕ
           </div>
         )}
 
         <Card 
           style={{ 
             width: '100%',
-            border: isInSplit 
-              ? '2px solid #10B981' 
-              : inProgress 
-              ? '2px solid #FF9500' 
+            border: inProgress 
+              ? '2px solid #FF9500' // ✅ Оранжевый бордер для "в процессе"
+              : isInSplit 
+              ? '2px solid #10B981' // ✅ Зелёный бордер для сплита
               : undefined
           }}
         >
@@ -207,7 +207,7 @@ export const ProgramSelector: React.FC<Props> = ({
       {programs.length === 0 ? (
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>��</div>
             <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Начни свой путь
             </Title>
@@ -242,13 +242,31 @@ export const ProgramSelector: React.FC<Props> = ({
         </Section>
       ) : (
         <>
-          {/* ✅ НОВОЕ: Секция основного сплита */}
+          {/* ✅ Секция основного сплита с tooltip */}
           {weeklySplit.length > 0 && (
             <Section 
               header={
-                <Title level="3" weight="2" style={{ fontSize: '18px', marginBottom: '12px' }}>
-                  Основной сплит
-                </Title>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', // ✅ По центру
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <Title level="3" weight="2" style={{ fontSize: '18px', margin: 0 }}>
+                    Основной сплит
+                  </Title>
+                  <span 
+                    style={{ 
+                      fontSize: '16px', 
+                      cursor: 'pointer',
+                      color: 'var(--tg-theme-hint-color)'
+                    }}
+                    onClick={() => telegramService.showAlert('Основной сплит — это твои регулярные тренировки, выделенные зелёным.')}
+                    title="Подсказка"
+                  >
+                    ℹ️
+                  </span>
+                </div>
               }
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -257,17 +275,15 @@ export const ProgramSelector: React.FC<Props> = ({
             </Section>
           )}
 
-          {/* ✅ НОВОЕ: Секция других программ */}
+          {/* ✅ Секция других программ */}
           {otherPrograms.length > 0 && (
             <Section 
               header={
-                <Title level="3" weight="2" style={{ 
-                  fontSize: '18px', 
-                  marginBottom: '12px',
-                  marginTop: weeklySplit.length > 0 ? '16px' : '0'
-                }}>
-                  Другие программы
-                </Title>
+                <div style={{ textAlign: 'center' }}> {/* ✅ По центру */}
+                  <Title level="3" weight="2" style={{ fontSize: '18px', marginTop: weeklySplit.length > 0 ? '16px' : '0' }}>
+                    Другие программы
+                  </Title>
+                </div>
               }
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

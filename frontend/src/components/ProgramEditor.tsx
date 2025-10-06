@@ -9,6 +9,7 @@ import {
   Checkbox
 } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
+import { supabaseService } from '../lib/supabase';
 import type { Program } from '../types';
 
 interface Props {
@@ -20,17 +21,28 @@ interface Props {
 export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) => {
   const [programName, setProgramName] = useState('');
   const [exercises, setExercises] = useState<any[]>([]);
-  
-  // ✅ НОВОЕ: Состояния для недельного сплита
   const [isInWeeklySplit, setIsInWeeklySplit] = useState(false);
   const [dayOrder, setDayOrder] = useState<number>(1);
   const [weekdayHint, setWeekdayHint] = useState<string>('');
+  const [existingPrograms, setExistingPrograms] = useState<Program[]>([]);
+
+  // ✅ НОВОЕ: Загружаем существующие программы для валидации
+  useEffect(() => {
+    const loadPrograms = async () => {
+      try {
+        const programs = await supabaseService.getPrograms();
+        setExistingPrograms(programs);
+      } catch (error) {
+        console.error('Error loading programs:', error);
+      }
+    };
+    loadPrograms();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
       setProgramName(initialData.program_name);
       
-      // ✅ НОВОЕ: Загружаем day_order и weekday_hint
       if (initialData.day_order && initialData.day_order > 0) {
         setIsInWeeklySplit(true);
         setDayOrder(initialData.day_order);
@@ -94,18 +106,47 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
     setExercises(exercises.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
-    if (programName.trim() && exercises.length > 0) {
-      const validExercises = exercises.filter(ex => ex.exercise_name.trim());
-      
-      // ✅ НОВОЕ: Добавляем day_order и weekday_hint
-      onSave({ 
-        program_name: programName, 
-        exercises: validExercises,
-        day_order: isInWeeklySplit ? dayOrder : 0,
-        weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : null
-      });
+  // ✅ НОВОЕ: Валидация дублей day_order
+  const validateDayOrder = (): boolean => {
+    if (!isInWeeklySplit) return true;
+    
+    const duplicate = existingPrograms.find(p => 
+      p.day_order === dayOrder && 
+      p.id !== initialData?.id // Исключаем текущую программу при редактировании
+    );
+    
+    if (duplicate) {
+      telegramService.showAlert(`Тренировка с номером ${dayOrder} уже существует: "${duplicate.program_name}". Выберите другой номер.`);
+      return false;
     }
+    
+    return true;
+  };
+
+  const handleSave = () => {
+    if (!programName.trim()) {
+      telegramService.showAlert('Введите название программы');
+      return;
+    }
+    
+    if (exercises.length === 0) {
+      telegramService.showAlert('Добавьте хотя бы одно упражнение');
+      return;
+    }
+    
+    // ✅ Валидация дублей
+    if (!validateDayOrder()) {
+      return;
+    }
+    
+    const validExercises = exercises.filter(ex => ex.exercise_name.trim());
+    
+    onSave({ 
+      program_name: programName, 
+      exercises: validExercises,
+      day_order: isInWeeklySplit ? dayOrder : 0,
+      weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : null
+    });
   };
 
   useEffect(() => {
@@ -179,14 +220,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </div>
       </div>
 
-      {/* ✅ НОВОЕ: Секция недельного сплита */}
+      {/* Секция недельного сплита */}
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
         <div style={{ 
           backgroundColor: 'var(--tg-theme-secondary-bg-color)',
           borderRadius: '12px',
           padding: '16px'
         }}>
-          {/* Checkbox */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
@@ -212,7 +252,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
             </div>
           </div>
 
-          {/* Выбор номера тренировки */}
           {isInWeeklySplit && (
             <>
               <div style={{ marginBottom: '14px' }}>
@@ -245,7 +284,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                 </Select>
               </div>
 
-              {/* Выбор дня недели (опционально) */}
               <div>
                 <Text weight="2" style={{ 
                   fontSize: '13px', 
@@ -281,7 +319,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </div>
       </div>
 
-      {/* Упражнения */}
+      {/* Упражнения - остальной код без изменений */}
       <div style={{ padding: '0 16px' }}>
         <div style={{ 
           display: 'flex', 
@@ -359,11 +397,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                       padding: '4px 10px'
                     }}
                   >
-                    ��️
+                    🗑️
                   </Button>
                 </div>
 
-                {/* Выбор типа упражнения */}
                 <div style={{ marginBottom: '14px' }}>
                   <Text weight="2" style={{ 
                     fontSize: '13px', 
@@ -406,7 +443,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </div>
                 </div>
 
-                {/* Название упражнения */}
                 <div style={{ marginBottom: '14px' }}>
                   <Text weight="2" style={{ 
                     fontSize: '13px', 
@@ -429,7 +465,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   />
                 </div>
 
-                {/* Для reps-based */}
                 {ex.exercise_type === 'reps' && (
                   <div style={{ 
                     display: 'grid', 
@@ -506,7 +541,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </div>
                 )}
 
-                {/* Для time-based */}
                 {ex.exercise_type === 'time' && (
                   <div style={{ 
                     display: 'grid', 
@@ -561,7 +595,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </div>
                 )}
 
-                {/* Для distance-based */}
                 {ex.exercise_type === 'distance' && (
                   <div style={{ marginBottom: '14px' }}>
                     <Text weight="2" style={{ 
@@ -587,7 +620,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                   </div>
                 )}
 
-                {/* Заметки */}
                 <div>
                   <Text weight="2" style={{ 
                     fontSize: '13px', 
