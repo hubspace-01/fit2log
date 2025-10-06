@@ -4,7 +4,9 @@ import {
   Textarea,
   Title, 
   Text,
-  Button
+  Button,
+  Select,
+  Checkbox
 } from '@telegram-apps/telegram-ui';
 import { telegramService } from '../lib/telegram';
 import type { Program } from '../types';
@@ -18,10 +20,22 @@ interface Props {
 export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) => {
   const [programName, setProgramName] = useState('');
   const [exercises, setExercises] = useState<any[]>([]);
+  
+  // ✅ НОВОЕ: Состояния для недельного сплита
+  const [isInWeeklySplit, setIsInWeeklySplit] = useState(false);
+  const [dayOrder, setDayOrder] = useState<number>(1);
+  const [weekdayHint, setWeekdayHint] = useState<string>('');
 
   useEffect(() => {
     if (initialData) {
       setProgramName(initialData.program_name);
+      
+      // ✅ НОВОЕ: Загружаем day_order и weekday_hint
+      if (initialData.day_order && initialData.day_order > 0) {
+        setIsInWeeklySplit(true);
+        setDayOrder(initialData.day_order);
+        setWeekdayHint(initialData.weekday_hint || '');
+      }
       
       const sortedExercises = [...(initialData.exercises || [])].sort(
         (a, b) => a.order_index - b.order_index
@@ -83,7 +97,14 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
   const handleSave = () => {
     if (programName.trim() && exercises.length > 0) {
       const validExercises = exercises.filter(ex => ex.exercise_name.trim());
-      onSave({ program_name: programName, exercises: validExercises });
+      
+      // ✅ НОВОЕ: Добавляем day_order и weekday_hint
+      onSave({ 
+        program_name: programName, 
+        exercises: validExercises,
+        day_order: isInWeeklySplit ? dayOrder : 0,
+        weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : null
+      });
     }
   };
 
@@ -93,13 +114,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
     });
 
     return () => {
-      telegramService.hideBackButton();
+      // Не скрываем BackButton
     };
   }, [onBack]);
 
   const title = initialData ? '✏️ Редактирование программы' : '➕ Новая программа';
 
-  // ✅ НОВОЕ: Функция для получения плейсхолдера
   const getPlaceholder = (type: string) => {
     switch(type) {
       case 'reps':
@@ -129,6 +149,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </Title>
       </div>
 
+      {/* Название программы */}
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
         <div style={{ 
           backgroundColor: 'var(--tg-theme-secondary-bg-color)',
@@ -158,6 +179,109 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
         </div>
       </div>
 
+      {/* ✅ НОВОЕ: Секция недельного сплита */}
+      <div style={{ padding: '0 16px', marginBottom: '24px' }}>
+        <div style={{ 
+          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+          borderRadius: '12px',
+          padding: '16px'
+        }}>
+          {/* Checkbox */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: isInWeeklySplit ? '16px' : '0'
+          }}>
+            <Checkbox
+              checked={isInWeeklySplit}
+              onChange={(e) => setIsInWeeklySplit(e.target.checked)}
+            />
+            <div>
+              <Text weight="2" style={{ fontSize: '15px', display: 'block' }}>
+                Добавить в основной сплит
+              </Text>
+              <Text style={{ 
+                fontSize: '12px', 
+                color: 'var(--tg-theme-hint-color)',
+                display: 'block',
+                marginTop: '2px'
+              }}>
+                Программа будет выделена зелёным
+              </Text>
+            </div>
+          </div>
+
+          {/* Выбор номера тренировки */}
+          {isInWeeklySplit && (
+            <>
+              <div style={{ marginBottom: '14px' }}>
+                <Text weight="2" style={{ 
+                  fontSize: '13px', 
+                  marginBottom: '8px', 
+                  display: 'block',
+                  color: 'var(--tg-theme-text-color)',
+                  textAlign: 'center'
+                }}>
+                  Номер тренировки
+                </Text>
+                <Select
+                  value={dayOrder}
+                  onChange={(e) => setDayOrder(parseInt(e.target.value))}
+                  style={{ 
+                    fontSize: '15px', 
+                    width: '100%',
+                    backgroundColor: 'var(--tg-theme-bg-color)',
+                    textAlign: 'center'
+                  }}
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                  <option value={5}>5</option>
+                  <option value={6}>6</option>
+                  <option value={7}>7</option>
+                </Select>
+              </div>
+
+              {/* Выбор дня недели (опционально) */}
+              <div>
+                <Text weight="2" style={{ 
+                  fontSize: '13px', 
+                  marginBottom: '8px', 
+                  display: 'block',
+                  color: 'var(--tg-theme-text-color)',
+                  textAlign: 'center'
+                }}>
+                  День недели (опционально)
+                </Text>
+                <Select
+                  value={weekdayHint}
+                  onChange={(e) => setWeekdayHint(e.target.value)}
+                  style={{ 
+                    fontSize: '15px', 
+                    width: '100%',
+                    backgroundColor: 'var(--tg-theme-bg-color)',
+                    textAlign: 'center'
+                  }}
+                >
+                  <option value="">Не указано</option>
+                  <option value="ПН">Понедельник</option>
+                  <option value="ВТ">Вторник</option>
+                  <option value="СР">Среда</option>
+                  <option value="ЧТ">Четверг</option>
+                  <option value="ПТ">Пятница</option>
+                  <option value="СБ">Суббота</option>
+                  <option value="ВС">Воскресенье</option>
+                </Select>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Упражнения */}
       <div style={{ padding: '0 16px' }}>
         <div style={{ 
           display: 'flex', 
@@ -235,7 +359,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                       padding: '4px 10px'
                     }}
                   >
-                    🗑️
+                    ��️
                   </Button>
                 </div>
 

@@ -16,7 +16,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 class SupabaseService {
-  // ✅ НОВОЕ: Публичный доступ к supabase client
   public supabase = supabase;
 
   async validateTelegramInitData(initData: string) {
@@ -133,8 +132,9 @@ class SupabaseService {
     }
   }
 
+  // ✅ ОБНОВЛЕНО: Добавлена поддержка day_order и weekday_hint
   async createProgram(programData: any) {
-    const { program_name, exercises, user_id } = programData;
+    const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
     if (!user_id) {
       throw new Error('User ID is required');
@@ -145,7 +145,9 @@ class SupabaseService {
       .insert({
         user_id: user_id,
         program_name,
-        is_template: false
+        is_template: false,
+        day_order: day_order || 0,
+        weekday_hint: weekday_hint || null
       })
       .select()
       .single();
@@ -177,8 +179,9 @@ class SupabaseService {
     return program;
   }
 
+  // ✅ ОБНОВЛЕНО: Добавлена поддержка day_order и weekday_hint
   async updateProgram(programId: string, programData: any) {
-    const { program_name, exercises, user_id } = programData;
+    const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
     if (!user_id) {
       throw new Error('User ID is required');
@@ -188,6 +191,8 @@ class SupabaseService {
       .from('programs')
       .update({
         program_name,
+        day_order: day_order !== undefined ? day_order : 0,
+        weekday_hint: weekday_hint || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', programId)

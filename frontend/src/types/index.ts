@@ -11,6 +11,8 @@ export interface Program {
   user_id: string;
   program_name: string;
   is_template: boolean;
+  day_order?: number; // ✅ НОВОЕ: Номер тренировки в недельном сплите (0 = не задано, 1-7)
+  weekday_hint?: string; // ✅ НОВОЕ: Подсказка дня недели ('ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС')
   created_at: string;
   updated_at: string;
   exercises?: Exercise[];
@@ -38,7 +40,7 @@ export interface LogItem {
   user_id: string;
   program_id?: string;
   exercise_id?: string;
-  session_id?: string; // ✅ НОВОЕ: Связь с сессией
+  session_id?: string;
   datetime: string;
   exercise_name: string;
   set_no: number;
@@ -74,7 +76,6 @@ export interface TemplateExercise {
   notes?: string;
 }
 
-// ✅ НОВОЕ: Интерфейс для workout_session из БД
 export interface WorkoutSessionDB {
   id: string;
   user_id: string;
@@ -89,7 +90,7 @@ export interface WorkoutSessionDB {
 }
 
 export interface WorkoutSession {
-  id?: string; // ✅ НОВОЕ: ID сессии из БД
+  id?: string;
   program_id: string;
   program_name: string;
   started_at: string;

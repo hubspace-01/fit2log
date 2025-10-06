@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Section, 
   Button, 
@@ -9,7 +9,7 @@ import {
 } from '@telegram-apps/telegram-ui';
 import type { Program } from '../types';
 import { supabaseService } from '../lib/supabase';
-import { telegramService } from '../lib/telegram'; // ✅ НОВОЕ
+import { telegramService } from '../lib/telegram';
 
 interface Props {
   programs: Program[];
@@ -31,7 +31,6 @@ export const ProgramSelector: React.FC<Props> = ({
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // ✅ НОВОЕ: Скрываем BackButton на главной странице
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
@@ -61,6 +60,18 @@ export const ProgramSelector: React.FC<Props> = ({
     }
   }, [userId, programs]);
 
+  // ✅ НОВОЕ: Разделяем программы на сплит и остальные
+  const { weeklySplit, otherPrograms } = useMemo(() => {
+    const split = programs
+      .filter(p => p.day_order && p.day_order > 0)
+      .sort((a, b) => (a.day_order || 0) - (b.day_order || 0));
+    
+    const others = programs
+      .filter(p => !p.day_order || p.day_order === 0);
+    
+    return { weeklySplit: split, otherPrograms: others };
+  }, [programs]);
+
   const hasInProgressSession = (programId: string) => {
     return inProgressSessions.has(programId);
   };
@@ -77,6 +88,106 @@ export const ProgramSelector: React.FC<Props> = ({
       </div>
     );
   }
+
+  // ✅ НОВОЕ: Рендер карточки программы
+  const renderProgramCard = (program: Program, isInSplit: boolean) => {
+    const inProgress = hasInProgressSession(program.id);
+    
+    return (
+      <div 
+        key={program.id}
+        style={{ 
+          position: 'relative',
+          paddingTop: (program.day_order || inProgress) ? '12px' : '0'
+        }}
+      >
+        {/* Бейдж номера тренировки (слева) */}
+        {program.day_order && program.day_order > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '0',
+            left: '10px',
+            backgroundColor: '#3B82F6',
+            color: '#FFFFFF',
+            padding: '4px 10px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: '600',
+            zIndex: 1
+          }}>
+            {program.day_order}
+          </div>
+        )}
+
+        {/* Бейдж "В ПРОЦЕССЕ" (справа) */}
+        {inProgress && (
+          <div style={{
+            position: 'absolute',
+            top: '0',
+            right: '10px',
+            backgroundColor: '#FF9500',
+            color: '#FFFFFF',
+            padding: '4px 10px',
+            borderRadius: '8px',
+            fontSize: '11px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            zIndex: 1
+          }}>
+            В процессе
+          </div>
+        )}
+
+        <Card 
+          style={{ 
+            width: '100%',
+            border: isInSplit 
+              ? '2px solid #10B981' 
+              : inProgress 
+              ? '2px solid #FF9500' 
+              : undefined
+          }}
+        >
+          <div style={{ 
+            padding: '14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text weight="2" style={{ 
+                fontSize: '16px',
+                display: 'block',
+                marginBottom: '4px'
+              }}>
+                {program.program_name}
+              </Text>
+              <Text style={{ 
+                fontSize: '13px',
+                color: 'var(--tg-theme-hint-color)'
+              }}>
+                {program.weekday_hint && `${program.weekday_hint} • `}
+                {program.exercises?.length || 0} упражнений
+              </Text>
+            </div>
+            <Button 
+              size="s" 
+              mode="filled"
+              style={{ 
+                fontSize: '13px',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={() => onSelectProgram(program)}
+            >
+              {inProgress ? 'Продолжить' : 'Начать'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
 
   return (
     <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
@@ -131,90 +242,39 @@ export const ProgramSelector: React.FC<Props> = ({
         </Section>
       ) : (
         <>
-          <Section 
-            header={
-              <Title level="3" weight="2" style={{ fontSize: '18px', marginBottom: '12px' }}>
-                Мои программы
-              </Title>
-            }
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {programs.map((program) => {
-                const inProgress = hasInProgressSession(program.id);
-                
-                return (
-                  <div 
-                    key={program.id}
-                    style={{ 
-                      position: 'relative',
-                      paddingTop: inProgress ? '12px' : '0'
-                    }}
-                  >
-                    {inProgress && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '0',
-                        left: '10px',
-                        backgroundColor: '#FF9500',
-                        color: '#FFFFFF',
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        zIndex: 1
-                      }}>
-                        В процессе
-                      </div>
-                    )}
+          {/* ✅ НОВОЕ: Секция основного сплита */}
+          {weeklySplit.length > 0 && (
+            <Section 
+              header={
+                <Title level="3" weight="2" style={{ fontSize: '18px', marginBottom: '12px' }}>
+                  Основной сплит
+                </Title>
+              }
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {weeklySplit.map((program) => renderProgramCard(program, true))}
+              </div>
+            </Section>
+          )}
 
-                    <Card 
-                      style={{ 
-                        width: '100%',
-                        border: inProgress ? '2px solid #FF9500' : undefined
-                      }}
-                    >
-                      <div style={{ 
-                        padding: '14px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '12px'
-                      }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <Text weight="2" style={{ 
-                            fontSize: '16px',
-                            display: 'block',
-                            marginBottom: '4px'
-                          }}>
-                            {program.program_name}
-                          </Text>
-                          <Text style={{ 
-                            fontSize: '13px',
-                            color: 'var(--tg-theme-hint-color)'
-                          }}>
-                            {program.exercises?.length || 0} упражнений
-                          </Text>
-                        </div>
-                        <Button 
-                          size="s" 
-                          mode="filled"
-                          style={{ 
-                            fontSize: '13px',
-                            whiteSpace: 'nowrap'
-                          }}
-                          onClick={() => onSelectProgram(program)}
-                        >
-                          {inProgress ? 'Продолжить' : 'Начать'}
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                );
-              })}
-            </div>
-          </Section>
+          {/* ✅ НОВОЕ: Секция других программ */}
+          {otherPrograms.length > 0 && (
+            <Section 
+              header={
+                <Title level="3" weight="2" style={{ 
+                  fontSize: '18px', 
+                  marginBottom: '12px',
+                  marginTop: weeklySplit.length > 0 ? '16px' : '0'
+                }}>
+                  Другие программы
+                </Title>
+              }
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {otherPrograms.map((program) => renderProgramCard(program, false))}
+              </div>
+            </Section>
+          )}
 
           <Section style={{ marginTop: '24px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
