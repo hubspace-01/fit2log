@@ -60,13 +60,15 @@ export const ProgramSelector: React.FC<Props> = ({
     }
   }, [userId, programs]);
 
+  // ✅ ИСПРАВЛЕНО: Убрана проверка на day_order === 0
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
       .filter(p => p.day_order && p.day_order > 0)
       .sort((a, b) => (a.day_order || 0) - (b.day_order || 0));
     
+    // ✅ Только программы с day_order = null или undefined
     const others = programs
-      .filter(p => !p.day_order || p.day_order === 0);
+      .filter(p => !p.day_order || p.day_order <= 0);
     
     return { weeklySplit: split, otherPrograms: others };
   }, [programs]);
@@ -100,18 +102,16 @@ export const ProgramSelector: React.FC<Props> = ({
           paddingTop: (hasDayOrder || inProgress) ? '12px' : '0'
         }}
       >
-        {/* ✅ ИСПРАВЛЕНО: Flexbox контейнер для бейджей */}
         {hasDayOrder && (
           <div style={{
             position: 'absolute',
             top: '0',
             left: '10px',
             display: 'flex',
-            gap: '5px', // ✅ 5px между бейджами
+            gap: '5px',
             alignItems: 'center',
             zIndex: 1
           }}>
-            {/* Номер тренировки */}
             <div style={{
               backgroundColor: inProgress ? '#FF9500' : '#10B981',
               color: '#FFFFFF',
@@ -123,7 +123,6 @@ export const ProgramSelector: React.FC<Props> = ({
               {program.day_order}
             </div>
 
-            {/* "В ПРОЦЕССЕ" рядом */}
             {inProgress && (
               <div style={{
                 backgroundColor: '#FF9500',
@@ -141,7 +140,6 @@ export const ProgramSelector: React.FC<Props> = ({
           </div>
         )}
 
-        {/* ✅ "В ПРОЦЕССЕ" по центру для программ БЕЗ day_order */}
         {!hasDayOrder && inProgress && (
           <div style={{
             position: 'absolute',
