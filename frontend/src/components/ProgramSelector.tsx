@@ -151,7 +151,7 @@ export const ProgramSelector: React.FC<Props> = ({
             zIndex: 1
           }}>
             <div style={{
-              backgroundColor: inProgress ? '#FF9500' : '#808080',
+              backgroundColor: inProgress ? '#FF9500' : '#CCCCCC',
               color: '#FFFFFF',
               padding: '4px 10px',
               borderRadius: '8px',
