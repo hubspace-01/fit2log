@@ -68,7 +68,7 @@ export const ProgramSelector: React.FC<Props> = ({
     
     // ✅ Только программы с day_order = null или undefined
     const others = programs
-      .filter(p => !p.day_order || p.day_order <= 0);
+      .filter(p => !p.day_order);
     
     return { weeklySplit: split, otherPrograms: others };
   }, [programs]);
