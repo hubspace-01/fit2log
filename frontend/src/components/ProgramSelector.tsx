@@ -100,31 +100,32 @@ export const ProgramSelector: React.FC<Props> = ({
           paddingTop: (hasDayOrder || inProgress) ? '12px' : '0'
         }}
       >
-        {/* ✅ ИСПРАВЛЕНО: Бейджи только для программ с day_order */}
+        {/* ✅ ИСПРАВЛЕНО: Flexbox контейнер для бейджей */}
         {hasDayOrder && (
-          <>
-            {/* Номер тренировки (слева) */}
+          <div style={{
+            position: 'absolute',
+            top: '0',
+            left: '10px',
+            display: 'flex',
+            gap: '5px', // ✅ 5px между бейджами
+            alignItems: 'center',
+            zIndex: 1
+          }}>
+            {/* Номер тренировки */}
             <div style={{
-              position: 'absolute',
-              top: '0',
-              left: '10px',
               backgroundColor: inProgress ? '#FF9500' : '#10B981',
               color: '#FFFFFF',
               padding: '4px 10px',
               borderRadius: '8px',
               fontSize: '12px',
-              fontWeight: '600',
-              zIndex: 1
+              fontWeight: '600'
             }}>
               {program.day_order}
             </div>
 
-            {/* "В ПРОЦЕССЕ" справа от номера */}
+            {/* "В ПРОЦЕССЕ" рядом */}
             {inProgress && (
               <div style={{
-                position: 'absolute',
-                top: '0',
-                left: '60px', // ✅ Справа от номера
                 backgroundColor: '#FF9500',
                 color: '#FFFFFF',
                 padding: '4px 10px',
@@ -132,16 +133,15 @@ export const ProgramSelector: React.FC<Props> = ({
                 fontSize: '11px',
                 fontWeight: '600',
                 textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                zIndex: 1
+                letterSpacing: '0.5px'
               }}>
                 В ПРОЦЕССЕ
               </div>
             )}
-          </>
+          </div>
         )}
 
-        {/* ✅ ИСПРАВЛЕНО: "В ПРОЦЕССЕ" по центру для программ БЕЗ day_order */}
+        {/* ✅ "В ПРОЦЕССЕ" по центру для программ БЕЗ day_order */}
         {!hasDayOrder && inProgress && (
           <div style={{
             position: 'absolute',
