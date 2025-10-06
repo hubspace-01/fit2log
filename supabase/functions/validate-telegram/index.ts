@@ -1,7 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts'
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,6 +55,29 @@ serve(async (req) => {
 
     const user = JSON.parse(userParam)
     console.log('User validated:', user.id)
+
+    // ✅ НОВОЕ: Создаем/обновляем профиль пользователя в таблице users
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
+    
+    try {
+      const { error: upsertError } = await supabase
+        .from('users')
+        .upsert({
+          telegram_id: user.id.toString(),
+          first_name: user.first_name,
+          last_name: user.last_name || null,
+          username: user.username || null,
+          language_code: user.language_code || 'ru'
+        }, { onConflict: 'telegram_id' })
+
+      if (upsertError) {
+        console.error('User upsert error:', upsertError)
+      } else {
+        console.log('User profile synced:', user.id)
+      }
+    } catch (err) {
+      console.error('User sync error:', err)
+    }
 
     return new Response(
       JSON.stringify({
