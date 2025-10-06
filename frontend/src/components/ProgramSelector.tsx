@@ -100,31 +100,54 @@ export const ProgramSelector: React.FC<Props> = ({
           paddingTop: (hasDayOrder || inProgress) ? '12px' : '0'
         }}
       >
-        {/* ✅ Бейдж номера тренировки - зелёный/оранжевый */}
+        {/* ✅ ИСПРАВЛЕНО: Бейджи только для программ с day_order */}
         {hasDayOrder && (
-          <div style={{
-            position: 'absolute',
-            top: '0',
-            left: '10px',
-            backgroundColor: inProgress ? '#FF9500' : '#10B981', // ✅ Оранжевый если в процессе
-            color: '#FFFFFF',
-            padding: '4px 10px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: '600',
-            zIndex: 1
-          }}>
-            {program.day_order}
-          </div>
+          <>
+            {/* Номер тренировки (слева) */}
+            <div style={{
+              position: 'absolute',
+              top: '0',
+              left: '10px',
+              backgroundColor: inProgress ? '#FF9500' : '#10B981',
+              color: '#FFFFFF',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: '600',
+              zIndex: 1
+            }}>
+              {program.day_order}
+            </div>
+
+            {/* "В ПРОЦЕССЕ" справа от номера */}
+            {inProgress && (
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '60px', // ✅ Справа от номера
+                backgroundColor: '#FF9500',
+                color: '#FFFFFF',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                zIndex: 1
+              }}>
+                В ПРОЦЕССЕ
+              </div>
+            )}
+          </>
         )}
 
-        {/* ✅ Бейдж "В ПРОЦЕССЕ" - всегда по центру сверху */}
-        {inProgress && (
+        {/* ✅ ИСПРАВЛЕНО: "В ПРОЦЕССЕ" по центру для программ БЕЗ day_order */}
+        {!hasDayOrder && inProgress && (
           <div style={{
             position: 'absolute',
             top: '0',
             left: '50%',
-            transform: 'translateX(-50%)', // ✅ Центрирование
+            transform: 'translateX(-50%)',
             backgroundColor: '#FF9500',
             color: '#FFFFFF',
             padding: '4px 10px',
@@ -143,9 +166,9 @@ export const ProgramSelector: React.FC<Props> = ({
           style={{ 
             width: '100%',
             border: inProgress 
-              ? '2px solid #FF9500' // ✅ Оранжевый бордер для "в процессе"
+              ? '2px solid #FF9500'
               : isInSplit 
-              ? '2px solid #10B981' // ✅ Зелёный бордер для сплита
+              ? '2px solid #10B981'
               : undefined
           }}
         >
@@ -207,7 +230,7 @@ export const ProgramSelector: React.FC<Props> = ({
       {programs.length === 0 ? (
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>��</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
             <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Начни свой путь
             </Title>
@@ -242,13 +265,12 @@ export const ProgramSelector: React.FC<Props> = ({
         </Section>
       ) : (
         <>
-          {/* ✅ Секция основного сплита с tooltip */}
           {weeklySplit.length > 0 && (
             <Section 
               header={
                 <div style={{ 
                   display: 'flex', 
-                  justifyContent: 'center', // ✅ По центру
+                  justifyContent: 'center',
                   alignItems: 'center',
                   gap: '8px'
                 }}>
@@ -275,11 +297,10 @@ export const ProgramSelector: React.FC<Props> = ({
             </Section>
           )}
 
-          {/* ✅ Секция других программ */}
           {otherPrograms.length > 0 && (
             <Section 
               header={
-                <div style={{ textAlign: 'center' }}> {/* ✅ По центру */}
+                <div style={{ textAlign: 'center' }}>
                   <Title level="3" weight="2" style={{ fontSize: '18px', marginTop: weeklySplit.length > 0 ? '16px' : '0' }}>
                     Другие программы
                   </Title>
