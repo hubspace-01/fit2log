@@ -263,7 +263,7 @@ export const TemplateList: React.FC<Props> = ({
             }>
               {(previewTemplate.template_exercises || [])
                 .sort((a, b) => a.order_index - b.order_index)
-                .map((exercise, index) => {
+                .map((exercise) => {
                   let subtitle = '';
                   const type = exercise.exercise_type || 'reps';
                   
