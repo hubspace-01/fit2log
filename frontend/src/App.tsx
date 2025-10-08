@@ -34,7 +34,7 @@ const App: React.FC = () => {
     programs, 
     templates, 
     loading: programsLoading,
-    initialize,  // ✅ НОВОЕ
+    initialize,
     loadPrograms, 
     loadTemplates, 
     createProgram,
@@ -43,7 +43,6 @@ const App: React.FC = () => {
     deleteProgram
   } = usePrograms();
 
-  // ✅ НОВОЕ: Инициализируем userId в хуке
   useEffect(() => {
     if (user && !authLoading) {
       initialize(user.id);
@@ -297,11 +296,13 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* ✅ ИСПРАВЛЕНО: Добавлена проверка user */}
       {state.screen === AppScreen.PROGRAM_EDITOR && user && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
           onBack={handleBack}
           initialData={state.current_program}
+          userId={user.id}
         />
       )}
 
