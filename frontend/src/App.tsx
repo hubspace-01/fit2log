@@ -296,7 +296,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ ИСПРАВЛЕНО: Добавлена проверка user */}
       {state.screen === AppScreen.PROGRAM_EDITOR && user && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
@@ -315,15 +314,19 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* ✅ ОБНОВЛЕНО: Добавлены sessionId и userId */}
       {state.screen === AppScreen.WORKOUT_SUMMARY && 
        state.workout_session && 
        state.workout_completed_sets && 
-       state.workout_duration !== undefined && (
+       state.workout_duration !== undefined && 
+       user && (
         <WorkoutSummary
           programName={state.workout_session.program_name}
           completedSets={state.workout_completed_sets}
           duration={state.workout_duration}
           totalExercises={state.workout_session.exercises.length}
+          sessionId={state.workout_session.id}
+          userId={user.id}
           onFinish={handleCompleteSummary}
         />
       )}

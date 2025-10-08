@@ -156,3 +156,49 @@ export enum AppScreen {
   WORKOUT_HISTORY = 'WORKOUT_HISTORY',
   WORKOUT_DETAIL = 'WORKOUT_DETAIL'
 }
+
+// ==========================================
+// Personal Records Types
+// ==========================================
+
+export interface PersonalRecord {
+  id: string;
+  user_id: string;
+  exercise_name: string;
+  exercise_type: ExerciseType;
+  
+  // Для reps
+  record_weight?: number;
+  record_reps?: number;
+  
+  // Для time
+  record_duration?: number;
+  
+  // Для distance
+  record_distance?: number;
+  
+  // Метаданные
+  estimated_1rm?: number;
+  achieved_at: string;
+  session_id?: string;
+  log_id?: string;
+  is_current: boolean;
+  previous_record_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewRecordSummary {
+  exercise_name: string;
+  exercise_type: ExerciseType;
+  new_value: string;
+  old_value?: string;
+  improvement_percent?: number;
+  record: PersonalRecord;
+}
+
+export interface RecordComparison {
+  isNewRecord: boolean;
+  currentBest?: PersonalRecord;
+  improvement?: number;
+}

@@ -56,7 +56,6 @@ class SupabaseService {
     return validatedTelegramId;
   }
 
-  // ✅ ИСПРАВЛЕНО: Добавлен фильтр по user_id
   async getPrograms(userId: string) {
     const { data, error } = await supabase
       .from('programs')
@@ -64,7 +63,7 @@ class SupabaseService {
         *,
         exercises (*)
       `)
-      .eq('user_id', userId)  // ← КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
+      .eq('user_id', userId)
       .eq('is_template', false)
       .order('created_at', { ascending: false });
 
@@ -213,7 +212,7 @@ class SupabaseService {
         updated_at: new Date().toISOString()
       })
       .eq('id', programId)
-      .eq('user_id', user_id)  // ← Проверка владельца
+      .eq('user_id', user_id)
       .select()
       .single();
 
@@ -252,7 +251,6 @@ class SupabaseService {
   }
 
   async deleteProgram(programId: string, userId: string) {
-    // ✅ ИСПРАВЛЕНО: Добавлена проверка владельца
     const { error: exercisesError } = await supabase
       .from('exercises')
       .delete()
@@ -506,7 +504,7 @@ class SupabaseService {
       .from('logs')
       .select('exercise_name, set_no, reps, weight, duration, distance, rpe')
       .eq('session_id', sessionId)
-      .order('datetime', { ascending: true });
+      .order('datetime', { ascending: true});
 
     if (error) throw error;
 
@@ -528,6 +526,80 @@ class SupabaseService {
         rpe: log.rpe || undefined,
       };
     });
+  }
+
+  // ==========================================
+  // ✅ НОВОЕ: Personal Records
+  // ==========================================
+
+  async getPersonalRecords(userId: string, exerciseName?: string) {
+    let query = this.supabase
+      .from('personal_records')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_current', true)
+      .order('achieved_at', { ascending: false });
+
+    if (exerciseName) {
+      query = query.eq('exercise_name', exerciseName);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async savePersonalRecord(recordData: any) {
+    const { data, error } = await this.supabase
+      .from('personal_records')
+      .insert(recordData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async updatePersonalRecord(recordId: string, updates: any) {
+    const { data, error } = await this.supabase
+      .from('personal_records')
+      .update(updates)
+      .eq('id', recordId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getAllPersonalRecords(userId: string) {
+    const { data, error } = await this.supabase
+      .from('personal_records')
+      .select('*')
+      .eq('user_id', userId)
+      .order('achieved_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getRecordHistory(userId: string, exerciseName: string, reps?: number) {
+    let query = this.supabase
+      .from('personal_records')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('exercise_name', exerciseName)
+      .order('achieved_at', { ascending: false });
+
+    if (reps !== undefined) {
+      query = query.eq('record_reps', reps);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
   }
 }
 
