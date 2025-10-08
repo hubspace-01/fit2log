@@ -9,10 +9,7 @@ import {
   Lightbulb, 
   CheckCircle, 
   Trophy,
-  Loader2,
-  Check,
-  ChevronRight,
-  SkipForward
+  Loader2
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -218,6 +215,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   const formatPR = () => {
@@ -471,37 +473,51 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      <div style={{ padding: '16px 16px 8px', textAlign: 'center' }}>
+      <div style={{ padding: '16px 16px 8px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
           {getExerciseIcon()}
         </div>
-        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px', textAlign: 'center' }}>
           {currentExercise.exercise_name}
         </Title>
-        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-          {getTargetDescription()}
-        </Caption>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          gap: '8px' 
+        }}>
+          <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+            {getTargetDescription()}
+          </Caption>
 
-        {currentExercisePR && (
-          <div style={{
-            marginTop: '12px',
-            padding: '10px 16px',
-            backgroundColor: 'rgba(var(--tgui--plain_foreground), 0.08)',
-            borderRadius: '8px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <Trophy size={18} color="var(--tg-theme-link-color)" />
-            <Caption level="1" style={{ 
-              fontSize: '14px',
-              color: 'var(--tg-theme-text-color)',
-              fontWeight: '500'
+          {currentExercisePR && (
+            <div style={{
+              padding: '8px 14px',
+              backgroundColor: 'rgba(var(--tgui--plain_foreground), 0.08)',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}>
-              Твой рекорд: {formatPR()}
-            </Caption>
-          </div>
-        )}
+              <Trophy size={16} color="var(--tg-theme-link-color)" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <Caption level="1" style={{ 
+                  fontSize: '13px',
+                  color: 'var(--tg-theme-text-color)',
+                  fontWeight: '500'
+                }}>
+                  Твой рекорд: {formatPR()}
+                </Caption>
+                <Caption level="1" style={{ 
+                  fontSize: '11px',
+                  color: 'var(--tg-theme-hint-color)'
+                }}>
+                  {formatDate(currentExercisePR.achieved_at)}
+                </Caption>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {currentExercise.notes && (
@@ -509,9 +525,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           <Cell
             before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
             subtitle={currentExercise.notes}
-            style={{
-              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
-            }}
           >
             Заметки
           </Cell>
@@ -650,19 +663,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           mode="filled"
           onClick={handleCompleteSet}
           disabled={saving}
-          style={{ fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          style={{ fontSize: '16px' }}
         >
-          {saving ? (
-            <>
-              <Loader2 size={18} className="animate-spin" />
-              Сохранение...
-            </>
-          ) : (
-            <>
-              <Check size={18} />
-              Выполнить подход
-            </>
-          )}
+          {saving ? 'Сохранение...' : 'Выполнить подход'}
         </Button>
 
         <Button
@@ -671,19 +674,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           mode="outline"
           onClick={handleSkipSet}
           disabled={saving}
-          style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          style={{ fontSize: '14px' }}
         >
-          {isLastSetOfExercise ? (
-            <>
-              <ChevronRight size={16} />
-              Следующее упражнение
-            </>
-          ) : (
-            <>
-              <SkipForward size={16} />
-              Пропустить подход
-            </>
-          )}
+          {isLastSetOfExercise ? 'Следующее упражнение' : 'Пропустить подход'}
         </Button>
       </div>
     </div>
