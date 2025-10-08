@@ -1,4 +1,5 @@
 import type { LogItem, Exercise, PersonalRecord, ExerciseType, NewRecordSummary } from '../types';
+import { supabaseService } from './supabase';
 
 /**
  * Нормализация названия упражнения для сравнения
@@ -273,10 +274,6 @@ export function calculateImprovement(
  * Главная функция: Обработка Personal Records после тренировки
  * ==========================================
  */
-
-import { supabaseService } from './supabase';
-import type { NewRecordSummary } from '../types';
-
 export async function processWorkoutRecords(
   sessionId: string,
   userId: string,
