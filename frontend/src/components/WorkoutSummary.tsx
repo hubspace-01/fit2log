@@ -1,5 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Section, Cell, Title, Caption, Button, Card } from '@telegram-apps/telegram-ui';
+import { Section, Cell, Title, Caption, Button, Card, Banner } from '@telegram-apps/telegram-ui';
+import { 
+  Trophy, 
+  Dumbbell, 
+  Timer, 
+  Footprints, 
+  TrendingUp, 
+  Clock,
+  Activity,
+  Target,
+  Award,
+  CheckCircle
+} from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { processWorkoutRecords } from '../lib/personalRecords';
 import type { NewRecordSummary } from '../types';
@@ -21,8 +33,8 @@ interface WorkoutSummaryProps {
   completedSets: SetLog[];
   duration: number;
   totalExercises: number;
-  sessionId?: string;  // ✅ НОВОЕ
-  userId?: string;     // ✅ НОВОЕ
+  sessionId?: string;
+  userId?: string;
   onFinish: () => void;
 }
 
@@ -31,19 +43,18 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   completedSets,
   duration,
   totalExercises,
-  sessionId,  // ✅ НОВОЕ
-  userId,     // ✅ НОВОЕ
+  sessionId,
+  userId,
   onFinish
 }) => {
   const [expandedExercises, setExpandedExercises] = useState<Set<number>>(new Set());
-  const [newRecords, setNewRecords] = useState<NewRecordSummary[]>([]);  // ✅ НОВОЕ
-  const [loadingRecords, setLoadingRecords] = useState(false);            // ✅ НОВОЕ
+  const [newRecords, setNewRecords] = useState<NewRecordSummary[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
 
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
 
-  // ✅ НОВОЕ: Обработка Personal Records
   useEffect(() => {
     if (sessionId && userId) {
       const processRecords = async () => {
@@ -154,10 +165,11 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
   ];
   const randomTitle = celebrationTitles[Math.floor(Math.random() * celebrationTitles.length)];
 
-  const getTypeIcon = (type: string) => {
-    if (type === 'time') return '⏱';
-    if (type === 'distance') return '🏃';
-    return '💪';
+  const getExerciseIcon = (type: string) => {
+    const iconColor = 'var(--tg-theme-link-color)';
+    if (type === 'time') return <Timer size={20} color={iconColor} />;
+    if (type === 'distance') return <Footprints size={20} color={iconColor} />;
+    return <Dumbbell size={20} color={iconColor} />;
   };
 
   const toggleExercise = (index: number) => {
@@ -176,17 +188,21 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
+      {/* Header */}
       <div style={{
         padding: '32px 16px 24px',
         textAlign: 'center',
         backgroundColor: 'var(--tg-theme-secondary-bg-color)'
       }}>
         <div style={{ 
-          fontSize: '48px', 
-          marginBottom: '16px',
-          lineHeight: '1'
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '12px',
+          marginBottom: '16px'
         }}>
-          🎉 🏋️ ��
+          <Award size={32} color="var(--tg-theme-link-color)" />
+          <Activity size={32} color="var(--tg-theme-link-color)" />
+          <Trophy size={32} color="var(--tg-theme-link-color)" />
         </div>
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
           {randomTitle}
@@ -196,46 +212,100 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Caption>
       </div>
 
-      {/* ✅ НОВОЕ: Секция новых рекордов */}
+      {/* ✅ НОВОЕ: Компактный баннер для рекордов */}
       {newRecords.length > 0 && (
-        <Section 
-          header={
-            <div style={{ textAlign: 'center', width: '100%', padding: '8px 0' }}>
-              🏆 НОВЫЕ РЕКОРДЫ
+        <>
+          <div style={{
+            padding: '16px',
+            margin: '16px 16px 8px',
+            backgroundColor: 'var(--tg-theme-link-color)',
+            borderRadius: '12px',
+            textAlign: 'center',
+            color: 'white'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <Trophy size={20} />
+              <Title level="2" weight="2" style={{ fontSize: '18px', color: 'white' }}>
+                {newRecords.length} {newRecords.length === 1 ? 'НОВЫЙ РЕКОРД' : 'НОВЫХ РЕКОРДОВ'}!
+              </Title>
             </div>
-          }
-          style={{ marginTop: '16px', marginBottom: '16px' }}
-        >
-          {newRecords.map((record, index) => (
-            <Card 
-              key={index}
-              style={{
-                padding: '16px',
-                marginBottom: '12px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px'
-              }}
-            >
-              <div style={{ marginBottom: '8px' }}>
-                <Title level="3" weight="2" style={{ fontSize: '18px', color: 'white' }}>
-                  {record.exercise_name}
-                </Title>
-              </div>
+            <Caption level="1" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)' }}>
+              Отличная тренировка!
+            </Caption>
+          </div>
+
+          {/* Список рекордов - компактный Cell */}
+          <Section style={{ marginTop: '0' }}>
+            {newRecords.map((record, index) => {
+              const isFirstRecord = !record.old_value;
               
-              <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '4px' }}>
-                {record.new_value}
-              </div>
-              
-              {record.old_value && record.improvement_percent !== undefined && (
-                <div style={{ fontSize: '14px', opacity: 0.9 }}>
-                  Было: {record.old_value} • +{record.improvement_percent}% 🎯
-                </div>
-              )}
-            </Card>
-          ))}
-        </Section>
+              return (
+                <Cell
+                  key={index}
+                  before={
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--tg-theme-link-color)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {record.exercise_type === 'reps' && <Dumbbell size={20} color="white" />}
+                      {record.exercise_type === 'time' && <Timer size={20} color="white" />}
+                      {record.exercise_type === 'distance' && <Footprints size={20} color="white" />}
+                    </div>
+                  }
+                  subtitle={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                      {!isFirstRecord && record.old_value && (
+                        <>
+                          <span style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)' }}>
+                            было: {record.old_value}
+                          </span>
+                          {record.improvement_percent !== undefined && (
+                            <span style={{ 
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '13px', 
+                              color: 'var(--tg-theme-link-color)',
+                              fontWeight: '600'
+                            }}>
+                              <TrendingUp size={14} />
+                              +{record.improvement_percent}%
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {isFirstRecord && (
+                        <span style={{ 
+                          fontSize: '13px', 
+                          color: 'var(--tg-theme-link-color)',
+                          fontWeight: '600',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <Award size={14} />
+                          Первый рекорд!
+                        </span>
+                      )}
+                    </div>
+                  }
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '500' }}>{record.exercise_name}</span>
+                    <span style={{ fontSize: '17px', fontWeight: '600', marginTop: '2px' }}>
+                      {record.new_value}
+                    </span>
+                  </div>
+                </Cell>
+              );
+            })}
+          </Section>
+        </>
       )}
 
       {loadingRecords && (
@@ -243,12 +313,18 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           padding: '16px', 
           textAlign: 'center',
           color: 'var(--tg-theme-hint-color)',
-          fontSize: '14px'
+          fontSize: '14px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '8px'
         }}>
-          ⏳ Проверяем рекорды...
+          <Clock size={16} />
+          Проверяем рекорды...
         </div>
       )}
 
+      {/* Stats Grid */}
       <div style={{ 
         padding: '16px',
         display: 'grid',
@@ -262,7 +338,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           border: '1px solid var(--tg-theme-section-separator-color)',
           borderRadius: '12px'
         }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏱</div>
+          <Clock size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
           <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
             {formatDuration(duration)}
           </Title>
@@ -278,7 +354,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           border: '1px solid var(--tg-theme-section-separator-color)',
           borderRadius: '12px'
         }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>💪</div>
+          <Target size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
           <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
             {stats.completedExercises}/{totalExercises}
           </Title>
@@ -294,7 +370,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           border: '1px solid var(--tg-theme-section-separator-color)',
           borderRadius: '12px'
         }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>📈</div>
+          <Activity size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
           <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
             {stats.totalSets}
           </Title>
@@ -312,7 +388,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         }}>
           {stats.repsCount > 0 && stats.timeCount === 0 && stats.distanceCount === 0 && (
             <>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏋️</div>
+              <Dumbbell size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {Math.round(stats.totalWeight)} кг
               </Title>
@@ -324,7 +400,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           
           {stats.timeCount > 0 && stats.repsCount === 0 && stats.distanceCount === 0 && (
             <>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⏱</div>
+              <Timer size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {formatDuration(stats.totalTimeUnderTension)}
               </Title>
@@ -336,7 +412,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           
           {stats.distanceCount > 0 && stats.repsCount === 0 && stats.timeCount === 0 && (
             <>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏃</div>
+              <Footprints size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
                 {stats.totalDistance} м
               </Title>
@@ -350,20 +426,29 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
             (stats.repsCount > 0 && stats.distanceCount > 0) ||
             (stats.timeCount > 0 && stats.distanceCount > 0)) && (
             <>
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>📊</div>
+              <Activity size={24} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <div style={{ 
                 fontSize: '12px', 
                 lineHeight: '1.6',
                 color: 'var(--tg-theme-text-color)'
               }}>
                 {stats.totalWeight > 0 && (
-                  <div>🏋️ {Math.round(stats.totalWeight)} кг</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <Dumbbell size={12} />
+                    {Math.round(stats.totalWeight)} кг
+                  </div>
                 )}
                 {stats.totalTimeUnderTension > 0 && (
-                  <div>⏱ {formatDuration(stats.totalTimeUnderTension)}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <Timer size={12} />
+                    {formatDuration(stats.totalTimeUnderTension)}
+                  </div>
                 )}
                 {stats.totalDistance > 0 && (
-                  <div>🏃 {stats.totalDistance} м</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                    <Footprints size={12} />
+                    {stats.totalDistance} м
+                  </div>
                 )}
               </div>
               <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)', marginTop: '4px' }}>
@@ -374,12 +459,9 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         </Card>
       </div>
 
+      {/* Exercise Details */}
       <Section 
-        header={
-          <div style={{ textAlign: 'center', width: '100%', padding: '8px 0' }}>
-            ДЕТАЛИ УПРАЖНЕНИЙ
-          </div>
-        }
+        header="ДЕТАЛИ УПРАЖНЕНИЙ"
         style={{ marginTop: '16px' }}
       >
         {stats.exerciseStats.map((exercise, index) => {
@@ -412,13 +494,13 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                       : exercise.type === 'time'
                       ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
                       : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                    color: 'white',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px'
+                    justifyContent: 'center'
                   }}>
-                    {getTypeIcon(exercise.type)}
+                    {exercise.type === 'reps' && <Dumbbell size={20} color="white" />}
+                    {exercise.type === 'time' && <Timer size={20} color="white" />}
+                    {exercise.type === 'distance' && <Footprints size={20} color="white" />}
                   </div>
                 }
                 after={isExpanded ? '▲' : '▼'}
@@ -451,10 +533,14 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                           fontSize: '14px',
                           color: 'var(--tg-theme-text-color)',
                           display: 'flex',
-                          justifyContent: 'space-between'
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
                         }}
                       >
-                        <span>✅ Подход {set.set_no}:</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <CheckCircle size={14} color="var(--tg-theme-link-color)" />
+                          Подход {set.set_no}:
+                        </span>
                         <span style={{ fontWeight: '500' }}>{setInfo}</span>
                       </div>
                     );
@@ -474,7 +560,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           onClick={onFinish}
           style={{ fontSize: '16px' }}
         >
-          ✅ Завершить
+          Завершить
         </Button>
       </div>
     </div>
