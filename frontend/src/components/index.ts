@@ -5,3 +5,5 @@ export { ProgramDetails } from './ProgramDetails';
 export { Stepper } from './Stepper';
 export { WorkoutLogger } from './WorkoutLogger';
 export { WorkoutSummary } from './WorkoutSummary';
+export { WorkoutHistory } from './WorkoutHistory';
+export { WorkoutDetail } from './WorkoutDetail';

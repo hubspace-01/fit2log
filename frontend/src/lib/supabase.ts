@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
+
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -15,8 +18,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
+
 class SupabaseService {
   public supabase = supabase;
+
 
   async validateTelegramInitData(initData: string) {
     try {
@@ -27,6 +32,7 @@ class SupabaseService {
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
 
+
       if (data.access_token && data.refresh_token) {
         await supabase.auth.setSession({
           access_token: data.access_token,
@@ -34,12 +40,14 @@ class SupabaseService {
         });
       }
 
+
       return data;
     } catch (error) {
       console.error('Validation error:', error);
       throw error;
     }
   }
+
 
   async getPrograms() {
     const { data, error } = await supabase
@@ -51,9 +59,11 @@ class SupabaseService {
       .eq('is_template', false)
       .order('created_at', { ascending: false });
 
+
     if (error) throw error;
     return data || [];
   }
+
 
   async getProgramTemplates() {
     const { data, error } = await supabase
@@ -65,11 +75,12 @@ class SupabaseService {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
+
     if (error) throw error;
     return data || [];
   }
 
-  // ✅ ИСПРАВЛЕНО: Явно устанавливаем day_order = null
+
   async copyTemplate(templateId: string, userId: string) {
     try {
       console.log('🔍 Copying template:', templateId, 'for user:', userId);
@@ -83,10 +94,13 @@ class SupabaseService {
         .eq('id', templateId)
         .single();
 
+
       if (templateError) throw templateError;
       if (!template) throw new Error('Template not found');
 
+
       console.log('✅ Template loaded:', template);
+
 
       const { data: program, error: programError } = await supabase
         .from('programs')
@@ -94,15 +108,18 @@ class SupabaseService {
           user_id: userId,
           program_name: template.template_name,
           is_template: false,
-          day_order: null,      // ✅ Явно NULL
-          weekday_hint: null    // ✅ Явно NULL
+          day_order: null,
+          weekday_hint: null
         })
         .select()
         .single();
 
+
       if (programError) throw programError;
 
+
       console.log('✅ Program created:', program);
+
 
       if (template.template_exercises && template.template_exercises.length > 0) {
         const exercises = template.template_exercises.map((ex: any) => ({
@@ -119,14 +136,18 @@ class SupabaseService {
           notes: ex.notes || ''
         }));
 
+
         const { error: exercisesError } = await supabase
           .from('exercises')
           .insert(exercises);
 
+
         if (exercisesError) throw exercisesError;
+
 
         console.log('✅ Exercises copied:', exercises.length);
       }
+
 
       return { ok: true, program };
     } catch (error) {
@@ -135,12 +156,14 @@ class SupabaseService {
     }
   }
 
+
   async createProgram(programData: any) {
     const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
     
     if (!user_id) {
       throw new Error('User ID is required');
     }
+
 
     const { data: program, error: programError } = await supabase
       .from('programs')
@@ -154,7 +177,9 @@ class SupabaseService {
       .select()
       .single();
 
+
     if (programError) throw programError;
+
 
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
@@ -171,15 +196,19 @@ class SupabaseService {
         notes: ex.notes || ''
       }));
 
+
       const { error: exercisesError } = await supabase
         .from('exercises')
         .insert(exercisesData);
 
+
       if (exercisesError) throw exercisesError;
     }
 
+
     return program;
   }
+
 
   async updateProgram(programId: string, programData: any) {
     const { program_name, exercises, user_id, day_order, weekday_hint } = programData;
@@ -187,6 +216,7 @@ class SupabaseService {
     if (!user_id) {
       throw new Error('User ID is required');
     }
+
 
     const { data: program, error: programError } = await supabase
       .from('programs')
@@ -201,14 +231,18 @@ class SupabaseService {
       .select()
       .single();
 
+
     if (programError) throw programError;
+
 
     const { error: deleteError } = await supabase
       .from('exercises')
       .delete()
       .eq('program_id', programId);
 
+
     if (deleteError) throw deleteError;
+
 
     if (exercises && exercises.length > 0) {
       const exercisesData = exercises.map((ex: any, index: number) => ({
@@ -225,15 +259,19 @@ class SupabaseService {
         notes: ex.notes || ''
       }));
 
+
       const { error: exercisesError } = await supabase
         .from('exercises')
         .insert(exercisesData);
 
+
       if (exercisesError) throw exercisesError;
     }
 
+
     return program;
   }
+
 
   async deleteProgram(programId: string) {
     const { error: exercisesError } = await supabase
@@ -241,17 +279,22 @@ class SupabaseService {
       .delete()
       .eq('program_id', programId);
 
+
     if (exercisesError) throw exercisesError;
+
 
     const { error: programError } = await supabase
       .from('programs')
       .delete()
       .eq('id', programId);
 
+
     if (programError) throw programError;
+
 
     return { success: true };
   }
+
 
   async createWorkoutSession(sessionData: {
     user_id: string;
@@ -271,10 +314,12 @@ class SupabaseService {
       .select()
       .single();
 
+
     if (error) throw error;
     console.log('✅ Workout session created:', data.id);
     return data;
   }
+
 
   async updateWorkoutSession(sessionId: string, updates: {
     status?: 'in_progress' | 'completed' | 'cancelled';
@@ -288,10 +333,12 @@ class SupabaseService {
       .select()
       .single();
 
+
     if (error) throw error;
     console.log('✅ Workout session updated:', sessionId, updates.status);
     return data;
   }
+
 
   async getInProgressSession(userId: string, programId: string) {
     const { data, error } = await supabase
@@ -304,9 +351,11 @@ class SupabaseService {
       .limit(1)
       .maybeSingle();
 
+
     if (error) throw error;
     return data;
   }
+
 
   async getSessionLogs(sessionId: string) {
     const { data, error } = await supabase
@@ -315,9 +364,11 @@ class SupabaseService {
       .eq('session_id', sessionId)
       .order('datetime', { ascending: true });
 
+
     if (error) throw error;
     return data || [];
   }
+
 
   async saveWorkoutLog(logData: {
     user_id: string;
@@ -354,21 +405,26 @@ class SupabaseService {
       .select()
       .single();
 
+
     if (error) throw error;
     return data;
   }
 
+
   async saveWorkoutLogs(logs: any[]) {
     if (logs.length === 0) return [];
+
 
     const { data, error } = await supabase
       .from('logs')
       .insert(logs)
       .select();
 
+
     if (error) throw error;
     return data || [];
   }
+
 
   async getWorkoutHistory(programId: string, limit = 10) {
     const { data, error } = await supabase
@@ -378,9 +434,11 @@ class SupabaseService {
       .order('datetime', { ascending: false })
       .limit(limit);
 
+
     if (error) throw error;
     return data || [];
   }
+
 
   async getExerciseHistory(exerciseId: string, limit = 5) {
     const { data, error } = await supabase
@@ -390,9 +448,11 @@ class SupabaseService {
       .order('datetime', { ascending: false })
       .limit(limit);
 
+
     if (error) throw error;
     return data || [];
   }
+
 
   async getLastWorkout(userId: string, programId: string) {
     const { data, error } = await supabase
@@ -403,14 +463,17 @@ class SupabaseService {
       .order('datetime', { ascending: false })
       .limit(1);
 
+
     if (error) throw error;
     return data && data.length > 0 ? data[0] : null;
   }
+
 
   async createExercises(programId: string, userId: string, exercises: any[]) {
     if (!userId) {
       throw new Error('User ID is required');
     }
+
 
     const exercisesData = exercises.map((ex, index) => ({
       program_id: programId,
@@ -426,14 +489,98 @@ class SupabaseService {
       notes: ex.notes || ''
     }));
 
+
     const { data, error } = await supabase
       .from('exercises')
       .insert(exercisesData)
       .select();
 
+
     if (error) throw error;
     return data;
   }
+
+
+  // ✅ НОВОЕ: Методы для истории тренировок
+  async getCompletedWorkouts(userId: string) {
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .select(`
+        id,
+        program_name,
+        completed_at,
+        total_duration
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(20);
+
+
+    if (error) throw error;
+    
+    if (!data || data.length === 0) return [];
+
+    // Получаем статистику для каждой тренировки
+    const workoutsWithStats = await Promise.all(
+      data.map(async (workout) => {
+        const { data: logs, error: logsError } = await supabase
+          .from('logs')
+          .select('exercise_name')
+          .eq('session_id', workout.id);
+
+        if (logsError) {
+          console.error('Error fetching logs for workout:', workout.id, logsError);
+          return {
+            ...workout,
+            exercises_count: 0,
+            total_sets: 0,
+          };
+        }
+
+        const exerciseNames = new Set(logs?.map(log => log.exercise_name) || []);
+        
+        return {
+          ...workout,
+          exercises_count: exerciseNames.size,
+          total_sets: logs?.length || 0,
+        };
+      })
+    );
+
+    return workoutsWithStats;
+  }
+
+
+  async getWorkoutDetail(sessionId: string) {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('exercise_name, set_no, reps, weight, duration, distance, rpe')
+      .eq('session_id', sessionId)
+      .order('datetime', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((log: any) => {
+      let display_value = '';
+      
+      if (log.duration > 0) {
+        display_value = `${log.duration}сек`;
+      } else if (log.distance > 0) {
+        display_value = `${log.distance}м`;
+      } else {
+        display_value = `${log.reps}×${log.weight}кг`;
+      }
+
+      return {
+        exercise_name: log.exercise_name,
+        set_no: log.set_no,
+        display_value,
+        rpe: log.rpe || undefined,
+      };
+    });
+  }
 }
+
 
 export const supabaseService = new SupabaseService();

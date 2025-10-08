@@ -7,11 +7,14 @@ import {
   ProgramEditor, 
   ProgramDetails, 
   WorkoutLogger,
-  WorkoutSummary 
+  WorkoutSummary,
+  WorkoutHistory,
+  WorkoutDetail
 } from './components';
 import { AppScreen } from './types';
-import type { Program, ProgramTemplate } from './types';
+import type { Program, ProgramTemplate, WorkoutHistoryItem } from './types';
 import { supabaseService } from './lib/supabase';
+
 
 const App: React.FC = () => {
   const { user, loading: authLoading, error: authError } = useAuth();
@@ -22,6 +25,8 @@ const App: React.FC = () => {
     setCurrentProgram, 
     startWorkout,
     setWorkoutSummary,
+    setWorkoutHistory,
+    setCurrentWorkoutDetail,
     setLoading, 
     setError, 
     clearError 
@@ -38,6 +43,7 @@ const App: React.FC = () => {
     deleteProgram
   } = usePrograms();
 
+
   useEffect(() => {
     if (user && !authLoading) {
       loadPrograms().then(() => {
@@ -46,16 +52,19 @@ const App: React.FC = () => {
     }
   }, [user, authLoading, loadPrograms, setScreen]);
 
+
   useEffect(() => {
     if (programs.length > 0 && programs !== state.programs) {
       setPrograms(programs);
     }
   }, [programs, setPrograms, state.programs]);
 
+
   const handleCreateProgram = useCallback(() => {
     setCurrentProgram(undefined);
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
+
 
   const handleSelectTemplate = useCallback(async () => {
     if (templates.length === 0) {
@@ -64,10 +73,48 @@ const App: React.FC = () => {
     setScreen(AppScreen.TEMPLATE_LIST);
   }, [templates.length, loadTemplates, setScreen]);
 
+
   const handleSelectProgram = useCallback((program: Program) => {
     setCurrentProgram(program);
     setScreen(AppScreen.PROGRAM_DETAILS);
   }, [setCurrentProgram, setScreen]);
+
+
+  // ✅ НОВОЕ: Обработчик истории тренировок
+  const handleViewHistory = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      clearError();
+      const history = await supabaseService.getCompletedWorkouts(user.id);
+      setWorkoutHistory(history);
+      setScreen(AppScreen.WORKOUT_HISTORY);
+    } catch (error) {
+      console.error('❌ Load history error:', error);
+      setError(`Ошибка загрузки истории: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, setWorkoutHistory, setLoading, clearError, setError, setScreen]);
+
+
+  // ✅ НОВОЕ: Обработчик детализации тренировки
+  const handleViewWorkoutDetail = useCallback(async (workout: WorkoutHistoryItem) => {
+    try {
+      setLoading(true);
+      clearError();
+      const details = await supabaseService.getWorkoutDetail(workout.id);
+      setCurrentWorkoutDetail(details, workout);
+      setScreen(AppScreen.WORKOUT_DETAIL);
+    } catch (error) {
+      console.error('❌ Load workout detail error:', error);
+      setError(`Ошибка загрузки деталей: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [setCurrentWorkoutDetail, setLoading, clearError, setError, setScreen]);
+
 
   const handleProgramEditorSave = useCallback(async (programData: any) => {
     if (!user) {
@@ -104,6 +151,7 @@ const App: React.FC = () => {
     }
   }, [user, state.current_program, createProgram, updateProgram, loadPrograms, setLoading, clearError, setError, setScreen]);
 
+
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
     if (!user) return;
     try {
@@ -125,10 +173,12 @@ const App: React.FC = () => {
     }
   }, [user, copyTemplate, loadPrograms, setLoading, clearError, setError, setScreen]);
 
+
   const handleEditProgram = useCallback((program: Program) => {
     setCurrentProgram(program);
     setScreen(AppScreen.PROGRAM_EDITOR);
   }, [setCurrentProgram, setScreen]);
+
 
   const handleDeleteProgram = useCallback(async (programId: string) => {
     try {
@@ -143,6 +193,7 @@ const App: React.FC = () => {
       setLoading(false);
     }
   }, [deleteProgram, setLoading, clearError, setError, setScreen]);
+
 
   const handleStartWorkout = useCallback(async (program: Program) => {
     if (!user) return;
@@ -170,25 +221,36 @@ const App: React.FC = () => {
     }
   }, [user, startWorkout, setScreen]);
 
+
   const handleFinishWorkout = useCallback((completedSets: any[], duration: number) => {
     console.log('✅ Workout finished:', completedSets, duration);
     setWorkoutSummary(completedSets, duration);
     setScreen(AppScreen.WORKOUT_SUMMARY);
   }, [setWorkoutSummary, setScreen]);
 
+
   const handleCancelWorkout = useCallback(() => {
     console.log('❌ Workout cancelled');
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
+
 
   const handleCompleteSummary = useCallback(() => {
     console.log('✅ Summary completed');
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
+
   const handleBack = useCallback(() => {
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
+
+
+  // ✅ НОВОЕ: Обработчик возврата к истории
+  const handleBackToHistory = useCallback(() => {
+    setScreen(AppScreen.WORKOUT_HISTORY);
+  }, [setScreen]);
+
 
   if (authLoading || state.screen === AppScreen.LOADING) {
     return (
@@ -203,6 +265,7 @@ const App: React.FC = () => {
     );
   }
 
+
   if (authError || state.screen === AppScreen.AUTH_ERROR) {
     return (
       <div style={{ 
@@ -215,6 +278,7 @@ const App: React.FC = () => {
     );
   }
 
+
   return (
     <div style={{ minHeight: '100vh' }}>
       {state.screen === AppScreen.PROGRAM_SELECTOR && user && (
@@ -225,8 +289,10 @@ const App: React.FC = () => {
           onCreateProgram={handleCreateProgram}
           onSelectTemplate={handleSelectTemplate}
           onSelectProgram={handleSelectProgram}
+          onViewHistory={handleViewHistory}
         />
       )}
+
 
       {state.screen === AppScreen.PROGRAM_DETAILS && state.current_program && user && (
         <ProgramDetails
@@ -239,6 +305,7 @@ const App: React.FC = () => {
         />
       )}
 
+
       {state.screen === AppScreen.TEMPLATE_LIST && (
         <TemplateList
           templates={templates}
@@ -248,6 +315,7 @@ const App: React.FC = () => {
         />
       )}
 
+
       {state.screen === AppScreen.PROGRAM_EDITOR && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
@@ -255,6 +323,7 @@ const App: React.FC = () => {
           initialData={state.current_program}
         />
       )}
+
 
       {state.screen === AppScreen.WORKOUT_LOGGER && state.workout_session && user && (
         <WorkoutLogger
@@ -264,6 +333,7 @@ const App: React.FC = () => {
           onCancel={handleCancelWorkout}
         />
       )}
+
 
       {state.screen === AppScreen.WORKOUT_SUMMARY && 
        state.workout_session && 
@@ -277,8 +347,29 @@ const App: React.FC = () => {
           onFinish={handleCompleteSummary}
         />
       )}
+
+
+      {/* ✅ НОВОЕ: Экраны истории тренировок */}
+      {state.screen === AppScreen.WORKOUT_HISTORY && user && (
+        <WorkoutHistory
+          userId={user.id}
+          onBack={handleBack}
+          onViewDetail={handleViewWorkoutDetail}
+        />
+      )}
+
+
+      {state.screen === AppScreen.WORKOUT_DETAIL && 
+       state.current_workout_info && 
+       state.current_workout_detail && (
+        <WorkoutDetail
+          workout={state.current_workout_info}
+          onBack={handleBackToHistory}
+        />
+      )}
     </div>
   );
 };
+
 
 export default App;

@@ -6,19 +6,22 @@ export interface User {
   language_code?: string;
 }
 
+
 export interface Program {
   id: string;
   user_id: string;
   program_name: string;
   is_template: boolean;
-  day_order?: number; // ✅ НОВОЕ: Номер тренировки в недельном сплите (0 = не задано, 1-7)
-  weekday_hint?: string; // ✅ НОВОЕ: Подсказка дня недели ('ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС')
+  day_order?: number;
+  weekday_hint?: string;
   created_at: string;
   updated_at: string;
   exercises?: Exercise[];
 }
 
+
 export type ExerciseType = 'reps' | 'time' | 'distance';
+
 
 export interface Exercise {
   id: string;
@@ -34,6 +37,7 @@ export interface Exercise {
   order_index: number;
   notes?: string;
 }
+
 
 export interface LogItem {
   id: string;
@@ -52,6 +56,7 @@ export interface LogItem {
   comments?: string;
 }
 
+
 export interface ProgramTemplate {
   id: string;
   template_name: string;
@@ -61,6 +66,7 @@ export interface ProgramTemplate {
   created_at: string;
   template_exercises?: TemplateExercise[];
 }
+
 
 export interface TemplateExercise {
   id: string;
@@ -76,6 +82,7 @@ export interface TemplateExercise {
   notes?: string;
 }
 
+
 export interface WorkoutSessionDB {
   id: string;
   user_id: string;
@@ -89,6 +96,7 @@ export interface WorkoutSessionDB {
   updated_at: string;
 }
 
+
 export interface WorkoutSession {
   id?: string;
   program_id: string;
@@ -99,6 +107,26 @@ export interface WorkoutSession {
   logs: LogItem[];
 }
 
+
+// ✅ НОВОЕ: Типы для истории тренировок
+export interface WorkoutHistoryItem {
+  id: string;
+  program_name: string;
+  completed_at: string;
+  total_duration: number;
+  exercises_count: number;
+  total_sets: number;
+}
+
+
+export interface WorkoutDetailLog {
+  exercise_name: string;
+  set_no: number;
+  display_value: string;
+  rpe?: number;
+}
+
+
 export interface AppState {
   screen: AppScreen;
   programs: Program[];
@@ -106,9 +134,14 @@ export interface AppState {
   workout_session?: WorkoutSession;
   workout_completed_sets?: any[];
   workout_duration?: number;
+  // ✅ НОВОЕ: Состояние для истории
+  workout_history?: WorkoutHistoryItem[];
+  current_workout_detail?: WorkoutDetailLog[];
+  current_workout_info?: WorkoutHistoryItem;
   loading: boolean;
   error?: string;
 }
+
 
 export enum AppScreen {
   LOADING = 'LOADING',
@@ -118,5 +151,8 @@ export enum AppScreen {
   PROGRAM_DETAILS = 'PROGRAM_DETAILS',
   TEMPLATE_LIST = 'TEMPLATE_LIST',
   WORKOUT_LOGGER = 'WORKOUT_LOGGER',
-  WORKOUT_SUMMARY = 'WORKOUT_SUMMARY'
+  WORKOUT_SUMMARY = 'WORKOUT_SUMMARY',
+  // ✅ НОВОЕ: Экраны истории
+  WORKOUT_HISTORY = 'WORKOUT_HISTORY',
+  WORKOUT_DETAIL = 'WORKOUT_DETAIL'
 }

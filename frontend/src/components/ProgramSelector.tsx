@@ -11,6 +11,7 @@ import type { Program } from '../types';
 import { supabaseService } from '../lib/supabase';
 import { telegramService } from '../lib/telegram';
 
+
 interface Props {
   programs: Program[];
   userName: string;
@@ -18,7 +19,9 @@ interface Props {
   onCreateProgram: () => void;
   onSelectTemplate: () => void;
   onSelectProgram: (program: Program) => void;
+  onViewHistory: () => void; // ✅ НОВОЕ
 }
+
 
 export const ProgramSelector: React.FC<Props> = ({
   programs,
@@ -26,14 +29,17 @@ export const ProgramSelector: React.FC<Props> = ({
   userId,
   onCreateProgram,
   onSelectTemplate,
-  onSelectProgram
+  onSelectProgram,
+  onViewHistory // ✅ НОВОЕ
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
+
 
   useEffect(() => {
     const loadInProgressSessions = async () => {
@@ -43,6 +49,7 @@ export const ProgramSelector: React.FC<Props> = ({
           .select('program_id')
           .eq('user_id', userId)
           .eq('status', 'in_progress');
+
 
         if (data) {
           const sessionSet = new Set(data.map((s: any) => s.program_id));
@@ -55,10 +62,12 @@ export const ProgramSelector: React.FC<Props> = ({
       }
     };
 
+
     if (userId) {
       loadInProgressSessions();
     }
   }, [userId, programs]);
+
 
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
@@ -71,9 +80,11 @@ export const ProgramSelector: React.FC<Props> = ({
     return { weeklySplit: split, otherPrograms: others };
   }, [programs]);
 
+
   const hasInProgressSession = (programId: string) => {
     return inProgressSessions.has(programId);
   };
+
 
   if (loading) {
     return (
@@ -87,6 +98,7 @@ export const ProgramSelector: React.FC<Props> = ({
       </div>
     );
   }
+
 
   const renderProgramCard = (program: Program, isInSplit: boolean, index?: number) => {
     const inProgress = hasInProgressSession(program.id);
@@ -123,6 +135,7 @@ export const ProgramSelector: React.FC<Props> = ({
               {program.day_order}
             </div>
 
+
             {inProgress && (
               <div style={{
                 backgroundColor: '#FF9500',
@@ -139,6 +152,7 @@ export const ProgramSelector: React.FC<Props> = ({
             )}
           </div>
         )}
+
 
         {showNumber && (
           <div style={{
@@ -161,6 +175,7 @@ export const ProgramSelector: React.FC<Props> = ({
               {displayNumber}
             </div>
 
+
             {inProgress && (
               <div style={{
                 backgroundColor: '#FF9500',
@@ -177,6 +192,7 @@ export const ProgramSelector: React.FC<Props> = ({
             )}
           </div>
         )}
+
 
         <Card 
           style={{ 
@@ -228,6 +244,7 @@ export const ProgramSelector: React.FC<Props> = ({
     );
   };
 
+
   return (
     <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
       <div style={{ 
@@ -242,6 +259,7 @@ export const ProgramSelector: React.FC<Props> = ({
           Готов к тренировке?
         </Text>
       </div>
+
 
       {programs.length === 0 ? (
         <Section>
@@ -313,6 +331,7 @@ export const ProgramSelector: React.FC<Props> = ({
             </Section>
           )}
 
+
           {otherPrograms.length > 0 && (
             <Section 
               header={
@@ -329,8 +348,9 @@ export const ProgramSelector: React.FC<Props> = ({
             </Section>
           )}
 
+
           <Section style={{ marginTop: '24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
               <Button 
                 size="m" 
                 stretched 
@@ -350,6 +370,17 @@ export const ProgramSelector: React.FC<Props> = ({
                 ➕ Создать
               </Button>
             </div>
+            
+            {/* ✅ НОВОЕ: Кнопка истории */}
+            <Button 
+              size="m" 
+              stretched 
+              mode="outline"
+              onClick={onViewHistory}
+              style={{ fontSize: '14px', marginTop: '8px' }}
+            >
+              📖 История тренировок
+            </Button>
           </Section>
         </>
       )}

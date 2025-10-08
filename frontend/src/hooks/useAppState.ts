@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AppScreen } from '../types';
-import type { Program, WorkoutSession, AppState } from '../types';
+import type { Program, WorkoutSession, AppState, WorkoutHistoryItem, WorkoutDetailLog } from '../types';
+
 
 export const useAppState = () => {
   const [state, setState] = useState<AppState>({
@@ -9,21 +10,25 @@ export const useAppState = () => {
     loading: false
   });
 
+
   const setScreen = useCallback((screen: AppScreen) => {
     setState(prev => ({ ...prev, screen }));
   }, []);
+
 
   const setPrograms = useCallback((programs: Program[]) => {
     setState(prev => ({ ...prev, programs }));
   }, []);
 
+
   const setCurrentProgram = useCallback((program: Program | undefined) => {
     setState(prev => ({ ...prev, current_program: program }));
   }, []);
 
+
   const startWorkout = useCallback((program: Program, sessionId?: string) => {
     const session: WorkoutSession = {
-      id: sessionId, // ✅ НОВОЕ: ID из БД
+      id: sessionId,
       program_id: program.id,
       program_name: program.program_name,
       started_at: new Date().toISOString(),
@@ -34,6 +39,7 @@ export const useAppState = () => {
     setState(prev => ({ ...prev, workout_session: session }));
   }, []);
 
+
   const setWorkoutSummary = useCallback((completedSets: any[], duration: number) => {
     setState(prev => ({
       ...prev,
@@ -42,17 +48,39 @@ export const useAppState = () => {
     }));
   }, []);
 
+
+  // ✅ НОВОЕ: Методы для истории тренировок
+  const setWorkoutHistory = useCallback((history: WorkoutHistoryItem[]) => {
+    setState(prev => ({ ...prev, workout_history: history }));
+  }, []);
+
+
+  const setCurrentWorkoutDetail = useCallback((
+    detail: WorkoutDetailLog[], 
+    workoutInfo: WorkoutHistoryItem
+  ) => {
+    setState(prev => ({ 
+      ...prev, 
+      current_workout_detail: detail,
+      current_workout_info: workoutInfo
+    }));
+  }, []);
+
+
   const setLoading = useCallback((loading: boolean) => {
     setState(prev => ({ ...prev, loading }));
   }, []);
+
 
   const setError = useCallback((error: string) => {
     setState(prev => ({ ...prev, error }));
   }, []);
 
+
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: undefined }));
   }, []);
+
 
   return {
     state,
@@ -61,6 +89,8 @@ export const useAppState = () => {
     setCurrentProgram,
     startWorkout,
     setWorkoutSummary,
+    setWorkoutHistory,
+    setCurrentWorkoutDetail,
     setLoading,
     setError,
     clearError,
