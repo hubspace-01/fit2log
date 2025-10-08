@@ -480,44 +480,45 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px', textAlign: 'center' }}>
           {currentExercise.exercise_name}
         </Title>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '8px' 
-        }}>
-          <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-            {getTargetDescription()}
-          </Caption>
+        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', textAlign: 'center', marginBottom: '12px' }}>
+          {getTargetDescription()}
+        </Caption>
 
-          {currentExercisePR && (
-            <div style={{
-              padding: '8px 14px',
-              backgroundColor: 'rgba(var(--tgui--plain_foreground), 0.08)',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}>
-              <Trophy size={16} color="var(--tg-theme-link-color)" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <Caption level="1" style={{ 
-                  fontSize: '13px',
-                  color: 'var(--tg-theme-text-color)',
-                  fontWeight: '500'
+        {currentExercisePR && (
+          <div style={{
+            margin: '0 auto',
+            maxWidth: '90%',
+            padding: '12px',
+            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+            borderRadius: '12px'
+          }}>
+            <Cell
+              before={
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--tg-theme-link-color)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
-                  Твой рекорд: {formatPR()}
+                  <Trophy size={20} color="white" />
+                </div>
+              }
+              subtitle={formatDate(currentExercisePR.achieved_at)}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <Caption level="1" style={{ fontSize: '12px', color: 'var(--tg-theme-hint-color)', marginBottom: '2px' }}>
+                  Твой рекорд:
                 </Caption>
-                <Caption level="1" style={{ 
-                  fontSize: '11px',
-                  color: 'var(--tg-theme-hint-color)'
-                }}>
-                  {formatDate(currentExercisePR.achieved_at)}
-                </Caption>
+                <Text weight="2" style={{ fontSize: '16px' }}>
+                  {formatPR()}
+                </Text>
               </div>
-            </div>
-          )}
-        </div>
+            </Cell>
+          </div>
+        )}
       </div>
 
       {currentExercise.notes && (
@@ -525,6 +526,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           <Cell
             before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
             subtitle={currentExercise.notes}
+            style={{
+              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
+            }}
           >
             Заметки
           </Cell>
