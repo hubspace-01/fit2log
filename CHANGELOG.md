@@ -1,44 +1,27 @@
 # Changelog
 
-## [1.3.0] - 2025-10-05
+## [1.7.1] - 2025-10-08
 
-### Added
-- ✅ **Три типа упражнений**: reps (повторения), time (время), distance (дистанция)
-- ✅ **Обновлённый WorkoutLogger** с поддержкой всех типов упражнений
-- ✅ **Редизайн WorkoutSummary**:
-  - Gradient header с celebration эффектом
-  - Grid layout 2×2 для метрик
-  - Раскрывающиеся детали упражнений
-  - Умная 4-я карточка (адаптируется под тип тренировки)
-- ✅ **Улучшенный TemplateList**:
-  - Группировка по категориям с иконками
-  - Цветные бейджи типов упражнений
-  - Preview modal для просмотра программы
-  - Центрированные заголовки
-- ✅ **7 тестовых программ** покрывающих все кейсы
-
-### Changed
-- Обновлена схема БД: добавлены поля `exercise_type`, `duration`, `distance`
-- Полная русская локализация UI
-- Улучшена типизация TypeScript для новых полей
+### Security
+- Enabled RLS on all tables (programs, exercises, workout_sessions, logs)
+- Added user_id filtering in frontend queries
+- Implemented data isolation by telegram_id
+- Added JWT token generation in Edge Function (foundation for v2.0)
 
 ### Fixed
-- Исправлены дубликаты программ в seed-скрипте
-- Убраны неиспользуемые переменные (TypeScript warnings)
-- Исправлено отображение категорий и бейджей
+- Fixed getPrograms() to require userId parameter
+- Fixed deleteProgram() to verify ownership
+- Fixed ProgramEditor to receive userId as prop
+- Fixed TypeScript compilation errors
 
-### Database Migrations
-- Добавлен seed-скрипт: `backend/supabase/seeds/test-programs-v1.3.0.sql`
+### Changed
+- Refactored usePrograms hook to manage userId state
+- Updated RLS policies with fallback for MVP compatibility
 
-### Breaking Changes
-- Требуется обновление БД (новые поля в таблицах)
+### Documentation
+- Added docs/SECURITY.md with current implementation details
 
----
-
-## [1.0.0] - 2025-10-04
-
-### Initial Release
-- Базовая функциональность логирования тренировок
-- CRUD операции для программ и упражнений
-- Интеграция с Telegram WebApp
-- Supabase backend
+### Notes
+- Current security level suitable for <100 users
+- Strict RLS planned for v2.0
+- Ready for production MVP deployment
