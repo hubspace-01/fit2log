@@ -7,8 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// ✅ НОВОЕ: Хранилище для telegram_id после валидации
+// ✅ Хранилище для telegram_id после валидации
 let validatedTelegramId: string | null = null;
+
+// ✅ ИСПРАВЛЕНО: Объект headers вместо функции
+const customHeaders: Record<string, string> = {};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -17,13 +20,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false
   },
   global: {
-    headers: () => {
-      // ✅ Добавляем telegram_id в каждый запрос
-      if (validatedTelegramId) {
-        return { 'x-telegram-id': validatedTelegramId };
-      }
-      return {};
-    }
+    headers: customHeaders
   }
 });
 
@@ -39,8 +36,9 @@ class SupabaseService {
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
 
-      // ✅ НОВОЕ: Сохраняем telegram_id для последующих запросов
+      // ✅ Сохраняем telegram_id и добавляем в headers
       validatedTelegramId = data.user.id;
+      customHeaders['x-telegram-id'] = validatedTelegramId;
       console.log('✅ Telegram user validated:', validatedTelegramId);
 
       return data;
@@ -50,7 +48,6 @@ class SupabaseService {
     }
   }
 
-  // ✅ НОВОЕ: Геттер для получения текущего telegram_id
   getCurrentTelegramId(): string | null {
     return validatedTelegramId;
   }
