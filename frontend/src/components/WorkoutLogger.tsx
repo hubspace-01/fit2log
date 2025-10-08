@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
+import { Section, Cell, Title, Caption, Text, Button, Divider, IconButton } from '@telegram-apps/telegram-ui';
 import { 
   Clock, 
   Activity, 
@@ -9,7 +9,8 @@ import {
   Lightbulb, 
   CheckCircle, 
   Trophy,
-  Loader2
+  Loader2,
+  Plus
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -486,52 +487,64 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
         {currentExercisePR && (
           <div style={{
-            margin: '0 auto',
-            maxWidth: '90%',
-            padding: '12px',
-            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-            borderRadius: '12px'
+            display: 'flex',
+            justifyContent: 'center'
           }}>
-            <Cell
-              before={
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--tg-theme-link-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Trophy size={20} color="white" />
-                </div>
-              }
-              subtitle={formatDate(currentExercisePR.achieved_at)}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <Caption level="1" style={{ fontSize: '12px', color: 'var(--tg-theme-hint-color)', marginBottom: '2px' }}>
-                  Твой рекорд:
-                </Caption>
-                <Text weight="2" style={{ fontSize: '16px' }}>
-                  {formatPR()}
-                </Text>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+              borderRadius: '8px'
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--tg-theme-link-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Trophy size={20} color="white" />
               </div>
-            </Cell>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <Text weight="2" style={{ fontSize: '15px' }}>
+                  Твой рекорд: {formatPR()}
+                </Text>
+                <Caption level="1" style={{ 
+                  fontSize: '12px',
+                  color: 'var(--tg-theme-hint-color)'
+                }}>
+                  {formatDate(currentExercisePR.achieved_at)}
+                </Caption>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       {currentExercise.notes && (
         <Section style={{ marginTop: '8px' }}>
-          <Cell
-            before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
-            subtitle={currentExercise.notes}
-            style={{
-              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
-            }}
-          >
-            Заметки
-          </Cell>
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px'
+          }}>
+            <Lightbulb size={20} color="var(--tg-theme-link-color)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <Text weight="2" style={{ fontSize: '15px', marginBottom: '4px', display: 'block' }}>
+                Заметки
+              </Text>
+              <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+                {currentExercise.notes}
+              </Caption>
+            </div>
+          </div>
         </Section>
       )}
 
@@ -543,22 +556,29 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             alignItems: 'center',
             padding: '0 16px'
           }}>
-            <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
-            {exerciseType !== 'distance' && (
-              <Button
-                size="s"
-                mode="bezeled"
-                onClick={handleAddSet}
-                style={{ 
-                  fontSize: '11px',
-                  padding: '3px 8px',
-                  minHeight: '24px',
-                  lineHeight: '1'
-                }}
-              >
-                +1 подход
-              </Button>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
+              {exerciseType !== 'distance' && (
+                <button
+                  onClick={handleAddSet}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    border: '1px solid var(--tg-theme-button-color)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--tg-theme-button-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  <Plus size={16} />
+                </button>
+              )}
+            </div>
           </div>
         }
         style={{ marginTop: '8px' }}
