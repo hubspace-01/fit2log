@@ -1,14 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
+import { 
+  Clock, 
+  Activity, 
+  Dumbbell, 
+  Timer, 
+  Footprints, 
+  Lightbulb, 
+  CheckCircle, 
+  Trophy,
+  Loader2,
+  Check,
+  ChevronRight,
+  SkipForward
+} from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
+import { normalizeExerciseName } from '../lib/personalRecords';
 import { Stepper } from './Stepper';
-import type { WorkoutSession } from '../types';
+import type { WorkoutSession, PersonalRecord } from '../types';
 
 interface WorkoutLoggerProps {
   session: WorkoutSession;
   userId: string;
-  onFinish: (completedSets: any[], duration: number, sessionId: string) => void; // ✅ ДОБАВЛЕНО sessionId
+  onFinish: (completedSets: any[], duration: number, sessionId: string) => void;
   onCancel: () => void;
 }
 
@@ -23,6 +38,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [completedSets, setCompletedSets] = useState<any[]>([]);
   const [skippedSets, setSkippedSets] = useState<Set<string>>(new Set());
   const [extraSets, setExtraSets] = useState<Map<string, number>>(new Map());
+  const [currentExercisePR, setCurrentExercisePR] = useState<PersonalRecord | null>(null);
   
   const [reps, setReps] = useState(0);
   const [weight, setWeight] = useState(0);
@@ -74,10 +90,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
                   completed_at: new Date().toISOString(),
                   total_duration: currentElapsed
                 });
-                console.log('✅ Session marked as cancelled');
               }
             } catch (error) {
-              console.error('❌ Cancel session error:', error);
+              
             } finally {
               onCancel();
             }
@@ -89,7 +104,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     telegramService.showBackButton(handleBack);
 
     return () => {
-      // Не скрываем BackButton при unmount
+      
     };
   }, [onCancel]);
 
@@ -104,11 +119,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         );
 
         if (existingSession) {
-          console.log('✅ Found existing session:', existingSession.id);
           setSessionId(existingSession.id);
           
           const logs = await supabaseService.getSessionLogs(existingSession.id);
-          console.log('✅ Loaded logs:', logs.length);
           
           if (logs.length > 0) {
             setCompletedSets(logs);
@@ -127,10 +140,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               
               if (setsForLastEx >= targetSets && lastExerciseIndex < session.exercises.length - 1) {
                 setCurrentExerciseIndex(lastExerciseIndex + 1);
-                console.log(`✅ Resuming from exercise ${lastExerciseIndex + 2}`);
               } else {
                 setCurrentExerciseIndex(lastExerciseIndex);
-                console.log(`✅ Resuming from exercise ${lastExerciseIndex + 1}`);
               }
             }
           }
@@ -141,11 +152,9 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             program_name: session.program_name,
             started_at: session.started_at
           });
-          console.log('✅ Created new session:', newSession.id);
           setSessionId(newSession.id);
         }
       } catch (error) {
-        console.error('❌ Session initialization error:', error);
         telegramService.showAlert('Ошибка создания сессии. Попробуйте позже.');
       } finally {
         setInitializing(false);
@@ -154,6 +163,30 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
     initializeSession();
   }, [userId, session.program_id, session.program_name, session.started_at, session.exercises]);
+
+  useEffect(() => {
+    if (currentExercise && userId) {
+      loadCurrentExercisePR();
+    }
+  }, [currentExerciseIndex, userId, currentExercise]);
+
+  const loadCurrentExercisePR = async () => {
+    try {
+      if (!currentExercise) return;
+
+      const prs = await supabaseService.getPersonalRecords(userId);
+      const normalizedName = normalizeExerciseName(currentExercise.exercise_name);
+      
+      const pr = prs.find(p => 
+        normalizeExerciseName(p.exercise_name) === normalizedName &&
+        p.exercise_type === exerciseType
+      );
+      
+      setCurrentExercisePR(pr || null);
+    } catch (error) {
+      setCurrentExercisePR(null);
+    }
+  };
 
   useEffect(() => {
     if (currentExercise) {
@@ -185,6 +218,18 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const formatPR = () => {
+    if (!currentExercisePR) return '';
+    if (currentExercisePR.exercise_type === 'reps') {
+      return `${currentExercisePR.record_weight}кг × ${currentExercisePR.record_reps}`;
+    } else if (currentExercisePR.exercise_type === 'time') {
+      return `${currentExercisePR.record_duration}сек`;
+    } else if (currentExercisePR.exercise_type === 'distance') {
+      return `${currentExercisePR.record_distance}м`;
+    }
+    return '';
   };
 
   const handleAddSet = () => {
@@ -249,13 +294,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         session_id: sessionId
       });
 
-      console.log('✅ Set saved to DB:', newSet);
-
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
 
     } catch (error) {
-      console.error('❌ Failed to save set:', error);
       telegramService.showAlert('Ошибка сохранения. Попробуйте ещё раз.');
       return;
     } finally {
@@ -311,14 +353,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     } else {
       const skipKey = `${currentExercise.id}_${currentSetNumber}`;
       setSkippedSets(prev => new Set([...prev, skipKey]));
-      console.log(`⏭️ Skipped set ${currentSetNumber}`);
     }
   };
 
-  // ✅ ИСПРАВЛЕНО: Передаём sessionId
   const handleFinishWorkout = async () => {
-    console.log('🔍 [Logger] Finishing with sessionId:', sessionId); // ← Добавлен лог
-    
     try {
       if (sessionId) {
         await supabaseService.updateWorkoutSession(sessionId, {
@@ -326,12 +364,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           completed_at: new Date().toISOString(),
           total_duration: elapsedTime
         });
-        console.log('✅ Session marked as completed');
       }
-      onFinish(completedSets, elapsedTime, sessionId!); // ✅ ПЕРЕДАЁМ sessionId
+      onFinish(completedSets, elapsedTime, sessionId!);
     } catch (error) {
-      console.error('❌ Finish workout error:', error);
-      onFinish(completedSets, elapsedTime, sessionId!); // ✅ ПЕРЕДАЁМ sessionId
+      onFinish(completedSets, elapsedTime, sessionId!);
     }
   };
 
@@ -346,15 +382,24 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return '';
   };
 
+  const getExerciseIcon = () => {
+    if (exerciseType === 'time') return <Timer size={28} color="var(--tg-theme-link-color)" />;
+    if (exerciseType === 'distance') return <Footprints size={28} color="var(--tg-theme-link-color)" />;
+    return <Dumbbell size={28} color="var(--tg-theme-link-color)" />;
+  };
+
   if (initializing) {
     return (
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '12px'
       }}>
-        <Text>⏳ Загрузка тренировки...</Text>
+        <Loader2 size={32} color="var(--tg-theme-link-color)" className="animate-spin" />
+        <Text>Загрузка тренировки...</Text>
       </div>
     );
   }
@@ -384,8 +429,15 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         <Text weight="2" style={{ fontSize: '15px' }}>
           {session.program_name}
         </Text>
-        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-          ⏱ {formatTime(elapsedTime)}
+        <Caption level="1" style={{ 
+          fontSize: '14px', 
+          color: 'var(--tg-theme-hint-color)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          <Clock size={16} />
+          {formatTime(elapsedTime)}
         </Caption>
       </div>
 
@@ -395,9 +447,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             fontSize: '14px', 
             color: 'var(--tg-theme-hint-color)',
             marginBottom: '8px',
-            display: 'block'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
           }}>
-            📊 Упражнение {currentExerciseIndex + 1} из {totalExercises}
+            <Activity size={16} />
+            Упражнение {currentExerciseIndex + 1} из {totalExercises}
           </Caption>
           <div style={{
             width: '100%',
@@ -416,19 +471,43 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      <div style={{ padding: '16px', textAlign: 'center' }}>
-        <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '8px' }}>
-          {exerciseType === 'reps' ? '💪' : exerciseType === 'time' ? '⏱' : '🏃'} {currentExercise.exercise_name}
+      <div style={{ padding: '16px 16px 8px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+          {getExerciseIcon()}
+        </div>
+        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+          {currentExercise.exercise_name}
         </Title>
-        <Caption level="1" style={{ fontSize: '15px', color: 'var(--tg-theme-hint-color)' }}>
+        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
           {getTargetDescription()}
         </Caption>
+
+        {currentExercisePR && (
+          <div style={{
+            marginTop: '12px',
+            padding: '10px 16px',
+            backgroundColor: 'rgba(var(--tgui--plain_foreground), 0.08)',
+            borderRadius: '8px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Trophy size={18} color="var(--tg-theme-link-color)" />
+            <Caption level="1" style={{ 
+              fontSize: '14px',
+              color: 'var(--tg-theme-text-color)',
+              fontWeight: '500'
+            }}>
+              Твой рекорд: {formatPR()}
+            </Caption>
+          </div>
+        )}
       </div>
 
       {currentExercise.notes && (
-        <Section>
+        <Section style={{ marginTop: '8px' }}>
           <Cell
-            before="💡"
+            before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
             subtitle={currentExercise.notes}
             style={{
               backgroundColor: 'var(--tg-theme-secondary-bg-color)'
@@ -465,6 +544,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             )}
           </div>
         }
+        style={{ marginTop: '8px' }}
       >
         <div style={{ padding: '0 16px' }}>
           {exerciseType === 'reps' && (
@@ -537,7 +617,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       </Section>
 
       {exerciseCompletedSets.length > 0 && (
-        <Section header="История подходов">
+        <Section header="История подходов" style={{ marginTop: '8px' }}>
           {exerciseCompletedSets.map((set, index) => {
             let subtitle = '';
             if (exerciseType === 'reps') {
@@ -551,7 +631,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             return (
               <Cell
                 key={`set-${index}`}
-                before="✅"
+                before={<CheckCircle size={18} color="var(--tg-theme-link-color)" />}
                 subtitle={subtitle}
               >
                 Подход {set.set_no}
@@ -570,9 +650,19 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           mode="filled"
           onClick={handleCompleteSet}
           disabled={saving}
-          style={{ fontSize: '16px' }}
+          style={{ fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          {saving ? '⏳ Сохранение...' : '✅ Выполнить подход'}
+          {saving ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Сохранение...
+            </>
+          ) : (
+            <>
+              <Check size={18} />
+              Выполнить подход
+            </>
+          )}
         </Button>
 
         <Button
@@ -581,9 +671,19 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           mode="outline"
           onClick={handleSkipSet}
           disabled={saving}
-          style={{ fontSize: '14px' }}
+          style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
         >
-          {isLastSetOfExercise ? '⏩ Следующее упражнение' : '⏭️ Пропустить подход'}
+          {isLastSetOfExercise ? (
+            <>
+              <ChevronRight size={16} />
+              Следующее упражнение
+            </>
+          ) : (
+            <>
+              <SkipForward size={16} />
+              Пропустить подход
+            </>
+          )}
         </Button>
       </div>
     </div>
