@@ -10,7 +10,9 @@ import {
   Activity,
   Target,
   Award,
-  CheckCircle
+  CheckCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { processWorkoutRecords } from '../lib/personalRecords';
@@ -60,16 +62,12 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       const processRecords = async () => {
         try {
           setLoadingRecords(true);
-          console.log('🔍 Processing personal records...');
-          
           const records = await processWorkoutRecords(sessionId, userId);
-          
           if (records.length > 0) {
-            console.log(`🎉 Found ${records.length} new records!`);
             setNewRecords(records);
           }
         } catch (error) {
-          console.error('❌ Error processing records:', error);
+          
         } finally {
           setLoadingRecords(false);
         }
@@ -175,6 +173,12 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
     setExpandedExercises(newExpanded);
   };
 
+  const activeMetrics = [
+    stats.repsCount > 0 ? 'reps' : null,
+    stats.timeCount > 0 ? 'time' : null,
+    stats.distanceCount > 0 ? 'distance' : null
+  ].filter(Boolean);
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -208,7 +212,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
         <>
           <div style={{
             padding: '16px',
-            margin: '16px 16px 8px',
+            margin: '16px',
             backgroundColor: 'var(--tg-theme-link-color)',
             borderRadius: '12px',
             textAlign: 'center',
@@ -248,9 +252,9 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                     </div>
                   }
                   subtitle={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    <div style={{ marginTop: '4px', textAlign: 'left' }}>
                       {!isFirstRecord && record.old_value && (
-                        <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)' }}>
                             было: {record.old_value}
                           </span>
@@ -267,10 +271,10 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                               +{record.improvement_percent}%
                             </span>
                           )}
-                        </>
+                        </div>
                       )}
                       {isFirstRecord && (
-                        <span style={{ 
+                        <div style={{ 
                           fontSize: '13px', 
                           color: 'var(--tg-theme-link-color)',
                           fontWeight: '600',
@@ -280,12 +284,12 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                         }}>
                           <Award size={14} />
                           Первый рекорд!
-                        </span>
+                        </div>
                       )}
                     </div>
                   }
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
                     <span style={{ fontSize: '15px', fontWeight: '500' }}>{record.exercise_name}</span>
                     <span style={{ fontSize: '17px', fontWeight: '600', marginTop: '2px' }}>
                       {record.new_value}
@@ -375,7 +379,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
           border: '1px solid var(--tg-theme-section-separator-color)',
           borderRadius: '12px'
         }}>
-          {stats.repsCount > 0 && stats.timeCount === 0 && stats.distanceCount === 0 && (
+          {activeMetrics.length === 1 && stats.repsCount > 0 && (
             <>
               <Dumbbell size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
@@ -387,7 +391,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
             </>
           )}
           
-          {stats.timeCount > 0 && stats.repsCount === 0 && stats.distanceCount === 0 && (
+          {activeMetrics.length === 1 && stats.timeCount > 0 && (
             <>
               <Timer size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
@@ -399,7 +403,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
             </>
           )}
           
-          {stats.distanceCount > 0 && stats.repsCount === 0 && stats.timeCount === 0 && (
+          {activeMetrics.length === 1 && stats.distanceCount > 0 && (
             <>
               <Footprints size={28} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <Title level="3" weight="2" style={{ fontSize: '20px', marginBottom: '4px' }}>
@@ -411,36 +415,37 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
             </>
           )}
 
-          {((stats.repsCount > 0 && stats.timeCount > 0) ||
-            (stats.repsCount > 0 && stats.distanceCount > 0) ||
-            (stats.timeCount > 0 && stats.distanceCount > 0)) && (
+          {activeMetrics.length > 1 && (
             <>
               <Activity size={24} color="var(--tg-theme-link-color)" style={{ marginBottom: '8px' }} />
               <div style={{ 
-                fontSize: '12px', 
-                lineHeight: '1.6',
-                color: 'var(--tg-theme-text-color)'
+                fontSize: '13px', 
+                lineHeight: '1.8',
+                color: 'var(--tg-theme-text-color)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
               }}>
                 {stats.totalWeight > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <Dumbbell size={12} />
-                    {Math.round(stats.totalWeight)} кг
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <Dumbbell size={14} color="var(--tg-theme-link-color)" />
+                    <span style={{ fontWeight: '600' }}>{Math.round(stats.totalWeight)} кг</span>
                   </div>
                 )}
                 {stats.totalTimeUnderTension > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <Timer size={12} />
-                    {formatDuration(stats.totalTimeUnderTension)}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <Timer size={14} color="var(--tg-theme-link-color)" />
+                    <span style={{ fontWeight: '600' }}>{formatDuration(stats.totalTimeUnderTension)}</span>
                   </div>
                 )}
                 {stats.totalDistance > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                    <Footprints size={12} />
-                    {stats.totalDistance} м
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <Footprints size={14} color="var(--tg-theme-link-color)" />
+                    <span style={{ fontWeight: '600' }}>{stats.totalDistance} м</span>
                   </div>
                 )}
               </div>
-              <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)', marginTop: '4px' }}>
+              <Caption level="1" style={{ fontSize: '11px', color: 'var(--tg-theme-hint-color)', marginTop: '6px' }}>
                 Смешанная
               </Caption>
             </>
@@ -491,7 +496,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                     {exercise.type === 'distance' && <Footprints size={20} color="white" />}
                   </div>
                 }
-                after={isExpanded ? '▲' : '▼'}
+                after={isExpanded ? <ChevronUp size={20} color="var(--tg-theme-hint-color)" /> : <ChevronDown size={20} color="var(--tg-theme-hint-color)" />}
                 subtitle={compactSubtitle}
               >
                 {exercise.name}
@@ -499,7 +504,7 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
 
               {isExpanded && (
                 <div style={{
-                  padding: '12px 16px',
+                  padding: '8px 16px 12px',
                   backgroundColor: 'var(--tg-theme-bg-color)',
                   borderTop: '0.5px solid var(--tg-theme-section-separator-color)'
                 }}>
@@ -517,19 +522,20 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
                       <div
                         key={setIndex}
                         style={{
-                          padding: '8px 0',
+                          padding: '10px 0',
                           fontSize: '14px',
                           color: 'var(--tg-theme-text-color)',
                           display: 'flex',
                           justifyContent: 'space-between',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          borderBottom: setIndex < exercise.details.length - 1 ? '0.5px solid var(--tg-theme-section-separator-color)' : 'none'
                         }}
                       >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <CheckCircle size={14} color="var(--tg-theme-link-color)" />
-                          Подход {set.set_no}:
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CheckCircle size={16} color="var(--tg-theme-link-color)" />
+                          <span style={{ fontSize: '15px' }}>Подход {set.set_no}</span>
                         </span>
-                        <span style={{ fontWeight: '500' }}>{setInfo}</span>
+                        <span style={{ fontWeight: '600', fontSize: '15px' }}>{setInfo}</span>
                       </div>
                     );
                   })}
