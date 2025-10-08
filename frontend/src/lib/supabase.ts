@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // ✅ Хранилище для telegram_id после валидации
 let validatedTelegramId: string | null = null;
 
-// ✅ ИСПРАВЛЕНО: Объект headers вместо функции
+// ✅ Объект headers (изменяемый)
 const customHeaders: Record<string, string> = {};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -36,10 +36,12 @@ class SupabaseService {
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
 
-      // ✅ Сохраняем telegram_id и добавляем в headers
-      validatedTelegramId = data.user.id;
-      customHeaders['x-telegram-id'] = validatedTelegramId;
-      console.log('✅ Telegram user validated:', validatedTelegramId);
+      // ✅ ИСПРАВЛЕНО: Проверяем что id существует перед присваиванием
+      if (data.user?.id) {
+        validatedTelegramId = data.user.id;
+        customHeaders['x-telegram-id'] = data.user.id;
+        console.log('✅ Telegram user validated:', validatedTelegramId);
+      }
 
       return data;
     } catch (error) {
