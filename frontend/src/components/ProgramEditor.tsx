@@ -16,9 +16,10 @@ interface Props {
   onSave: (data: any) => void;
   onBack: () => void;
   initialData?: Program;
+  userId: string;  // ✅ НОВОЕ
 }
 
-export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) => {
+export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, userId }) => {
   const [programName, setProgramName] = useState('');
   const [exercises, setExercises] = useState<any[]>([]);
   const [isInWeeklySplit, setIsInWeeklySplit] = useState(false);
@@ -29,14 +30,14 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
   useEffect(() => {
     const loadPrograms = async () => {
       try {
-        const programs = await supabaseService.getPrograms();
+        const programs = await supabaseService.getPrograms(userId);  // ✅ ИСПРАВЛЕНО
         setExistingPrograms(programs);
       } catch (error) {
         console.error('Error loading programs:', error);
       }
     };
     loadPrograms();
-  }, []);
+  }, [userId]);  // ✅ ИСПРАВЛЕНО: добавлена зависимость
 
   useEffect(() => {
     if (initialData) {
@@ -138,7 +139,6 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
     
     const validExercises = exercises.filter(ex => ex.exercise_name.trim());
     
-    // ✅ ИСПРАВЛЕНО: NULL вместо 0
     onSave({ 
       program_name: programName, 
       exercises: validExercises,
@@ -433,7 +433,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData }) 
                       onClick={() => updateExercise(i, 'exercise_type', 'distance')}
                       style={{ fontSize: '11px' }}
                     >
-                      �� Расст
+                      🏃 Расст
                     </Button>
                   </div>
                 </div>
