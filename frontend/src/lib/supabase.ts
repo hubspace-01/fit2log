@@ -12,8 +12,8 @@ const customHeaders: Record<string, string> = {};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: false,
-    persistSession: false,
+    autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: false
   },
   global: {
@@ -33,12 +33,10 @@ class SupabaseService {
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
 
-      // ✅ Сохраняем telegram_id и JWT токен
       if (data.user?.id) {
         validatedTelegramId = data.user.id;
         customHeaders['x-telegram-id'] = data.user.id;
         
-        // ✅ Если есть JWT токен - добавляем в Authorization header
         if (data.access_token) {
           customHeaders['Authorization'] = `Bearer ${data.access_token}`;
           console.log('✅ JWT token received and set');
@@ -58,13 +56,15 @@ class SupabaseService {
     return validatedTelegramId;
   }
 
-  async getPrograms() {
+  // ✅ ИСПРАВЛЕНО: Добавлен фильтр по user_id
+  async getPrograms(userId: string) {
     const { data, error } = await supabase
       .from('programs')
       .select(`
         *,
         exercises (*)
       `)
+      .eq('user_id', userId)  // ← КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
       .eq('is_template', false)
       .order('created_at', { ascending: false });
 
@@ -213,7 +213,7 @@ class SupabaseService {
         updated_at: new Date().toISOString()
       })
       .eq('id', programId)
-      .eq('user_id', user_id)
+      .eq('user_id', user_id)  // ← Проверка владельца
       .select()
       .single();
 
@@ -251,18 +251,21 @@ class SupabaseService {
     return program;
   }
 
-  async deleteProgram(programId: string) {
+  async deleteProgram(programId: string, userId: string) {
+    // ✅ ИСПРАВЛЕНО: Добавлена проверка владельца
     const { error: exercisesError } = await supabase
       .from('exercises')
       .delete()
-      .eq('program_id', programId);
+      .eq('program_id', programId)
+      .eq('user_id', userId);
 
     if (exercisesError) throw exercisesError;
 
     const { error: programError } = await supabase
       .from('programs')
       .delete()
-      .eq('id', programId);
+      .eq('id', programId)
+      .eq('user_id', userId);
 
     if (programError) throw programError;
 
@@ -399,7 +402,7 @@ class SupabaseService {
   }
 
   async getExerciseHistory(exerciseId: string, limit = 5) {
-    const { data, error} = await supabase
+    const { data, error } = await supabase
       .from('logs')
       .select('*')
       .eq('exercise_id', exerciseId)
