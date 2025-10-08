@@ -8,7 +8,7 @@ import type { WorkoutSession } from '../types';
 interface WorkoutLoggerProps {
   session: WorkoutSession;
   userId: string;
-  onFinish: (completedSets: any[], duration: number) => void;
+  onFinish: (completedSets: any[], duration: number, sessionId: string) => void; // ✅ ДОБАВЛЕНО sessionId
   onCancel: () => void;
 }
 
@@ -60,7 +60,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     sessionIdRef.current = sessionId;
   }, [sessionId]);
 
-  // ✅ НОВОЕ: Сразу переопределяем BackButton при монтировании
   useEffect(() => {
     const handleBack = () => {
       telegramService.showConfirm(
@@ -87,7 +86,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       );
     };
 
-    // Переопределяем обработчик сразу без скрытия кнопки
     telegramService.showBackButton(handleBack);
 
     return () => {
@@ -95,7 +93,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     };
   }, [onCancel]);
 
-  // Инициализация сессии
   useEffect(() => {
     const initializeSession = async () => {
       try {
@@ -318,7 +315,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   };
 
+  // ✅ ИСПРАВЛЕНО: Передаём sessionId
   const handleFinishWorkout = async () => {
+    console.log('🔍 [Logger] Finishing with sessionId:', sessionId); // ← Добавлен лог
+    
     try {
       if (sessionId) {
         await supabaseService.updateWorkoutSession(sessionId, {
@@ -328,10 +328,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         });
         console.log('✅ Session marked as completed');
       }
-      onFinish(completedSets, elapsedTime);
+      onFinish(completedSets, elapsedTime, sessionId!); // ✅ ПЕРЕДАЁМ sessionId
     } catch (error) {
       console.error('❌ Finish workout error:', error);
-      onFinish(completedSets, elapsedTime);
+      onFinish(completedSets, elapsedTime, sessionId!); // ✅ ПЕРЕДАЁМ sessionId
     }
   };
 

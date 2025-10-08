@@ -213,9 +213,10 @@ const App: React.FC = () => {
     }
   }, [user, startWorkout, setScreen]);
 
-  const handleFinishWorkout = useCallback((completedSets: any[], duration: number) => {
-    console.log('✅ Workout finished:', completedSets, duration);
-    setWorkoutSummary(completedSets, duration);
+  // ✅ ИСПРАВЛЕНО: Принимаем sessionId и передаём дальше
+  const handleFinishWorkout = useCallback((completedSets: any[], duration: number, sessionId: string) => {
+    console.log('✅ [App] Workout finished:', { completedSets, duration, sessionId });
+    setWorkoutSummary(completedSets, duration, sessionId);
     setScreen(AppScreen.WORKOUT_SUMMARY);
   }, [setWorkoutSummary, setScreen]);
 
@@ -314,7 +315,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ ОБНОВЛЕНО: Добавлены sessionId и userId */}
+      {/* ✅ ИСПРАВЛЕНО: Добавлена проверка user и передача sessionId, userId */}
       {state.screen === AppScreen.WORKOUT_SUMMARY && 
        state.workout_session && 
        state.workout_completed_sets && 
