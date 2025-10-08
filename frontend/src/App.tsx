@@ -297,7 +297,7 @@ const App: React.FC = () => {
         />
       )}
 
-      {state.screen === AppScreen.PROGRAM_EDITOR && (
+      {state.screen === AppScreen.PROGRAM_EDITOR && user && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
           onBack={handleBack}
