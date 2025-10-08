@@ -1,10 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts'
+import { create } from 'https://deno.land/x/djwt@v3.0.1/mod.ts'
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const JWT_SECRET = Deno.env.get('JWT_SECRET') || TELEGRAM_BOT_TOKEN
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,7 +58,7 @@ serve(async (req) => {
     const user = JSON.parse(userParam)
     console.log('User validated:', user.id)
 
-    // ✅ НОВОЕ: Создаем/обновляем профиль пользователя в таблице users
+    // Создаем/обновляем профиль пользователя
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
     
     try {
@@ -79,6 +81,29 @@ serve(async (req) => {
       console.error('User sync error:', err)
     }
 
+    // ✅ НОВОЕ: Создаём JWT токен с telegram_id
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(JWT_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign', 'verify']
+    )
+
+    const jwt = await create(
+      { alg: 'HS256', typ: 'JWT' },
+      {
+        telegram_id: user.id.toString(),
+        first_name: user.first_name,
+        username: user.username,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7), // 7 дней
+        iat: Math.floor(Date.now() / 1000)
+      },
+      key
+    )
+
+    console.log('✅ JWT token created for user:', user.id)
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -87,7 +112,9 @@ serve(async (req) => {
           first_name: user.first_name,
           last_name: user.last_name,
           username: user.username
-        }
+        },
+        access_token: jwt,
+        token_type: 'bearer'
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     )

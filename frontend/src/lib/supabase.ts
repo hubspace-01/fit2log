@@ -7,16 +7,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// ✅ Хранилище для telegram_id после валидации
 let validatedTelegramId: string | null = null;
-
-// ✅ Объект headers (изменяемый)
 const customHeaders: Record<string, string> = {};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
-    persistSession: true,
+    autoRefreshToken: false,
+    persistSession: false,
     detectSessionInUrl: false
   },
   global: {
@@ -36,10 +33,17 @@ class SupabaseService {
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || 'Validation failed');
 
-      // ✅ ИСПРАВЛЕНО: Проверяем что id существует перед присваиванием
+      // ✅ Сохраняем telegram_id и JWT токен
       if (data.user?.id) {
         validatedTelegramId = data.user.id;
         customHeaders['x-telegram-id'] = data.user.id;
+        
+        // ✅ Если есть JWT токен - добавляем в Authorization header
+        if (data.access_token) {
+          customHeaders['Authorization'] = `Bearer ${data.access_token}`;
+          console.log('✅ JWT token received and set');
+        }
+        
         console.log('✅ Telegram user validated:', validatedTelegramId);
       }
 
@@ -395,7 +399,7 @@ class SupabaseService {
   }
 
   async getExerciseHistory(exerciseId: string, limit = 5) {
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('logs')
       .select('*')
       .eq('exercise_id', exerciseId)
