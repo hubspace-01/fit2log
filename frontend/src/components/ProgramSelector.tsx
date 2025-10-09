@@ -7,7 +7,7 @@ import {
   Card,
   Spinner
 } from '@telegram-apps/telegram-ui';
-import { Trophy, History, FileText, Plus } from 'lucide-react';
+import { Trophy, History, FileText, Plus, BarChart3 } from 'lucide-react';
 import type { Program } from '../types';
 import { supabaseService } from '../lib/supabase';
 import { telegramService } from '../lib/telegram';
@@ -21,6 +21,7 @@ interface Props {
   onSelectProgram: (program: Program) => void;
   onViewHistory: () => void;
   onViewRecords: () => void;
+  onViewStatistics: () => void;
 }
 
 export const ProgramSelector: React.FC<Props> = ({
@@ -31,7 +32,8 @@ export const ProgramSelector: React.FC<Props> = ({
   onSelectTemplate,
   onSelectProgram,
   onViewHistory,
-  onViewRecords
+  onViewRecords,
+  onViewStatistics
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -349,7 +351,7 @@ export const ProgramSelector: React.FC<Props> = ({
               </Button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
               <Button 
                 size="m" 
                 stretched 
@@ -369,6 +371,16 @@ export const ProgramSelector: React.FC<Props> = ({
               >
                 <Trophy size={16} />
                 Рекорды
+              </Button>
+              <Button 
+                size="m" 
+                stretched 
+                mode="outline"
+                onClick={onViewStatistics}
+                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <BarChart3 size={16} />
+                Статистика
               </Button>
             </div>
           </Section>

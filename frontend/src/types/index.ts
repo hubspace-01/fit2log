@@ -140,6 +140,7 @@ export enum AppScreen {
   WORKOUT_SUMMARY = 'WORKOUT_SUMMARY',
   WORKOUT_HISTORY = 'WORKOUT_HISTORY',
   WORKOUT_DETAIL = 'WORKOUT_DETAIL',
+  STATISTICS = 'STATISTICS',
   PERSONAL_RECORDS = 'PERSONAL_RECORDS'
 }
 
@@ -175,4 +176,20 @@ export interface RecordComparison {
   isNewRecord: boolean;
   currentBest?: PersonalRecord;
   improvement?: number;
+}
+
+export interface BasicStats {
+  total_workouts: number;
+  active_weeks_streak: number;
+  total_duration_minutes: number;
+}
+
+export interface Last7DaysStats {
+  workout_count: number;
+  workout_dates: string[];
+}
+
+export interface TopExercise {
+  exercise_name: string;
+  total_sets: number;
 }

@@ -8,3 +8,7 @@ export { WorkoutSummary } from './WorkoutSummary';
 export { WorkoutHistory } from './WorkoutHistory';
 export { WorkoutDetail } from './WorkoutDetail';
 export { PersonalRecords } from './PersonalRecords';
+export { StatCard } from './StatCard';
+export { WeekActivityBar } from './WeekActivityBar';
+export { TopExerciseItem } from './TopExerciseItem';
+export { Statistics } from './Statistics';

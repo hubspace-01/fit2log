@@ -604,3 +604,113 @@ class SupabaseService {
 }
 
 export const supabaseService = new SupabaseService();
+
+  async getBasicStats(userId: string) {
+    const { data: workouts, error: workoutsError } = await this.supabase
+      .from('workout_sessions')
+      .select('id, total_duration')
+      .eq('user_id', userId)
+      .eq('status', 'completed');
+
+    if (workoutsError) throw workoutsError;
+
+    const totalWorkouts = workouts?.length || 0;
+    const totalDuration = workouts?.reduce((sum, w) => sum + (w.total_duration || 0), 0) || 0;
+
+    const { data: weeklyData, error: weeklyError } = await this.supabase
+      .from('workout_sessions')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false });
+
+    if (weeklyError) throw weeklyError;
+
+    let activeWeeksStreak = 0;
+    if (weeklyData && weeklyData.length > 0) {
+      const weeks = new Set<string>();
+      weeklyData.forEach(w => {
+        if (w.completed_at) {
+          const date = new Date(w.completed_at);
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay());
+          weeks.add(weekStart.toISOString().split('T')[0]);
+        }
+      });
+
+      const sortedWeeks = Array.from(weeks).sort().reverse();
+      const currentWeek = new Date();
+      currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
+      const currentWeekStr = currentWeek.toISOString().split('T')[0];
+
+      for (let i = 0; i < sortedWeeks.length; i++) {
+        const expectedWeek = new Date(currentWeek);
+        expectedWeek.setDate(currentWeek.getDate() - (i * 7));
+        const expectedWeekStr = expectedWeek.toISOString().split('T')[0];
+
+        if (sortedWeeks[i] === expectedWeekStr) {
+          activeWeeksStreak++;
+        } else {
+          break;
+        }
+      }
+    }
+
+    return {
+      total_workouts: totalWorkouts,
+      active_weeks_streak: activeWeeksStreak,
+      total_duration_minutes: totalDuration
+    };
+  }
+
+  async getLast7Days(userId: string) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const { data, error } = await this.supabase
+      .from('workout_sessions')
+      .select('completed_at')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .gte('completed_at', sevenDaysAgo.toISOString());
+
+    if (error) throw error;
+
+    const workoutDates = data?.map(w => {
+      if (w.completed_at) {
+        return new Date(w.completed_at).toISOString().split('T')[0];
+      }
+      return null;
+    }).filter(Boolean) || [];
+
+    return {
+      workout_count: workoutDates.length,
+      workout_dates: workoutDates as string[]
+    };
+  }
+
+  async getTopExercises(userId: string, limit: number = 5) {
+    const { data, error } = await this.supabase
+      .from('logs')
+      .select('exercise_name')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    const exerciseCounts = (data || []).reduce((acc, log) => {
+      const name = log.exercise_name;
+      acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topExercises = Object.entries(exerciseCounts)
+      .map(([exercise_name, total_sets]) => ({ exercise_name, total_sets }))
+      .sort((a, b) => b.total_sets - a.total_sets)
+      .slice(0, limit);
+
+    return topExercises;
+  }
+}
+
+export const supabaseService = new SupabaseService();
