@@ -85,7 +85,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
   };
 
-  const toggleExpand = async (exerciseName: string) => {
+  const toggleExpand = (exerciseName: string) => {
     const newExpanded = new Set(expandedRecords);
     if (newExpanded.has(exerciseName)) {
       newExpanded.delete(exerciseName);
@@ -111,8 +111,45 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     );
   }
 
-  const currentRecordsOnly = records.filter(r => r.is_current);
-  const uniqueExercises = new Set(currentRecordsOnly.map(r => normalizeExerciseName(r.exercise_name))).size;
+  const uniqueExercises = sortedExerciseNames.length;
+
+  if (records.length === 0) {
+    return (
+      <div style={{ 
+        minHeight: '100vh',
+        paddingBottom: '40px',
+        backgroundColor: 'var(--tg-theme-bg-color)'
+      }}>
+        <div style={{
+          padding: '20px 16px',
+          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+          textAlign: 'center'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <Trophy size={32} color="var(--tg-theme-link-color)" />
+          </div>
+          <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+            Мои рекорды
+          </Title>
+        </div>
+        <Section style={{ marginTop: '16px' }}>
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '60px 16px',
+            color: 'var(--tg-theme-hint-color)'
+          }}>
+            <Trophy size={64} style={{ opacity: 0.2, marginBottom: '16px' }} />
+            <Title level="3" style={{ marginBottom: '8px', color: 'var(--tg-theme-text-color)' }}>
+              Пока нет рекордов
+            </Title>
+            <Text style={{ fontSize: '14px' }}>
+              Завершите первую тренировку, чтобы увидеть свои рекорды
+            </Text>
+          </div>
+        </Section>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -201,12 +238,14 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
             );
             const currentRecord = exerciseRecords.find(r => r.is_current) || exerciseRecords[0];
             const isExpanded = expandedRecords.has(exerciseName);
-            const hasHistory = exerciseRecords.length > 1;
+            const oldRecords = exerciseRecords.filter(r => !r.is_current);
+            const hasHistory = oldRecords.length > 0;
 
             return (
               <div key={exerciseName} style={{ marginBottom: '8px' }}>
                 <Cell
                   onClick={() => hasHistory && toggleExpand(exerciseName)}
+                  style={{ cursor: hasHistory ? 'pointer' : 'default' }}
                   before={
                     <div style={{
                       width: '40px',
@@ -239,7 +278,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                   }
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <Text style={{ fontSize: '15px', fontWeight: '500', textTransform: 'capitalize' }}>
+                    <Text style={{ fontSize: '15px', fontWeight: '500' }}>
                       {exerciseName}
                     </Text>
                     <Text style={{ fontSize: '18px', fontWeight: '700', color: 'var(--tg-theme-link-color)' }}>
@@ -271,7 +310,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                         История рекордов
                       </Caption>
                     </div>
-                    {exerciseRecords.filter(r => !r.is_current).map((record, index) => (
+                    {oldRecords.map((record, index) => (
                       <div
                         key={record.id}
                         style={{
@@ -279,7 +318,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          borderBottom: index < exerciseRecords.length - 2 ? '0.5px solid var(--tg-theme-section-separator-color)' : 'none'
+                          borderBottom: index < oldRecords.length - 1 ? '0.5px solid var(--tg-theme-section-separator-color)' : 'none'
                         }}
                       >
                         <div style={{ flex: 1 }}>
