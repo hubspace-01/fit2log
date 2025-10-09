@@ -150,10 +150,12 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
       }
     };
 
-    if (userId) {
+    if (userId && programs.length > 0) {
       loadInProgressSessions();
+    } else if (programs.length === 0) {
+      setLoading(false);
     }
-  }, [userId, programs.length]);
+  }, [userId]);
 
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
@@ -316,7 +318,8 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
               ? '2px solid #FF9500'
               : isInSplit 
               ? '2px solid #10B981'
-              : undefined
+              : undefined,
+            transition: 'none'
           }}
         >
           <div style={{ 
@@ -373,7 +376,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
             <Spinner size="l" />
           </div>
         ) : (
-          <div className="app-container fade-in" style={{ padding: '16px' }}>
+          <div style={{ padding: '16px' }}>
             <div style={{ 
               marginBottom: '28px', 
               position: 'relative',
