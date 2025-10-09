@@ -8,7 +8,8 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  History
+  History,
+  Grid3x3
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -95,6 +96,47 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     setExpandedRecords(newExpanded);
   };
 
+  const FilterButton: React.FC<{
+    type: FilterType;
+    icon: React.ReactNode;
+    label: string;
+  }> = ({ type, icon, label }) => (
+    <button
+      onClick={() => setFilter(type)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '6px',
+        padding: '12px 16px',
+        borderRadius: '12px',
+        border: filter === type ? '2px solid var(--tg-theme-link-color)' : '1px solid var(--tg-theme-section-separator-color)',
+        backgroundColor: filter === type ? 'var(--tg-theme-link-color)' : 'var(--tg-theme-secondary-bg-color)',
+        color: filter === type ? 'white' : 'var(--tg-theme-text-color)',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        minWidth: '70px',
+        flex: 1
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {icon}
+      </div>
+      <span style={{
+        fontSize: '12px',
+        fontWeight: filter === type ? '600' : '500',
+        whiteSpace: 'nowrap'
+      }}>
+        {label}
+      </span>
+    </button>
+  );
+
   if (loading) {
     return (
       <div style={{ 
@@ -175,47 +217,30 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
 
       <Section style={{ marginTop: '8px' }}>
         <div style={{
-          padding: '8px 16px',
+          padding: '12px 16px',
           display: 'flex',
-          gap: '8px',
-          overflowX: 'auto',
-          justifyContent: 'center'
+          gap: '8px'
         }}>
-          <Button
-            size="s"
-            mode={filter === 'all' ? 'filled' : 'bezeled'}
-            onClick={() => setFilter('all')}
-            style={{ fontSize: '13px', whiteSpace: 'nowrap' }}
-          >
-            Все
-          </Button>
-          <Button
-            size="s"
-            mode={filter === 'reps' ? 'filled' : 'bezeled'}
-            onClick={() => setFilter('reps')}
-            style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
-          >
-            <Dumbbell size={14} />
-            Вес
-          </Button>
-          <Button
-            size="s"
-            mode={filter === 'time' ? 'filled' : 'bezeled'}
-            onClick={() => setFilter('time')}
-            style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
-          >
-            <Timer size={14} />
-            Время
-          </Button>
-          <Button
-            size="s"
-            mode={filter === 'distance' ? 'filled' : 'bezeled'}
-            onClick={() => setFilter('distance')}
-            style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
-          >
-            <Footprints size={14} />
-            Дистанция
-          </Button>
+          <FilterButton
+            type="all"
+            icon={<Grid3x3 size={20} color={filter === 'all' ? 'white' : 'var(--tg-theme-link-color)'} />}
+            label="Все"
+          />
+          <FilterButton
+            type="reps"
+            icon={<Dumbbell size={20} color={filter === 'reps' ? 'white' : 'var(--tg-theme-link-color)'} />}
+            label="Вес"
+          />
+          <FilterButton
+            type="time"
+            icon={<Timer size={20} color={filter === 'time' ? 'white' : 'var(--tg-theme-link-color)'} />}
+            label="Время"
+          />
+          <FilterButton
+            type="distance"
+            icon={<Footprints size={20} color={filter === 'distance' ? 'white' : 'var(--tg-theme-link-color)'} />}
+            label="Дистанция"
+          />
         </div>
       </Section>
 
