@@ -532,17 +532,47 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       )}
 
       {currentExercise.notes && (
-        <Section style={{ marginTop: '0' }}>
-          <Cell
-            before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
-            subtitle={currentExercise.notes}
-            style={{
-              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
-            }}
-          >
-            Заметки
-          </Cell>
-        </Section>
+        <div style={{ padding: '0 16px 12px' }}>
+          <div style={{
+            padding: '12px 14px',
+            backgroundColor: 'rgba(255, 193, 7, 0.15)',
+            border: '1px solid rgba(255, 193, 7, 0.3)',
+            borderRadius: '10px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              minWidth: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 193, 7, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Lightbulb size={18} color="#FFC107" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                fontSize: '13px',
+                fontWeight: '600',
+                color: 'var(--tg-theme-text-color)',
+                marginBottom: '4px'
+              }}>
+                Заметки
+              </div>
+              <div style={{ 
+                fontSize: '14px',
+                color: 'var(--tg-theme-text-color)',
+                lineHeight: '1.4'
+              }}>
+                {currentExercise.notes}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <Section 
@@ -554,26 +584,24 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             padding: '0 16px'
           }}>
             <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
-            {exerciseType !== 'distance' && (
-              <button
-                onClick={handleAddSet}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  border: 'none',
-                  backgroundColor: 'var(--tg-theme-link-color)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  padding: 0
-                }}
-              >
-                <Plus size={16} />
-              </button>
-            )}
+            <button
+              onClick={handleAddSet}
+              style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'var(--tg-theme-link-color)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              <Plus size={16} />
+            </button>
           </div>
         }
         style={{ marginTop: '8px' }}
