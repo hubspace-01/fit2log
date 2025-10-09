@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { 
   Section, 
   Button, 
@@ -125,12 +125,15 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const loadedRef = useRef(false);
 
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
 
   useEffect(() => {
+    if (loadedRef.current) return;
+
     const loadInProgressSessions = async () => {
       try {
         const { data } = await supabaseService.supabase
@@ -147,13 +150,12 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
         telegramService.showAlert('Ошибка загрузки данных');
       } finally {
         setLoading(false);
+        loadedRef.current = true;
       }
     };
 
-    if (userId && programs.length > 0) {
+    if (userId) {
       loadInProgressSessions();
-    } else if (programs.length === 0) {
-      setLoading(false);
     }
   }, [userId]);
 
@@ -319,7 +321,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
               : isInSplit 
               ? '2px solid #10B981'
               : undefined,
-            transition: 'none'
+            transition: 'border 0.2s ease-out'
           }}
         >
           <div style={{ 
