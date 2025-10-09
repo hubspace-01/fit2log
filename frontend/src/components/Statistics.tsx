@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Section, Title, Text, Spinner, Card } from '@telegram-apps/telegram-ui';
+import { Section, Title, Text, Spinner, Card, Caption } from '@telegram-apps/telegram-ui';
 import { Dumbbell, Flame, Clock, CalendarDays, BarChart3 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -172,35 +172,44 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              marginBottom: '12px'
+              marginBottom: '8px'
             }}>
               <CalendarDays size={20} color="var(--tg-theme-link-color)" />
               <Text style={{ fontSize: '15px', fontWeight: '600' }}>
                 {last7Days.split_size 
-                  ? `${last7Days.workout_count} из ${last7Days.split_size} тренировок сплита`
+                  ? `${last7Days.workout_count} из ${last7Days.split_size} тренировок основного сплита`
                   : formatWorkoutCount(last7Days.workout_count)
                 }
               </Text>
             </div>
 
             {last7Days.split_size && last7Days.progress_percent !== undefined && (
-              <div style={{
-                width: '100%',
-                height: '8px',
-                backgroundColor: 'var(--tg-theme-hint-color)',
-                borderRadius: '4px',
-                overflow: 'hidden',
-                marginBottom: '12px',
-                opacity: 0.2
-              }}>
+              <div style={{ marginBottom: '12px' }}>
                 <div style={{
-                  height: '100%',
-                  width: `${last7Days.progress_percent}%`,
-                  backgroundColor: 'var(--tg-theme-link-color)',
+                  width: '100%',
+                  height: '8px',
+                  backgroundColor: 'var(--tg-theme-hint-color)',
                   borderRadius: '4px',
-                  opacity: 1,
-                  transition: 'width 0.3s ease'
-                }} />
+                  overflow: 'hidden',
+                  opacity: 0.2,
+                  marginBottom: '4px'
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${last7Days.progress_percent}%`,
+                    backgroundColor: 'var(--tg-theme-link-color)',
+                    borderRadius: '4px',
+                    opacity: 1,
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+                <Caption level="1" style={{
+                  fontSize: '12px',
+                  color: 'var(--tg-theme-hint-color)',
+                  textAlign: 'center'
+                }}>
+                  {last7Days.progress_percent}% выполнено
+                </Caption>
               </div>
             )}
 
