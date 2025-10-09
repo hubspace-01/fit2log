@@ -9,7 +9,8 @@ import {
   WorkoutLogger,
   WorkoutSummary,
   WorkoutHistory,
-  WorkoutDetail
+  WorkoutDetail,
+  PersonalRecords
 } from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate, WorkoutHistoryItem } from './types';
@@ -90,12 +91,15 @@ const App: React.FC = () => {
       setWorkoutHistory(history);
       setScreen(AppScreen.WORKOUT_HISTORY);
     } catch (error) {
-      console.error('❌ Load history error:', error);
       setError(`Ошибка загрузки истории: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setLoading(false);
     }
   }, [user, setWorkoutHistory, setLoading, clearError, setError, setScreen]);
+
+  const handleViewRecords = useCallback(() => {
+    setScreen(AppScreen.PERSONAL_RECORDS);
+  }, [setScreen]);
 
   const handleViewWorkoutDetail = useCallback(async (workout: WorkoutHistoryItem) => {
     try {
@@ -105,7 +109,6 @@ const App: React.FC = () => {
       setCurrentWorkoutDetail(details, workout);
       setScreen(AppScreen.WORKOUT_DETAIL);
     } catch (error) {
-      console.error('❌ Load workout detail error:', error);
       setError(`Ошибка загрузки деталей: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
       setLoading(false);
@@ -119,7 +122,6 @@ const App: React.FC = () => {
     }
     
     try {
-      console.log('🔍 Saving program:', programData);
       setLoading(true);
       clearError();
       
@@ -129,17 +131,14 @@ const App: React.FC = () => {
       };
       
       if (state.current_program) {
-        console.log('✏️ Updating program:', state.current_program.id);
         await updateProgram(state.current_program.id, dataWithUserId);
       } else {
-        console.log('➕ Creating new program');
         await createProgram(dataWithUserId);
       }
       
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      console.error('❌ Save error:', error);
       setError(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
       alert(`Ошибка при сохранении: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
@@ -150,17 +149,14 @@ const App: React.FC = () => {
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
     if (!user) return;
     try {
-      console.log('🔍 Copying template:', template.id);
       setLoading(true);
       clearError();
       
       const result = await copyTemplate(template.id, user.id);
-      console.log('✅ Template copied:', result);
       
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      console.error('❌ Copy template error:', error);
       setError(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
       alert(`Ошибка при копировании: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     } finally {
@@ -180,7 +176,6 @@ const App: React.FC = () => {
       await deleteProgram(programId);
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      console.error('Delete error:', error);
       setError('Ошибка при удалении программы');
     } finally {
       setLoading(false);
@@ -191,42 +186,33 @@ const App: React.FC = () => {
     if (!user) return;
     
     try {
-      console.log('🏋️ Starting workout:', program);
-      
       const existingSession = await supabaseService.getInProgressSession(
         user.id,
         program.id
       );
       
       if (existingSession) {
-        console.log('✅ Found existing session, resuming');
         startWorkout(program, existingSession.id);
       } else {
-        console.log('✅ Starting new session');
         startWorkout(program);
       }
       
       setScreen(AppScreen.WORKOUT_LOGGER);
     } catch (error) {
-      console.error('❌ Start workout error:', error);
       alert('Ошибка при запуске тренировки');
     }
   }, [user, startWorkout, setScreen]);
 
-  // ✅ ИСПРАВЛЕНО: Принимаем sessionId и передаём дальше
   const handleFinishWorkout = useCallback((completedSets: any[], duration: number, sessionId: string) => {
-    console.log('✅ [App] Workout finished:', { completedSets, duration, sessionId });
     setWorkoutSummary(completedSets, duration, sessionId);
     setScreen(AppScreen.WORKOUT_SUMMARY);
   }, [setWorkoutSummary, setScreen]);
 
   const handleCancelWorkout = useCallback(() => {
-    console.log('❌ Workout cancelled');
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
   const handleCompleteSummary = useCallback(() => {
-    console.log('✅ Summary completed');
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
@@ -274,6 +260,7 @@ const App: React.FC = () => {
           onSelectTemplate={handleSelectTemplate}
           onSelectProgram={handleSelectProgram}
           onViewHistory={handleViewHistory}
+          onViewRecords={handleViewRecords}
         />
       )}
 
@@ -315,7 +302,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* ✅ ИСПРАВЛЕНО: Добавлена проверка user и передача sessionId, userId */}
       {state.screen === AppScreen.WORKOUT_SUMMARY && 
        state.workout_session && 
        state.workout_completed_sets && 
@@ -346,6 +332,13 @@ const App: React.FC = () => {
         <WorkoutDetail
           workout={state.current_workout_info}
           onBack={handleBackToHistory}
+        />
+      )}
+
+      {state.screen === AppScreen.PERSONAL_RECORDS && user && (
+        <PersonalRecords
+          userId={user.id}
+          onBack={handleBack}
         />
       )}
     </div>
