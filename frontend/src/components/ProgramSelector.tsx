@@ -47,10 +47,6 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
   onProfileClick,
   activeTab = 'programs'
 }) => {
-  const handleNavClick = useCallback((action: () => void) => {
-    action();
-  }, []);
-
   const navItems = useMemo(() => [
     { id: 'create', icon: Plus, onClick: onCreateClick, label: 'Create' },
     { id: 'history', icon: History, onClick: onHistoryClick, label: 'History' },
@@ -65,17 +61,16 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
       left: 0,
       right: 0,
       height: '72px',
-      backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-      borderTop: '0.5px solid rgba(0, 0, 0, 0.15)',
-      backdropFilter: 'saturate(180%) blur(20px)',
-      WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.75)',
+      borderTop: '0.5px solid rgba(0, 0, 0, 0.2)',
+      backdropFilter: 'saturate(180%) blur(30px)',
+      WebkitBackdropFilter: 'saturate(180%) blur(30px)',
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
       paddingTop: '12px',
       paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-      zIndex: 10,
-      opacity: 0.95
+      zIndex: 10
     }}>
       {navItems.map((item) => {
         const Icon = item.icon;
@@ -83,7 +78,7 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
         return (
           <div
             key={item.id}
-            onClick={() => handleNavClick(item.onClick)}
+            onClick={item.onClick}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -96,6 +91,7 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
               WebkitTapHighlightColor: 'transparent'
             }}
             onTouchStart={(e) => {
+              telegramService.hapticFeedback('impact', 'light');
               (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
             }}
             onTouchEnd={(e) => {
@@ -193,6 +189,16 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
     setShowCreateModal(false);
     onSelectTemplate();
   }, [onSelectTemplate]);
+
+  const handleHistoryClick = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    onViewHistory();
+  }, [onViewHistory]);
+
+  const handleStatisticsClick = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    onViewStatistics();
+  }, [onViewStatistics]);
 
   const handleProfileClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
@@ -353,17 +359,30 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
     );
   }, [hasInProgressSession, handleProgramClick]);
 
+  const bottomNav = (
+    <BottomNav
+      onCreateClick={handleCreateClick}
+      onHistoryClick={handleHistoryClick}
+      onStatisticsClick={handleStatisticsClick}
+      onProfileClick={handleProfileClick}
+      activeTab="programs"
+    />
+  );
+
   if (loading && programs.length === 0) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        backgroundColor: 'var(--tg-theme-bg-color)'
-      }}>
-        <Spinner size="l" />
-      </div>
+      <>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          backgroundColor: 'var(--tg-theme-bg-color)'
+        }}>
+          <Spinner size="l" />
+        </div>
+        {bottomNav}
+      </>
     );
   }
 
@@ -519,13 +538,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
           </>
         )}
 
-        <BottomNav
-          onCreateClick={handleCreateClick}
-          onHistoryClick={onViewHistory}
-          onStatisticsClick={onViewStatistics}
-          onProfileClick={handleProfileClick}
-          activeTab="programs"
-        />
+        {bottomNav}
       </div>
 
       {showCreateModal && (
