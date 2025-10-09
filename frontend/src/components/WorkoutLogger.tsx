@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
+import { Section, Cell, Title, Caption, Text, Button, Divider, Banner } from '@telegram-apps/telegram-ui';
 import { 
   Clock, 
   Activity, 
@@ -477,7 +477,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      <div style={{ padding: '16px 16px 8px', textAlign: 'center' }}>
+      <div style={{ padding: '16px 16px 0', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
           {getExerciseIcon()}
         </div>
@@ -487,15 +487,15 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
           {getTargetDescription()}
         </Caption>
+      </div>
 
-        {currentExercisePR && (
+      {currentExercisePR && (
+        <div style={{ padding: '12px 16px' }}>
           <div style={{
-            marginTop: '12px',
-            padding: '10px 16px',
-            backgroundColor: 'rgba(var(--tgui--plain_foreground), 0.08)',
-            borderRadius: '8px',
-            display: 'inline-block',
-            minWidth: '200px'
+            padding: '12px',
+            backgroundColor: 'var(--tg-theme-link-color)',
+            borderRadius: '10px',
+            textAlign: 'center'
           }}>
             <div style={{ 
               display: 'flex', 
@@ -504,35 +504,35 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               gap: '6px',
               marginBottom: '4px'
             }}>
-              <Trophy size={16} color="var(--tg-theme-link-color)" />
-              <Caption level="1" style={{ 
-                fontSize: '12px',
-                color: 'var(--tg-theme-hint-color)',
+              <Trophy size={16} color="white" />
+              <span style={{ 
+                fontSize: '13px',
+                color: 'rgba(255,255,255,0.9)',
                 fontWeight: '500'
               }}>
                 Твой рекорд
-              </Caption>
+              </span>
             </div>
             <div style={{ 
-              fontSize: '16px',
-              fontWeight: '600',
-              color: 'var(--tg-theme-text-color)',
+              fontSize: '18px',
+              fontWeight: '700',
+              color: 'white',
               marginBottom: '2px'
             }}>
               {formatPR()}
             </div>
-            <Caption level="1" style={{ 
+            <div style={{ 
               fontSize: '11px',
-              color: 'var(--tg-theme-hint-color)'
+              color: 'rgba(255,255,255,0.8)'
             }}>
               {formatDate(currentExercisePR.achieved_at)}
-            </Caption>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {currentExercise.notes && (
-        <Section style={{ marginTop: '8px' }}>
+        <Section style={{ marginTop: '0' }}>
           <Cell
             before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
             subtitle={currentExercise.notes}
@@ -549,8 +549,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         header={
           <div style={{ 
             display: 'flex', 
-            justifyContent: 'space-between', 
             alignItems: 'center',
+            gap: '10px',
             padding: '0 16px'
           }}>
             <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
@@ -558,12 +558,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               <button
                 onClick={handleAddSet}
                 style={{
-                  width: '28px',
-                  height: '28px',
+                  width: '24px',
+                  height: '24px',
                   borderRadius: '50%',
-                  border: '1.5px solid var(--tg-theme-link-color)',
-                  backgroundColor: 'transparent',
-                  color: 'var(--tg-theme-link-color)',
+                  border: 'none',
+                  backgroundColor: 'var(--tg-theme-link-color)',
+                  color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -571,7 +571,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
                   padding: 0
                 }}
               >
-                <Plus size={18} />
+                <Plus size={16} />
               </button>
             )}
           </div>

@@ -1,126 +1,112 @@
 import React from 'react';
-import { Button, Text } from '@telegram-apps/telegram-ui';
+import { Minus, Plus } from 'lucide-react';
 
 interface StepperProps {
+  label: string;
   value: number;
   onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  label?: string;
+  min: number;
+  max: number;
+  step: number;
   suffix?: string;
 }
 
 export const Stepper: React.FC<StepperProps> = ({
+  label,
   value,
   onChange,
-  min = 0,
-  max = 999,
-  step = 1,
-  label,
+  min,
+  max,
+  step,
   suffix = ''
 }) => {
   const handleDecrement = () => {
-    const newValue = value - step;
-    if (newValue >= min) {
-      onChange(newValue);
-    }
+    const newValue = Math.max(min, value - step);
+    onChange(newValue);
   };
 
   const handleIncrement = () => {
-    const newValue = value + step;
-    if (newValue <= max) {
-      onChange(newValue);
-    }
+    const newValue = Math.min(max, value + step);
+    onChange(newValue);
   };
-
-  const isMinDisabled = value <= min;
-  const isMaxDisabled = value >= max;
 
   return (
     <div style={{ marginBottom: '16px' }}>
-      {/* Label */}
-      {label && (
-        <Text 
-          weight="2" 
-          style={{ 
-            fontSize: '13px',
-            marginBottom: '8px',
-            display: 'block',
-            color: 'var(--tg-theme-text-color)',
-            textAlign: 'center'
-          }}
-        >
-          {label}
-        </Text>
-      )}
-
-      {/* Stepper */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 2fr 1fr',
-        gap: '8px',
-        alignItems: 'center'
+      <div style={{ 
+        fontSize: '14px', 
+        color: 'var(--tg-theme-hint-color)', 
+        marginBottom: '8px',
+        fontWeight: '500'
       }}>
-        {/* Minus Button */}
-        <Button
-          mode="bezeled"
-          size="m"
+        {label}
+      </div>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+        borderRadius: '10px'
+      }}>
+        <button
           onClick={handleDecrement}
-          disabled={isMinDisabled}
+          disabled={value <= min}
           style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            padding: '12px',
-            minHeight: '48px',
-            backgroundColor: isMinDisabled 
-              ? 'var(--tg-theme-secondary-bg-color)' 
-              : 'var(--tg-theme-bg-color)',
-            opacity: isMinDisabled ? 0.5 : 1
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: value <= min 
+              ? 'rgba(var(--tgui--plain_foreground), 0.06)' 
+              : 'var(--tg-theme-link-color)',
+            color: value <= min 
+              ? 'var(--tg-theme-hint-color)' 
+              : 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: value <= min ? 'not-allowed' : 'pointer',
+            padding: 0,
+            transition: 'all 0.2s ease'
           }}
         >
-          −
-        </Button>
+          <Minus size={18} />
+        </button>
 
-        {/* Value Display */}
-        <div style={{
-          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-          borderRadius: '12px',
-          padding: '12px',
-          textAlign: 'center',
-          minHeight: '48px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+        <div style={{ 
+          fontSize: '20px', 
+          fontWeight: '600',
+          color: 'var(--tg-theme-text-color)',
+          minWidth: '80px',
+          textAlign: 'center'
         }}>
-          <Text style={{ 
-            fontSize: '18px',
-            fontWeight: '600',
-            color: 'var(--tg-theme-text-color)'
-          }}>
-            {value}{suffix}
-          </Text>
+          {value}{suffix}
         </div>
 
-        {/* Plus Button */}
-        <Button
-          mode="bezeled"
-          size="m"
+        <button
           onClick={handleIncrement}
-          disabled={isMaxDisabled}
+          disabled={value >= max}
           style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            padding: '12px',
-            minHeight: '48px',
-            backgroundColor: isMaxDisabled 
-              ? 'var(--tg-theme-secondary-bg-color)' 
-              : 'var(--tg-theme-bg-color)',
-            opacity: isMaxDisabled ? 0.5 : 1
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: value >= max 
+              ? 'rgba(var(--tgui--plain_foreground), 0.06)' 
+              : 'var(--tg-theme-link-color)',
+            color: value >= max 
+              ? 'var(--tg-theme-hint-color)' 
+              : 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: value >= max ? 'not-allowed' : 'pointer',
+            padding: 0,
+            transition: 'all 0.2s ease'
           }}
         >
-          +
-        </Button>
+          <Plus size={18} />
+        </button>
       </div>
     </div>
   );
