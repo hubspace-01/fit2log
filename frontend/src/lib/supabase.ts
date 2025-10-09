@@ -788,4 +788,36 @@ export const supabaseService = new SupabaseService();
       return { success: true };
     } catch (error) {
       throw error;
+  }
+
+  async clearWorkoutHistory(userId: string) {
+    try {
+      const { error: logsError } = await this.supabase
+        .from('logs')
+        .delete()
+        .eq('user_id', userId);
+
+      if (logsError) throw logsError;
+
+      const { error: sessionsError } = await this.supabase
+        .from('workout_sessions')
+        .delete()
+        .eq('user_id', userId);
+
+      if (sessionsError) throw sessionsError;
+
+      const { error: recordsError } = await this.supabase
+        .from('personal_records')
+        .delete()
+        .eq('user_id', userId);
+
+      if (recordsError) throw recordsError;
+
+      return { success: true };
+    } catch (error) {
+      throw error;
     }
+  }
+}
+
+export const supabaseService = new SupabaseService();
