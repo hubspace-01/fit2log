@@ -755,39 +755,72 @@ class SupabaseService {
 
     return topExercises;
   }
-}
+  async getTopExercises(userId: string, limit: number = 5) {
+    const { data, error } = await this.supabase
+      .from('logs')
+      .select('exercise_name, weight, reps, duration, distance')
+      .eq('user_id', userId);
 
-export const supabaseService = new SupabaseService();
+    if (error) throw error;
 
-  async clearWorkoutHistory(userId: string) {
-    try {
-      // Удаляем все логи
-      const { error: logsError } = await this.supabase
-        .from('logs')
-        .delete()
-        .eq('user_id', userId);
+    const exerciseData = (data || []).reduce((acc, log) => {
+      const name = log.exercise_name;
+      if (!acc[name]) {
+        acc[name] = {
+          total_sets: 0,
+          total_volume: 0,
+          total_duration: 0,
+          total_distance: 0,
+          has_weight: false,
+          has_duration: false,
+          has_distance: false
+        };
+      }
+      
+      acc[name].total_sets++;
+      
+      if (log.weight > 0 && log.reps > 0) {
+        acc[name].total_volume += log.weight * log.reps;
+        acc[name].has_weight = true;
+      }
+      
+      if (log.duration > 0) {
+        acc[name].total_duration += log.duration;
+        acc[name].has_duration = true;
+      }
+      
+      if (log.distance > 0) {
+        acc[name].total_distance += log.distance;
+        acc[name].has_distance = true;
+      }
+      
+      return acc;
+    }, {} as Record<string, any>);
 
-      if (logsError) throw logsError;
+    const topExercises = Object.entries(exerciseData)
+      .map(([exercise_name, data]: [string, any]) => {
+        let secondary_metric = '';
+        
+        if (data.has_weight) {
+          secondary_metric = `${Math.round(data.total_volume).toLocaleString()} кг`;
+        } else if (data.has_duration) {
+          const minutes = Math.round(data.total_duration / 60);
+          secondary_metric = `${minutes} мин`;
+        } else if (data.has_distance) {
+          const km = (data.total_distance / 1000).toFixed(1);
+          secondary_metric = `${km} км`;
+        }
+        
+        return {
+          exercise_name,
+          total_sets: data.total_sets,
+          secondary_metric: secondary_metric || undefined
+        };
+      })
+      .sort((a, b) => b.total_sets - a.total_sets)
+      .slice(0, limit);
 
-      // Удаляем все сессии
-      const { error: sessionsError } = await this.supabase
-        .from('workout_sessions')
-        .delete()
-        .eq('user_id', userId);
-
-      if (sessionsError) throw sessionsError;
-
-      // Удаляем все рекорды
-      const { error: recordsError } = await this.supabase
-        .from('personal_records')
-        .delete()
-        .eq('user_id', userId);
-
-      if (recordsError) throw recordsError;
-
-      return { success: true };
-    } catch (error) {
-      throw error;
+    return topExercises;
   }
 
   async clearWorkoutHistory(userId: string) {
