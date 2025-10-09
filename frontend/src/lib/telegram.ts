@@ -1,235 +1,103 @@
-class TelegramService {
-  private initialized = false;
-  private currentBackHandler: (() => void) | null = null;
+import type { HapticFeedbackType, HapticImpactStyle, HapticNotificationStyle } from '../types';
 
-  async init(): Promise<void> {
-    if (this.initialized) return;
-    
-    try {
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-        window.Telegram.WebApp.enableClosingConfirmation();
-        window.Telegram.WebApp.disableVerticalSwipes();
-        
-        this.initialized = true;
-      }
-    } catch (error) {
-      
+class TelegramService {
+  private webApp: any;
+
+  constructor() {
+    this.webApp = (window as any).Telegram?.WebApp;
+    if (this.webApp) {
+      this.webApp.ready();
+      this.webApp.expand();
+      this.webApp.disableVerticalSwipes();
     }
   }
 
   getInitData(): string {
-    try {
-      return window.Telegram?.WebApp?.initData || '';
-    } catch (error) {
-      return '';
+    return this.webApp?.initData || '';
+  }
+
+  getUserData() {
+    return this.webApp?.initDataUnsafe?.user || null;
+  }
+
+  getColorScheme() {
+    return this.webApp?.colorScheme || 'light';
+  }
+
+  showBackButton(onClick: () => void) {
+    if (this.webApp?.BackButton) {
+      this.webApp.BackButton.show();
+      this.webApp.BackButton.onClick(onClick);
     }
   }
 
-  getUser(): any {
-    try {
-      const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-      return user;
-    } catch (error) {
-      return null;
+  hideBackButton() {
+    if (this.webApp?.BackButton) {
+      this.webApp.BackButton.hide();
     }
   }
 
-  isInTelegram(): boolean {
-    return !!(window.Telegram?.WebApp);
-  }
-
-  ready(): void {
-    try {
-      window.Telegram?.WebApp?.ready();
-    } catch (error) {
-      
+  showAlert(message: string) {
+    if (this.webApp) {
+      this.webApp.showAlert(message);
+    } else {
+      alert(message);
     }
   }
 
-  expand(): void {
-    try {
-      window.Telegram?.WebApp?.expand();
-    } catch (error) {
-      
-    }
-  }
-
-  showMainButton(text: string, onClick: () => void): void {
-    try {
-      const mainButton = window.Telegram?.WebApp?.MainButton;
-      if (mainButton) {
-        mainButton.text = text;
-        mainButton.onClick(onClick);
-        mainButton.show();
-      }
-    } catch (error) {
-      
-    }
-  }
-
-  hideMainButton(): void {
-    try {
-      window.Telegram?.WebApp?.MainButton?.hide();
-    } catch (error) {
-      
-    }
-  }
-
-  setMainButtonText(text: string): void {
-    try {
-      const mainButton = window.Telegram?.WebApp?.MainButton;
-      if (mainButton) {
-        mainButton.text = text;
-      }
-    } catch (error) {
-      
-    }
-  }
-
-  enableMainButton(): void {
-    try {
-      window.Telegram?.WebApp?.MainButton?.enable();
-    } catch (error) {
-      
-    }
-  }
-
-  disableMainButton(): void {
-    try {
-      window.Telegram?.WebApp?.MainButton?.disable();
-    } catch (error) {
-      
-    }
-  }
-
-  showBackButton(onClick: () => void): void {
-    try {
-      const backButton = window.Telegram?.WebApp?.BackButton;
-      if (backButton) {
-        if (this.currentBackHandler) {
-          backButton.offClick(this.currentBackHandler);
-        }
-        
-        this.currentBackHandler = onClick;
-        backButton.onClick(onClick);
-        backButton.show();
-      }
-    } catch (error) {
-      
-    }
-  }
-
-  hideBackButton(): void {
-    try {
-      const backButton = window.Telegram?.WebApp?.BackButton;
-      if (backButton) {
-        if (this.currentBackHandler) {
-          backButton.offClick(this.currentBackHandler);
-          this.currentBackHandler = null;
-        }
-        
-        backButton.hide();
-      }
-    } catch (error) {
-      
-    }
-  }
-
-  showConfirm(message: string, callback: (confirmed: boolean) => void): void {
-    try {
-      if (window.Telegram?.WebApp?.showConfirm) {
-        window.Telegram.WebApp.showConfirm(message, callback);
+  showConfirm(message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.webApp) {
+        this.webApp.showConfirm(message, (confirmed: boolean) => {
+          resolve(confirmed);
+        });
       } else {
-        const confirmed = window.confirm(message);
-        callback(confirmed);
+        resolve(confirm(message));
       }
-    } catch (error) {
-      const confirmed = window.confirm(message);
-      callback(confirmed);
+    });
+  }
+
+  openTelegramLink(url: string) {
+    if (this.webApp) {
+      this.webApp.openTelegramLink(url);
+    } else {
+      window.open(url, '_blank');
     }
   }
 
-  showAlert(message: string, callback?: () => void): void {
+  openLink(url: string) {
+    if (this.webApp) {
+      this.webApp.openLink(url);
+    } else {
+      window.open(url, '_blank');
+    }
+  }
+
+  hapticFeedback(type: HapticFeedbackType, style?: HapticImpactStyle | HapticNotificationStyle) {
+    if (!this.webApp?.HapticFeedback) return;
+
     try {
-      if (window.Telegram?.WebApp?.showAlert) {
-        window.Telegram.WebApp.showAlert(message, callback);
-      } else {
-        window.alert(message);
-        if (callback) callback();
+      if (type === 'impact' && style) {
+        this.webApp.HapticFeedback.impactOccurred(style as HapticImpactStyle);
+      } else if (type === 'notification' && style) {
+        this.webApp.HapticFeedback.notificationOccurred(style as HapticNotificationStyle);
+      } else if (type === 'selection') {
+        this.webApp.HapticFeedback.selectionChanged();
       }
     } catch (error) {
-      window.alert(message);
-      if (callback) callback();
+      console.warn('Haptic feedback not supported:', error);
     }
   }
 
-  hapticFeedback(type: 'impact' | 'notification' | 'selection' = 'impact', style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'light'): void {
-    try {
-      const haptic = window.Telegram?.WebApp?.HapticFeedback;
-      if (haptic) {
-        if (type === 'impact') {
-          haptic.impactOccurred(style);
-        } else if (type === 'notification') {
-          haptic.notificationOccurred(style as 'error' | 'success' | 'warning');
-        } else if (type === 'selection') {
-          haptic.selectionChanged();
-        }
-      }
-    } catch (error) {
-      
+  close() {
+    if (this.webApp) {
+      this.webApp.close();
     }
   }
-}
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        initData: string;
-        initDataUnsafe: any;
-        ready(): void;
-        expand(): void;
-        close(): void;
-        enableClosingConfirmation(): void;
-        disableVerticalSwipes(): void;
-        showConfirm(message: string, callback: (confirmed: boolean) => void): void;
-        showAlert(message: string, callback?: () => void): void;
-        MainButton?: {
-          text: string;
-          show(): void;
-          hide(): void;
-          enable(): void;
-          disable(): void;
-          onClick(callback: () => void): void;
-          offClick(callback: () => void): void;
-        };
-        BackButton?: {
-          show(): void;
-          hide(): void;
-          onClick(callback: () => void): void;
-          offClick(callback: () => void): void;
-        };
-        HapticFeedback?: {
-          impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
-          notificationOccurred(type: 'error' | 'success' | 'warning'): void;
-          selectionChanged(): void;
-        };
-      };
-    };
+  isAvailable(): boolean {
+    return !!this.webApp;
   }
 }
 
 export const telegramService = new TelegramService();
-
-  openTelegramLink(url: string) {
-    window.open(url, '_blank');
-  }
-
-  async showConfirm(message: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      const result = confirm(message);
-      resolve(result);
-    });
-  }

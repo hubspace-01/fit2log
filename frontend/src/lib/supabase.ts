@@ -789,6 +789,3 @@ export const supabaseService = new SupabaseService();
     } catch (error) {
       throw error;
     }
-  }
-}
-
