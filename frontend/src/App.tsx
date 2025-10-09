@@ -16,6 +16,7 @@ import {
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate, WorkoutHistoryItem } from './types';
 import { supabaseService } from './lib/supabase';
+import { telegramService } from './lib/telegram';
 
 const App: React.FC = () => {
   const { user, loading: authLoading, error: authError } = useAuth();
@@ -92,7 +93,9 @@ const App: React.FC = () => {
       setWorkoutHistory(history);
       setScreen(AppScreen.WORKOUT_HISTORY);
     } catch (error) {
-      setError(`Ошибка загрузки истории: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      setError(`Ошибка загрузки истории: ${errorMessage}`);
+      telegramService.showAlert(`Ошибка загрузки истории: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -114,15 +117,17 @@ const App: React.FC = () => {
       setCurrentWorkoutDetail(details, workout);
       setScreen(AppScreen.WORKOUT_DETAIL);
     } catch (error) {
-      setError(`Ошибка загрузки деталей: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      setError(`Ошибка загрузки деталей: ${errorMessage}`);
+      telegramService.showAlert(`Ошибка загрузки деталей: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   }, [setCurrentWorkoutDetail, setLoading, clearError, setError, setScreen]);
 
-  const handleProgramEditorSave = useCallback(async (programData: any) => {
+  const handleProgramEditorSave = useCallback(async (programData: Partial<Program>) => {
     if (!user) {
-      alert('Ошибка: пользователь не авторизован');
+      telegramService.showAlert('Ошибка: пользователь не авторизован');
       return;
     }
     
@@ -144,8 +149,9 @@ const App: React.FC = () => {
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      setError(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
-      alert(`Ошибка при сохранении: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      setError(`Ошибка: ${errorMessage}`);
+      telegramService.showAlert(`Ошибка при сохранении: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -162,8 +168,9 @@ const App: React.FC = () => {
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
-      setError(`Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
-      alert(`Ошибка при копировании: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      setError(`Ошибка: ${errorMessage}`);
+      telegramService.showAlert(`Ошибка при копировании: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -182,6 +189,7 @@ const App: React.FC = () => {
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       setError('Ошибка при удалении программы');
+      telegramService.showAlert('Ошибка при удалении программы');
     } finally {
       setLoading(false);
     }
@@ -204,7 +212,7 @@ const App: React.FC = () => {
       
       setScreen(AppScreen.WORKOUT_LOGGER);
     } catch (error) {
-      alert('Ошибка при запуске тренировки');
+      telegramService.showAlert('Ошибка при запуске тренировки');
     }
   }, [user, startWorkout, setScreen]);
 
@@ -235,7 +243,8 @@ const App: React.FC = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
         <Spinner size="l" />
       </div>
@@ -247,7 +256,7 @@ const App: React.FC = () => {
       <div style={{ 
         padding: '20px', 
         textAlign: 'center',
-        color: 'var(--tg-theme-destructive-text-color, #ff3b30)'
+        color: 'var(--tg-theme-destructive-text-color)'
       }}>
         {authError}
       </div>
@@ -255,7 +264,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
       {state.screen === AppScreen.PROGRAM_SELECTOR && user && (
         <ProgramSelector
           programs={state.programs}

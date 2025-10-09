@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { 
   Section, 
   Button, 
@@ -7,7 +7,14 @@ import {
   Card,
   Spinner
 } from '@telegram-apps/telegram-ui';
-import { Trophy, History, FileText, Plus, BarChart3 } from 'lucide-react';
+import { 
+  Dumbbell, 
+  Plus, 
+  History, 
+  BarChart3, 
+  User,
+  Zap
+} from 'lucide-react';
 import type { Program } from '../types';
 import { supabaseService } from '../lib/supabase';
 import { telegramService } from '../lib/telegram';
@@ -24,7 +31,107 @@ interface Props {
   onViewStatistics: () => void;
 }
 
-export const ProgramSelector: React.FC<Props> = ({
+interface BottomNavProps {
+  onCreateClick: () => void;
+  onHistoryClick: () => void;
+  onStatisticsClick: () => void;
+  onProfileClick: () => void;
+}
+
+const SkeletonCard: React.FC = () => (
+  <div style={{
+    backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+    borderRadius: '12px',
+    padding: '14px',
+    height: '76px',
+    position: 'relative',
+    overflow: 'hidden'
+  }}>
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+      animation: 'shimmer 1.5s infinite'
+    }} />
+  </div>
+);
+
+const BottomNav: React.FC<BottomNavProps> = React.memo(({ 
+  onCreateClick, 
+  onHistoryClick, 
+  onStatisticsClick,
+  onProfileClick
+}) => {
+  const handleNavClick = useCallback((action: () => void) => {
+    telegramService.showBackButton(() => {});
+    action();
+  }, []);
+
+  const navItems = useMemo(() => [
+    { icon: Plus, onClick: onCreateClick, label: 'Create' },
+    { icon: History, onClick: onHistoryClick, label: 'History' },
+    { icon: BarChart3, onClick: onStatisticsClick, label: 'Statistics' },
+    { icon: User, onClick: onProfileClick, label: 'Profile' }
+  ], [onCreateClick, onHistoryClick, onStatisticsClick, onProfileClick]);
+
+  return (
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: '64px',
+      backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+      borderTop: '1px solid rgba(0,0,0,0.1)',
+      backdropFilter: 'blur(10px)',
+      display: 'flex',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      zIndex: 10
+    }}>
+      {navItems.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={index}
+            onClick={() => handleNavClick(item.onClick)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: '8px',
+              flex: 1,
+              transition: 'transform 0.15s ease-out',
+              WebkitTapHighlightColor: 'transparent'
+            }}
+            onTouchStart={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(0.95)';
+            }}
+            onTouchEnd={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+            }}
+          >
+            <Icon 
+              size={24} 
+              color="var(--tg-theme-hint-color)"
+              strokeWidth={2}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
+BottomNav.displayName = 'BottomNav';
+
+export const ProgramSelector: React.FC<Props> = React.memo(({
   programs,
   userName,
   userId,
@@ -32,18 +139,28 @@ export const ProgramSelector: React.FC<Props> = ({
   onSelectTemplate,
   onSelectProgram,
   onViewHistory,
-  onViewRecords,
   onViewStatistics
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [showSkeleton, setShowSkeleton] = useState(false);
 
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
     const loadInProgressSessions = async () => {
+      const startTime = Date.now();
+      
+      timer = setTimeout(() => {
+        if (Date.now() - startTime > 300) {
+          setShowSkeleton(true);
+        }
+      }, 300);
+
       try {
         const { data } = await supabaseService.supabase
           .from('workout_sessions')
@@ -52,19 +169,25 @@ export const ProgramSelector: React.FC<Props> = ({
           .eq('status', 'in_progress');
 
         if (data) {
-          const sessionSet = new Set(data.map((s: any) => s.program_id));
+          const sessionSet = new Set(data.map((s: { program_id: string }) => s.program_id));
           setInProgressSessions(sessionSet);
         }
       } catch (error) {
-        
+        telegramService.showAlert('Ошибка загрузки данных');
       } finally {
+        clearTimeout(timer);
         setLoading(false);
+        setShowSkeleton(false);
       }
     };
 
     if (userId) {
       loadInProgressSessions();
     }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [userId, programs]);
 
   const { weeklySplit, otherPrograms } = useMemo(() => {
@@ -72,30 +195,33 @@ export const ProgramSelector: React.FC<Props> = ({
       .filter(p => p.day_order && p.day_order > 0)
       .sort((a, b) => (a.day_order || 0) - (b.day_order || 0));
     
-    const others = programs
-      .filter(p => !p.day_order);
+    const others = programs.filter(p => !p.day_order);
     
     return { weeklySplit: split, otherPrograms: others };
   }, [programs]);
 
-  const hasInProgressSession = (programId: string) => {
+  const hasInProgressSession = useCallback((programId: string) => {
     return inProgressSessions.has(programId);
-  };
+  }, [inProgressSessions]);
 
-  if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <Spinner size="m" />
-      </div>
+  const handleCreateClick = useCallback(() => {
+    telegramService.showConfirm(
+      'Что хотите сделать?',
+      (confirmed) => {
+        if (confirmed) {
+          onCreateProgram();
+        } else {
+          onSelectTemplate();
+        }
+      }
     );
-  }
+  }, [onCreateProgram, onSelectTemplate]);
 
-  const renderProgramCard = (program: Program, isInSplit: boolean, index?: number) => {
+  const handleProfileClick = useCallback(() => {
+    telegramService.showAlert('Раздел "Профиль" в разработке');
+  }, []);
+
+  const renderProgramCard = useCallback((program: Program, isInSplit: boolean, index?: number) => {
     const inProgress = hasInProgressSession(program.id);
     const hasDayOrder = program.day_order && program.day_order > 0;
     const showNumber = !isInSplit && index !== undefined;
@@ -132,16 +258,18 @@ export const ProgramSelector: React.FC<Props> = ({
 
             {inProgress && (
               <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
                 backgroundColor: '#FF9500',
                 color: '#FFFFFF',
-                padding: '4px 10px',
+                padding: '4px 8px',
                 borderRadius: '8px',
                 fontSize: '11px',
                 fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
+                animation: 'pulse 2s ease-in-out infinite'
               }}>
-                В ПРОЦЕССЕ
+                <Zap size={12} fill="#FFFFFF" />
               </div>
             )}
           </div>
@@ -170,16 +298,18 @@ export const ProgramSelector: React.FC<Props> = ({
 
             {inProgress && (
               <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
                 backgroundColor: '#FF9500',
                 color: '#FFFFFF',
-                padding: '4px 10px',
+                padding: '4px 8px',
                 borderRadius: '8px',
                 fontSize: '11px',
                 fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
+                animation: 'pulse 2s ease-in-out infinite'
               }}>
-                В ПРОЦЕССЕ
+                <Zap size={12} fill="#FFFFFF" />
               </div>
             )}
           </div>
@@ -233,27 +363,91 @@ export const ProgramSelector: React.FC<Props> = ({
         </Card>
       </div>
     );
-  };
+  }, [hasInProgressSession, onSelectProgram]);
+
+  if (loading && showSkeleton) {
+    return (
+      <div style={{ padding: '16px', paddingBottom: '80px' }}>
+        <div style={{ marginBottom: '28px', textAlign: 'center' }}>
+          <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
+            Привет, {userName}!
+          </Title>
+          <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
+            Готов к тренировке?
+          </Text>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <BottomNav
+          onCreateClick={handleCreateClick}
+          onHistoryClick={onViewHistory}
+          onStatisticsClick={onViewStatistics}
+          onProfileClick={handleProfileClick}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
+    <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '80px' }}>
       <div style={{ 
         marginBottom: '28px', 
         padding: '8px',
-        textAlign: 'center'
+        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
-        <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
-          Привет, {userName}!
-        </Title>
-        <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
-          Готов к тренировке?
-        </Text>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
+            Привет, {userName}!
+          </Title>
+          <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
+            Готов к тренировке?
+          </Text>
+        </div>
+        <div 
+          onClick={handleCreateClick}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--tg-theme-button-color)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease-out'
+          }}
+          onTouchStart={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+          }}
+        >
+          <Plus size={24} color="var(--tg-theme-button-text-color)" />
+        </div>
       </div>
 
       {programs.length === 0 ? (
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}></div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '16px',
+              animation: 'float 3s ease-in-out infinite'
+            }}>
+              <Dumbbell 
+                size={64} 
+                color="var(--tg-theme-hint-color)" 
+                strokeWidth={1.5}
+              />
+            </div>
             <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Начни свой путь
             </Title>
@@ -270,9 +464,8 @@ export const ProgramSelector: React.FC<Props> = ({
               size="m" 
               stretched 
               onClick={onSelectTemplate}
-              style={{ marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ marginBottom: '12px', fontSize: '15px' }}
             >
-              <FileText size={18} />
               Выбрать готовую программу
             </Button>
             
@@ -281,9 +474,8 @@ export const ProgramSelector: React.FC<Props> = ({
               stretched 
               mode="outline"
               onClick={onCreateProgram}
-              style={{ fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ fontSize: '15px' }}
             >
-              <Plus size={18} />
               Создать свою программу
             </Button>
           </Card>
@@ -326,66 +518,17 @@ export const ProgramSelector: React.FC<Props> = ({
               </div>
             </Section>
           )}
-
-          <Section style={{ marginTop: '24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              <Button 
-                size="m" 
-                stretched 
-                mode="outline"
-                onClick={onSelectTemplate}
-                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <FileText size={16} />
-                Шаблоны
-              </Button>
-              <Button 
-                size="m" 
-                stretched 
-                mode="outline"
-                onClick={onCreateProgram}
-                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <Plus size={16} />
-                Создать
-              </Button>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-              <Button 
-                size="m" 
-                stretched 
-                mode="outline"
-                onClick={onViewHistory}
-                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <History size={16} />
-                История
-              </Button>
-              <Button 
-                size="m" 
-                stretched 
-                mode="outline"
-                onClick={onViewRecords}
-                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <Trophy size={16} />
-                Рекорды
-              </Button>
-              <Button 
-                size="m" 
-                stretched 
-                mode="outline"
-                onClick={onViewStatistics}
-                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              >
-                <BarChart3 size={16} />
-                Статистика
-              </Button>
-            </div>
-          </Section>
         </>
       )}
+
+      <BottomNav
+        onCreateClick={handleCreateClick}
+        onHistoryClick={onViewHistory}
+        onStatisticsClick={onViewStatistics}
+        onProfileClick={handleProfileClick}
+      />
     </div>
   );
-};
+});
+
+ProgramSelector.displayName = 'ProgramSelector';
