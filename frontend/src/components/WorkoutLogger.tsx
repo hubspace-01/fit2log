@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Section, Cell, Title, Caption, Text, Button, Divider, Banner } from '@telegram-apps/telegram-ui';
+import { Section, Cell, Title, Caption, Text, Button, Divider } from '@telegram-apps/telegram-ui';
 import { 
   Clock, 
   Activity, 
