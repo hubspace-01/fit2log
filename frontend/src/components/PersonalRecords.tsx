@@ -4,13 +4,11 @@ import {
   Trophy, 
   Dumbbell, 
   Timer, 
-  Footprints, 
-  TrendingUp,
+  Footprints,
   Award,
   Calendar,
   ChevronDown,
-  ChevronUp,
-  Filter
+  ChevronUp
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -97,21 +95,6 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     setExpandedRecords(newExpanded);
   };
 
-  const getRecordHistory = async (exerciseName: string) => {
-    try {
-      const { data } = await supabaseService.supabase
-        .from('personal_records')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('exercise_name', exerciseName)
-        .order('achieved_at', { ascending: false });
-      
-      return data || [];
-    } catch (error) {
-      return [];
-    }
-  };
-
   if (loading) {
     return (
       <div style={{ 
@@ -127,10 +110,6 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
       </div>
     );
   }
-
-  const latestRecordDate = records.length > 0 
-    ? formatDate(records.reduce((latest, r) => r.achieved_at > latest.achieved_at ? r : latest).achieved_at)
-    : '-';
 
   return (
     <div style={{ 
