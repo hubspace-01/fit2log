@@ -75,34 +75,33 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   }, [sessionId]);
 
   useEffect(() => {
-    const handleBack = () => {
-      telegramService.showConfirm(
-        'Отменить тренировку? Прогресс будет сохранён.',
-        async (confirmed: boolean) => {
-          if (confirmed) {
-            try {
-              if (sessionIdRef.current) {
-                const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-                await supabaseService.updateWorkoutSession(sessionIdRef.current, {
-                  status: 'cancelled',
-                  completed_at: new Date().toISOString(),
-                  total_duration: currentElapsed
-                });
-              }
-            } catch (error) {
-              
-            } finally {
-              onCancel();
-            }
-          }
-        }
+    const handleBack = async () => {
+      const confirmed = await telegramService.showConfirm(
+        'Отменить тренировку? Прогресс будет сохранён.'
       );
+      
+      if (confirmed) {
+        try {
+          if (sessionIdRef.current) {
+            const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+            await supabaseService.updateWorkoutSession(sessionIdRef.current, {
+              status: 'cancelled',
+              completed_at: new Date().toISOString(),
+              total_duration: currentElapsed
+            });
+          }
+        } catch (error) {
+          // ignore
+        } finally {
+          onCancel();
+        }
+      }
     };
 
     telegramService.showBackButton(handleBack);
 
     return () => {
-      
+      // cleanup
     };
   }, [onCancel]);
 
@@ -312,14 +311,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
     if (currentSetNumber >= effectiveTargetSets) {
       if (currentExerciseIndex < totalExercises - 1) {
-        telegramService.showConfirm(
-          'Упражнение завершено! Перейти к следующему?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleNextExercise();
-            }
-          }
+        const confirmed = await telegramService.showConfirm(
+          'Упражнение завершено! Перейти к следующему?'
         );
+        if (confirmed) {
+          handleNextExercise();
+        }
       } else {
         handleFinishWorkout();
       }
@@ -333,28 +330,24 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   };
 
-  const handleSkipSet = () => {
+  const handleSkipSet = async () => {
     if (!currentExercise) return;
 
     if (isLastSetOfExercise) {
       if (currentExerciseIndex < totalExercises - 1) {
-        telegramService.showConfirm(
-          'Завершить упражнение и перейти к следующему?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleNextExercise();
-            }
-          }
+        const confirmed = await telegramService.showConfirm(
+          'Завершить упражнение и перейти к следующему?'
         );
+        if (confirmed) {
+          handleNextExercise();
+        }
       } else {
-        telegramService.showConfirm(
-          'Это последнее упражнение. Завершить тренировку?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleFinishWorkout();
-            }
-          }
+        const confirmed = await telegramService.showConfirm(
+          'Это последнее упражнение. Завершить тренировку?'
         );
+        if (confirmed) {
+          handleFinishWorkout();
+        }
       }
     } else {
       const skipKey = `${currentExercise.id}_${currentSetNumber}`;
