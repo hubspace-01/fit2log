@@ -540,7 +540,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             borderRadius: '10px',
             display: 'flex',
             gap: '12px',
-            alignItems: 'flex-start'
+            alignItems: 'center'
           }}>
             <div style={{
               width: '32px',
@@ -554,22 +554,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             }}>
               <Lightbulb size={18} color="#FFC107" />
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ 
-                fontSize: '13px',
-                fontWeight: '600',
-                color: 'var(--tg-theme-text-color)',
-                marginBottom: '4px'
-              }}>
-                Заметки
-              </div>
-              <div style={{ 
-                fontSize: '14px',
-                color: 'var(--tg-theme-text-color)',
-                lineHeight: '1.4'
-              }}>
-                {currentExercise.notes}
-              </div>
+            <div style={{ 
+              fontSize: '14px',
+              color: 'var(--tg-theme-text-color)',
+              lineHeight: '1.4',
+              flex: 1
+            }}>
+              {currentExercise.notes}
             </div>
           </div>
         </div>
