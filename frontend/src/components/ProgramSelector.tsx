@@ -4,8 +4,7 @@ import {
   Button, 
   Title, 
   Text,
-  Card,
-  Spinner
+  Card
 } from '@telegram-apps/telegram-ui';
 import { 
   Dumbbell, 
@@ -66,7 +65,6 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
   onProfileClick
 }) => {
   const handleNavClick = useCallback((action: () => void) => {
-    telegramService.hapticFeedback('impact', 'light');
     action();
   }, []);
 
