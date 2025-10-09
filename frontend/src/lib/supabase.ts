@@ -619,7 +619,6 @@ class SupabaseService {
       const currentWeek = new Date();
       currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
 
-
       for (let i = 0; i < sortedWeeks.length; i++) {
         const expectedWeek = new Date(currentWeek);
         expectedWeek.setDate(currentWeek.getDate() - (i * 7));
@@ -641,29 +640,51 @@ class SupabaseService {
   }
 
   async getLast7Days(userId: string) {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
-
     const { data, error } = await this.supabase
       .from('workout_sessions')
       .select('completed_at')
       .eq('user_id', userId)
       .eq('status', 'completed')
-      .gte('completed_at', sevenDaysAgo.toISOString());
+      .gte('completed_at', (() => {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+        return sevenDaysAgo.toISOString();
+      })());
 
     if (error) throw error;
 
-    const workoutDates = data?.map(w => {
-      if (w.completed_at) {
-        return new Date(w.completed_at).toISOString().split('T')[0];
-      }
-      return null;
-    }).filter(Boolean) || [];
+    const workoutDates = (data || [])
+      .map(w => {
+        if (w.completed_at) {
+          return new Date(w.completed_at).toISOString().split('T')[0];
+        }
+        return null;
+      })
+      .filter(Boolean) as string[];
+
+    // Получаем размер сплита
+    const { data: splitPrograms, error: splitError } = await this.supabase
+      .from('programs')
+      .select('id')
+      .eq('user_id', userId)
+      .not('day_order', 'is', null)
+      .gt('day_order', 0);
+
+    if (splitError) throw splitError;
+
+    const splitSize = splitPrograms?.length || 0;
+    let progressPercent: number | undefined;
+
+    if (splitSize > 0) {
+      progressPercent = Math.round((workoutDates.length / splitSize) * 100);
+    }
 
     return {
       workout_count: workoutDates.length,
-      workout_dates: workoutDates as string[]
+      workout_dates: workoutDates,
+      split_size: splitSize > 0 ? splitSize : undefined,
+      progress_percent: progressPercent
     };
   }
 

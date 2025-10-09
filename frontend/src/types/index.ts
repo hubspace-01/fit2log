@@ -187,6 +187,8 @@ export interface BasicStats {
 export interface Last7DaysStats {
   workout_count: number;
   workout_dates: string[];
+  split_size?: number;
+  progress_percent?: number;
 }
 
 export interface TopExercise {

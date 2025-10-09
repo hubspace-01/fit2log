@@ -176,9 +176,34 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
             }}>
               <CalendarDays size={20} color="var(--tg-theme-link-color)" />
               <Text style={{ fontSize: '15px', fontWeight: '600' }}>
-                {formatWorkoutCount(last7Days.workout_count)}
+                {last7Days.split_size 
+                  ? `${last7Days.workout_count} из ${last7Days.split_size} тренировок сплита`
+                  : formatWorkoutCount(last7Days.workout_count)
+                }
               </Text>
             </div>
+
+            {last7Days.split_size && last7Days.progress_percent !== undefined && (
+              <div style={{
+                width: '100%',
+                height: '8px',
+                backgroundColor: 'var(--tg-theme-hint-color)',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                marginBottom: '12px',
+                opacity: 0.2
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${last7Days.progress_percent}%`,
+                  backgroundColor: 'var(--tg-theme-link-color)',
+                  borderRadius: '4px',
+                  opacity: 1,
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            )}
+
             <WeekActivityBar workoutDates={last7Days.workout_dates} />
           </Card>
         </Section>
@@ -188,11 +213,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
         <Section header="Топ упражнения" style={{ marginTop: '16px' }}>
           {topExercises.map((exercise, index) => (
             <TopExerciseItem
-             key={exercise.exercise_name}
-             rank={index + 1}
-             name={exercise.exercise_name}
-             sets={exercise.total_sets}
-             secondaryMetric={exercise.secondary_metric}
+              key={exercise.exercise_name}
+              rank={index + 1}
+              name={exercise.exercise_name}
+              sets={exercise.total_sets}
+              secondaryMetric={exercise.secondary_metric}
             />
           ))}
         </Section>
