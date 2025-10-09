@@ -4,8 +4,7 @@ import {
   Button, 
   Title, 
   Text,
-  Card,
-  Modal
+  Card
 } from '@telegram-apps/telegram-ui';
 import { 
   Dumbbell, 
