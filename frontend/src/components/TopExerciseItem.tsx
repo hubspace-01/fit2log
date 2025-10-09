@@ -5,14 +5,26 @@ interface TopExerciseItemProps {
   rank: number;
   name: string;
   sets: number;
+  secondaryMetric?: string;
 }
 
-export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({ rank, name, sets }) => {
+export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({ 
+  rank, 
+  name, 
+  sets, 
+  secondaryMetric 
+}) => {
   const getGradient = (rank: number) => {
     if (rank === 1) return 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
     if (rank === 2) return 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)';
     if (rank === 3) return 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)';
     return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  };
+
+  const formatSets = (sets: number): string => {
+    if (sets === 1) return '1 подход';
+    if (sets < 5) return `${sets} подхода`;
+    return `${sets} подходов`;
   };
 
   return (
@@ -39,7 +51,8 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({ rank, name, se
           color: 'var(--tg-theme-hint-color)',
           marginTop: '4px'
         }}>
-          {sets} {sets === 1 ? 'подход' : sets < 5 ? 'подхода' : 'подходов'}
+          {formatSets(sets)}
+          {secondaryMetric && ` • ${secondaryMetric}`}
         </Caption>
       }
     >

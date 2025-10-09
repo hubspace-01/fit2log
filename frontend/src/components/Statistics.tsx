@@ -188,10 +188,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
         <Section header="Топ упражнения" style={{ marginTop: '16px' }}>
           {topExercises.map((exercise, index) => (
             <TopExerciseItem
-              key={exercise.exercise_name}
-              rank={index + 1}
-              name={exercise.exercise_name}
-              sets={exercise.total_sets}
+             key={exercise.exercise_name}
+             rank={index + 1}
+             name={exercise.exercise_name}
+             sets={exercise.total_sets}
+             secondaryMetric={exercise.secondary_metric}
             />
           ))}
         </Section>

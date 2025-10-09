@@ -192,4 +192,5 @@ export interface Last7DaysStats {
 export interface TopExercise {
   exercise_name: string;
   total_sets: number;
+  secondary_metric?: string;
 }
