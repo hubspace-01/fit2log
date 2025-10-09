@@ -106,11 +106,11 @@ const App: React.FC = () => {
   }, [setScreen]);
 
   const handleViewStatistics = useCallback(() => {
+    setScreen(AppScreen.STATISTICS);
+  }, [setScreen]);
 
   const handleViewProfile = useCallback(() => {
     setScreen(AppScreen.PROFILE);
-  }, [setScreen]);
-    setScreen(AppScreen.STATISTICS);
   }, [setScreen]);
 
   const handleViewWorkoutDetail = useCallback(async (workout: WorkoutHistoryItem) => {
@@ -281,10 +281,6 @@ const App: React.FC = () => {
           onViewRecords={handleViewRecords}
           onViewStatistics={handleViewStatistics}
           onViewProfile={handleViewProfile}
-
-  const handleViewProfile = useCallback(() => {
-    setScreen(AppScreen.PROFILE);
-  }, [setScreen]);
         />
       )}
 
@@ -360,9 +356,16 @@ const App: React.FC = () => {
       )}
 
       {state.screen === AppScreen.STATISTICS && user && (
-        <StatisticsWithTabs,
-  Profile
+        <StatisticsWithTabs
           userId={user.id}
+          onBack={handleBack}
+        />
+      )}
+
+      {state.screen === AppScreen.PROFILE && user && (
+        <Profile
+          userId={user.id}
+          userName={user.first_name || 'Друг'}
           onBack={handleBack}
         />
       )}
