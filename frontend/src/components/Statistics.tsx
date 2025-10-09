@@ -171,26 +171,38 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '4px',
-              marginBottom: '8px'
+              gap: '12px',
+              marginBottom: '12px'
             }}>
               <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--tg-theme-link-color) 0%, var(--tg-theme-button-color) 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                justifyContent: 'center',
+                color: 'white'
               }}>
-                <CalendarDays size={20} color="var(--tg-theme-link-color)" />
-                <Text style={{ fontSize: '16px', fontWeight: '600' }}>
-                  {last7Days.split_size 
-                    ? `${last7Days.workout_count} из ${last7Days.split_size}`
-                    : formatWorkoutCount(last7Days.workout_count)
-                  }
-                </Text>
+                <CalendarDays size={24} />
               </div>
+
+              <Title level="2" weight="2" style={{ 
+                fontSize: '28px',
+                margin: '0',
+                color: 'var(--tg-theme-text-color)'
+              }}>
+                {last7Days.split_size 
+                  ? `${last7Days.workout_count} из ${last7Days.split_size}`
+                  : last7Days.workout_count
+                }
+              </Title>
+
               {last7Days.split_size && (
                 <Caption level="1" style={{
                   fontSize: '13px',
-                  color: 'var(--tg-theme-hint-color)'
+                  color: 'var(--tg-theme-hint-color)',
+                  textAlign: 'center'
                 }}>
                   тренировок основного сплита
                 </Caption>
