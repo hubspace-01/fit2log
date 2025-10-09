@@ -4,7 +4,8 @@ import {
   Button, 
   Title, 
   Text,
-  Card
+  Card,
+  Spinner
 } from '@telegram-apps/telegram-ui';
 import { 
   Dumbbell, 
@@ -38,27 +39,6 @@ interface BottomNavProps {
   onProfileClick: () => void;
   activeTab?: string;
 }
-
-const SkeletonCard: React.FC = () => (
-  <div style={{
-    backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-    borderRadius: '12px',
-    padding: '14px',
-    height: '76px',
-    position: 'relative',
-    overflow: 'hidden'
-  }}>
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-      animation: 'shimmer 1.5s infinite'
-    }} />
-  </div>
-);
 
 const BottomNav: React.FC<BottomNavProps> = React.memo(({ 
   onCreateClick, 
@@ -375,27 +355,14 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
   if (loading && programs.length === 0) {
     return (
-      <div style={{ padding: '16px', paddingBottom: '88px' }}>
-        <div style={{ marginBottom: '28px', textAlign: 'center' }}>
-          <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
-            Привет, {userName}!
-          </Title>
-          <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
-            Готов к тренировке?
-          </Text>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-        <BottomNav
-          onCreateClick={handleCreateClick}
-          onHistoryClick={onViewHistory}
-          onStatisticsClick={onViewStatistics}
-          onProfileClick={handleProfileClick}
-          activeTab="programs"
-        />
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: 'var(--tg-theme-bg-color)'
+      }}>
+        <Spinner size="l" />
       </div>
     );
   }
