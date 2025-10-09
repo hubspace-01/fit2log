@@ -61,7 +61,7 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
       left: 0,
       right: 0,
       height: '72px',
-      backgroundColor: 'rgba(255, 255, 255, 0.75)',
+      backgroundColor: 'rgba(255, 255, 255, 0.6)',
       borderTop: '0.5px solid rgba(0, 0, 0, 0.2)',
       backdropFilter: 'saturate(180%) blur(30px)',
       WebkitBackdropFilter: 'saturate(180%) blur(30px)',
@@ -359,187 +359,180 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
     );
   }, [hasInProgressSession, handleProgramClick]);
 
-  const bottomNav = (
-    <BottomNav
-      onCreateClick={handleCreateClick}
-      onHistoryClick={handleHistoryClick}
-      onStatisticsClick={handleStatisticsClick}
-      onProfileClick={handleProfileClick}
-      activeTab="programs"
-    />
-  );
-
-  if (loading && programs.length === 0) {
-    return (
-      <>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          backgroundColor: 'var(--tg-theme-bg-color)'
-        }}>
-          <Spinner size="l" />
-        </div>
-        {bottomNav}
-      </>
-    );
-  }
-
   return (
     <>
-      <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '88px' }}>
-        <div style={{ 
-          marginBottom: '28px', 
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '8px'
-        }}>
+      <div style={{ minHeight: '100vh', paddingBottom: '88px' }}>
+        {loading && programs.length === 0 ? (
           <div style={{ 
-            textAlign: 'center',
-            flex: 1
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: 'calc(100vh - 88px)',
+            backgroundColor: 'var(--tg-theme-bg-color)'
           }}>
-            <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
-              Привет, {userName}!
-            </Title>
-            <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
-              Готов к тренировке?
-            </Text>
+            <Spinner size="l" />
           </div>
-          
-          {programs.length > 0 && (
-            <div 
-              onClick={handleCreateClick}
-              style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--tg-theme-button-color)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'transform 0.15s ease-out',
-                flexShrink: 0
-              }}
-              onTouchStart={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
-              }}
-              onTouchEnd={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-              }}
-            >
-              <Plus size={24} color="var(--tg-theme-button-text-color)" />
-            </div>
-          )}
-        </div>
-
-        {programs.length === 0 ? (
-          <Section>
-            <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                marginBottom: '16px',
-                animation: 'float 3s ease-in-out infinite'
-              }}>
-                <Dumbbell 
-                  size={64} 
-                  color="var(--tg-theme-hint-color)" 
-                  strokeWidth={1.5}
-                />
-              </div>
-              <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
-                Начни свой путь
-              </Title>
-              <Text style={{ 
-                color: 'var(--tg-theme-hint-color)', 
-                marginBottom: '24px', 
-                fontSize: '14px',
-                display: 'block'
-              }}>
-                У тебя пока нет программ тренировок
-              </Text>
-              
-              <Button 
-                size="m" 
-                stretched 
-                onClick={handleSelectTemplate}
-                style={{ marginBottom: '12px', fontSize: '15px' }}
-              >
-                Выбрать готовую программу
-              </Button>
-              
-              <Button 
-                size="m" 
-                stretched 
-                mode="outline"
-                onClick={handleCreateOwn}
-                style={{ fontSize: '15px' }}
-              >
-                Создать свою программу
-              </Button>
-            </Card>
-          </Section>
         ) : (
-          <>
-            {weeklySplit.length > 0 && (
-              <Section 
-                header={
+          <div className="app-container fade-in" style={{ padding: '16px' }}>
+            <div style={{ 
+              marginBottom: '28px', 
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px'
+            }}>
+              <div style={{ 
+                textAlign: 'center',
+                flex: 1
+              }}>
+                <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
+                  Привет, {userName}!
+                </Title>
+                <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
+                  Готов к тренировке?
+                </Text>
+              </div>
+              
+              {programs.length > 0 && (
+                <div 
+                  onClick={handleCreateClick}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--tg-theme-button-color)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s ease-out',
+                    flexShrink: 0
+                  }}
+                  onTouchStart={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+                  }}
+                  onTouchEnd={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                  }}
+                >
+                  <Plus size={24} color="var(--tg-theme-button-text-color)" />
+                </div>
+              )}
+            </div>
+
+            {programs.length === 0 ? (
+              <Section>
+                <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
                   <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '6px'
+                    justifyContent: 'center', 
+                    marginBottom: '16px',
+                    animation: 'float 3s ease-in-out infinite'
                   }}>
-                    <Title level="3" weight="2" style={{ fontSize: '18px', margin: 0 }}>
-                      Основной сплит
-                    </Title>
-                    <div
-                      onClick={handleInfoClick}
-                      style={{
-                        cursor: 'pointer',
-                        display: 'flex',
+                    <Dumbbell 
+                      size={64} 
+                      color="var(--tg-theme-hint-color)" 
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
+                    Начни свой путь
+                  </Title>
+                  <Text style={{ 
+                    color: 'var(--tg-theme-hint-color)', 
+                    marginBottom: '24px', 
+                    fontSize: '14px',
+                    display: 'block'
+                  }}>
+                    У тебя пока нет программ тренировок
+                  </Text>
+                  
+                  <Button 
+                    size="m" 
+                    stretched 
+                    onClick={handleSelectTemplate}
+                    style={{ marginBottom: '12px', fontSize: '15px' }}
+                  >
+                    Выбрать готовую программу
+                  </Button>
+                  
+                  <Button 
+                    size="m" 
+                    stretched 
+                    mode="outline"
+                    onClick={handleCreateOwn}
+                    style={{ fontSize: '15px' }}
+                  >
+                    Создать свою программу
+                  </Button>
+                </Card>
+              </Section>
+            ) : (
+              <>
+                {weeklySplit.length > 0 && (
+                  <Section 
+                    header={
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center',
                         alignItems: 'center',
-                        padding: '2px'
-                      }}
-                    >
-                      <Info size={16} color="var(--tg-theme-hint-color)" strokeWidth={2} />
+                        gap: '6px'
+                      }}>
+                        <Title level="3" weight="2" style={{ fontSize: '18px', margin: 0 }}>
+                          Основной сплит
+                        </Title>
+                        <div
+                          onClick={handleInfoClick}
+                          style={{
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '2px'
+                          }}
+                        >
+                          <Info size={16} color="var(--tg-theme-hint-color)" strokeWidth={2} />
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {weeklySplit.map((program) => renderProgramCard(program, true))}
                     </div>
-                  </div>
-                }
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {weeklySplit.map((program) => renderProgramCard(program, true))}
-                </div>
-              </Section>
-            )}
+                  </Section>
+                )}
 
-            {otherPrograms.length > 0 && (
-              <Section 
-                header={
-                  <div style={{ textAlign: 'center' }}>
-                    <Title level="3" weight="2" style={{ fontSize: '18px', marginTop: weeklySplit.length > 0 ? '16px' : '0' }}>
-                      Другие программы
-                    </Title>
-                  </div>
-                }
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {otherPrograms.map((program, index) => renderProgramCard(program, false, index))}
-                </div>
-              </Section>
+                {otherPrograms.length > 0 && (
+                  <Section 
+                    header={
+                      <div style={{ textAlign: 'center' }}>
+                        <Title level="3" weight="2" style={{ fontSize: '18px', marginTop: weeklySplit.length > 0 ? '16px' : '0' }}>
+                          Другие программы
+                        </Title>
+                      </div>
+                    }
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {otherPrograms.map((program, index) => renderProgramCard(program, false, index))}
+                    </div>
+                  </Section>
+                )}
+              </>
             )}
-          </>
+          </div>
         )}
-
-        {bottomNav}
       </div>
+
+      <BottomNav
+        onCreateClick={handleCreateClick}
+        onHistoryClick={handleHistoryClick}
+        onStatisticsClick={handleStatisticsClick}
+        onProfileClick={handleProfileClick}
+        activeTab="programs"
+      />
 
       {showCreateModal && (
         <div
