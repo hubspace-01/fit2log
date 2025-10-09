@@ -197,3 +197,8 @@ export interface TopExercise {
   total_sets: number;
   secondary_metric?: string;
 }
+
+// Haptic Feedback Types
+export type HapticFeedbackType = 'impact' | 'notification' | 'selection';
+export type HapticImpactStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
+export type HapticNotificationStyle = 'error' | 'success' | 'warning';
