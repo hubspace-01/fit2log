@@ -64,12 +64,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
     return `${weeks} недель`;
   };
 
-  const formatWorkoutCount = (count: number): string => {
-    if (count === 1) return '1 тренировка';
-    if (count < 5) return `${count} тренировки`;
-    return `${count} тренировок`;
-  };
-
   if (loading) {
     return (
       <div style={{
