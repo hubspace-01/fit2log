@@ -203,14 +203,16 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   }, [inProgressSessions]);
 
   const handleCreateClick = useCallback(() => {
-    const buttons = [
-      { text: 'Создать свою', action: onCreateProgram },
-      { text: 'Из шаблонов', action: onSelectTemplate }
-    ];
-    
-    telegramService.showAlert('Выберите действие:\n\nОК - Создать свою программу\nОтмена - Выбрать из шаблонов', () => {
-      onCreateProgram();
-    });
+    telegramService.showConfirm(
+      'Выберите действие:',
+      (confirmed) => {
+        if (confirmed) {
+          onCreateProgram();
+        } else {
+          onSelectTemplate();
+        }
+      }
+    );
   }, [onCreateProgram, onSelectTemplate]);
 
   const handleProfileClick = useCallback(() => {
