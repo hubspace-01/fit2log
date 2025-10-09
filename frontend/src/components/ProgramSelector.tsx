@@ -29,8 +29,7 @@ interface Props {
   onSelectProgram: (program: Program) => void;
   onViewHistory: () => void;
   onViewRecords: () => void;
-  onViewStatistics: () => void;,
-  onViewProfile
+  onViewStatistics: () => void;
   onViewProfile: () => void;
 }
 
@@ -204,10 +203,8 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
   const handleStatisticsClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    onViewStatistics();,
-  onViewProfile
-  }, [onViewStatistics]);,
-  onViewProfile
+    onViewStatistics();
+  }, [onViewStatistics]);
 
   const handleProfileClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
