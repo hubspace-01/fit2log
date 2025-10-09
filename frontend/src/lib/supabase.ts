@@ -618,7 +618,7 @@ class SupabaseService {
       const sortedWeeks = Array.from(weeks).sort().reverse();
       const currentWeek = new Date();
       currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
-      const currentWeekStr = currentWeek.toISOString().split('T')[0];
+
 
       for (let i = 0; i < sortedWeeks.length; i++) {
         const expectedWeek = new Date(currentWeek);
