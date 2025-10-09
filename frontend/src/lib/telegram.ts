@@ -1,6 +1,6 @@
 class TelegramService {
   private initialized = false;
-  private currentBackHandler: (() => void) | null = null; // ✅ НОВОЕ: Храним текущий обработчик
+  private currentBackHandler: (() => void) | null = null;
 
   async init(): Promise<void> {
     if (this.initialized) return;
@@ -15,7 +15,7 @@ class TelegramService {
         this.initialized = true;
       }
     } catch (error) {
-      console.error('Telegram SDK init failed:', error);
+      
     }
   }
 
@@ -23,7 +23,6 @@ class TelegramService {
     try {
       return window.Telegram?.WebApp?.initData || '';
     } catch (error) {
-      console.error('Failed to get initData:', error);
       return '';
     }
   }
@@ -33,7 +32,6 @@ class TelegramService {
       const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
       return user;
     } catch (error) {
-      console.error('Failed to get user:', error);
       return null;
     }
   }
@@ -46,7 +44,7 @@ class TelegramService {
     try {
       window.Telegram?.WebApp?.ready();
     } catch (error) {
-      console.error('Ready failed:', error);
+      
     }
   }
 
@@ -54,7 +52,7 @@ class TelegramService {
     try {
       window.Telegram?.WebApp?.expand();
     } catch (error) {
-      console.error('Expand failed:', error);
+      
     }
   }
 
@@ -67,7 +65,7 @@ class TelegramService {
         mainButton.show();
       }
     } catch (error) {
-      console.error('Show MainButton failed:', error);
+      
     }
   }
 
@@ -75,7 +73,7 @@ class TelegramService {
     try {
       window.Telegram?.WebApp?.MainButton?.hide();
     } catch (error) {
-      console.error('Hide MainButton failed:', error);
+      
     }
   }
 
@@ -86,7 +84,7 @@ class TelegramService {
         mainButton.text = text;
       }
     } catch (error) {
-      console.error('Set MainButton text failed:', error);
+      
     }
   }
 
@@ -94,7 +92,7 @@ class TelegramService {
     try {
       window.Telegram?.WebApp?.MainButton?.enable();
     } catch (error) {
-      console.error('Enable MainButton failed:', error);
+      
     }
   }
 
@@ -102,31 +100,24 @@ class TelegramService {
     try {
       window.Telegram?.WebApp?.MainButton?.disable();
     } catch (error) {
-      console.error('Disable MainButton failed:', error);
+      
     }
   }
 
-  // ✅ ИСПРАВЛЕНО: Правильная работа с BackButton
   showBackButton(onClick: () => void): void {
     try {
       const backButton = window.Telegram?.WebApp?.BackButton;
       if (backButton) {
-        // Удаляем предыдущий обработчик если есть
         if (this.currentBackHandler) {
           backButton.offClick(this.currentBackHandler);
         }
         
-        // Сохраняем новый обработчик
         this.currentBackHandler = onClick;
-        
-        // Устанавливаем новый обработчик
         backButton.onClick(onClick);
         backButton.show();
-        
-        console.log('✅ BackButton handler installed');
       }
     } catch (error) {
-      console.error('Show BackButton failed:', error);
+      
     }
   }
 
@@ -134,17 +125,15 @@ class TelegramService {
     try {
       const backButton = window.Telegram?.WebApp?.BackButton;
       if (backButton) {
-        // Удаляем обработчик перед скрытием
         if (this.currentBackHandler) {
           backButton.offClick(this.currentBackHandler);
           this.currentBackHandler = null;
-          console.log('✅ BackButton handler removed');
         }
         
         backButton.hide();
       }
     } catch (error) {
-      console.error('Hide BackButton failed:', error);
+      
     }
   }
 
@@ -157,7 +146,6 @@ class TelegramService {
         callback(confirmed);
       }
     } catch (error) {
-      console.error('Show confirm failed:', error);
       const confirmed = window.confirm(message);
       callback(confirmed);
     }
@@ -172,9 +160,25 @@ class TelegramService {
         if (callback) callback();
       }
     } catch (error) {
-      console.error('Show alert failed:', error);
       window.alert(message);
       if (callback) callback();
+    }
+  }
+
+  hapticFeedback(type: 'impact' | 'notification' | 'selection' = 'impact', style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'light'): void {
+    try {
+      const haptic = window.Telegram?.WebApp?.HapticFeedback;
+      if (haptic) {
+        if (type === 'impact') {
+          haptic.impactOccurred(style);
+        } else if (type === 'notification') {
+          haptic.notificationOccurred(style as 'error' | 'success' | 'warning');
+        } else if (type === 'selection') {
+          haptic.selectionChanged();
+        }
+      }
+    } catch (error) {
+      
     }
   }
 }
@@ -206,6 +210,11 @@ declare global {
           hide(): void;
           onClick(callback: () => void): void;
           offClick(callback: () => void): void;
+        };
+        HapticFeedback?: {
+          impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
+          notificationOccurred(type: 'error' | 'success' | 'warning'): void;
+          selectionChanged(): void;
         };
       };
     };
