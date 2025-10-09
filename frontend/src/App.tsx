@@ -152,7 +152,7 @@ const App: React.FC = () => {
       setLoading(true);
       clearError();
       
-      const result = await copyTemplate(template.id, user.id);
+      await copyTemplate(template.id, user.id);
       
       await loadPrograms();
       setScreen(AppScreen.PROGRAM_SELECTOR);
