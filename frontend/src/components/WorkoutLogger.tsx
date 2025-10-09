@@ -218,9 +218,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
   };
 
   const formatPR = () => {
@@ -474,77 +477,71 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         </div>
       </Section>
 
-      <div style={{ padding: '16px 16px 8px' }}>
+      <div style={{ padding: '16px 16px 8px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
           {getExerciseIcon()}
         </div>
-        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px', textAlign: 'center' }}>
+        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
           {currentExercise.exercise_name}
         </Title>
-        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', textAlign: 'center', marginBottom: '12px' }}>
+        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
           {getTargetDescription()}
         </Caption>
 
         {currentExercisePR && (
           <div style={{
-            display: 'flex',
-            justifyContent: 'center'
+            marginTop: '12px',
+            padding: '10px 16px',
+            backgroundColor: 'rgba(var(--tgui--plain_foreground), 0.08)',
+            borderRadius: '8px',
+            display: 'inline-block',
+            minWidth: '200px'
           }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 16px',
-              backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-              borderRadius: '8px'
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              gap: '6px',
+              marginBottom: '4px'
             }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--tg-theme-link-color)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
+              <Trophy size={16} color="var(--tg-theme-link-color)" />
+              <Caption level="1" style={{ 
+                fontSize: '12px',
+                color: 'var(--tg-theme-hint-color)',
+                fontWeight: '500'
               }}>
-                <Trophy size={20} color="white" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <Text weight="2" style={{ fontSize: '15px' }}>
-                  Твой рекорд: {formatPR()}
-                </Text>
-                <Caption level="1" style={{ 
-                  fontSize: '12px',
-                  color: 'var(--tg-theme-hint-color)'
-                }}>
-                  {formatDate(currentExercisePR.achieved_at)}
-                </Caption>
-              </div>
+                Твой рекорд
+              </Caption>
             </div>
+            <div style={{ 
+              fontSize: '16px',
+              fontWeight: '600',
+              color: 'var(--tg-theme-text-color)',
+              marginBottom: '2px'
+            }}>
+              {formatPR()}
+            </div>
+            <Caption level="1" style={{ 
+              fontSize: '11px',
+              color: 'var(--tg-theme-hint-color)'
+            }}>
+              {formatDate(currentExercisePR.achieved_at)}
+            </Caption>
           </div>
         )}
       </div>
 
       {currentExercise.notes && (
         <Section style={{ marginTop: '8px' }}>
-          <div style={{
-            padding: '12px 16px',
-            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px'
-          }}>
-            <Lightbulb size={20} color="var(--tg-theme-link-color)" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <Text weight="2" style={{ fontSize: '15px', marginBottom: '4px', display: 'block' }}>
-                Заметки
-              </Text>
-              <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-                {currentExercise.notes}
-              </Caption>
-            </div>
-          </div>
+          <Cell
+            before={<Lightbulb size={20} color="var(--tg-theme-link-color)" />}
+            subtitle={currentExercise.notes}
+            style={{
+              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
+            }}
+          >
+            Заметки
+          </Cell>
         </Section>
       )}
 
@@ -556,29 +553,27 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             alignItems: 'center',
             padding: '0 16px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
-              {exerciseType !== 'distance' && (
-                <button
-                  onClick={handleAddSet}
-                  style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    border: '1px solid var(--tg-theme-button-color)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--tg-theme-button-color)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    padding: 0
-                  }}
-                >
-                  <Plus size={16} />
-                </button>
-              )}
-            </div>
+            <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
+            {exerciseType !== 'distance' && (
+              <button
+                onClick={handleAddSet}
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  border: '1.5px solid var(--tg-theme-link-color)',
+                  backgroundColor: 'transparent',
+                  color: 'var(--tg-theme-link-color)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <Plus size={18} />
+              </button>
+            )}
           </div>
         }
         style={{ marginTop: '8px' }}
