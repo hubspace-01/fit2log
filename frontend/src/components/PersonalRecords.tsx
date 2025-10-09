@@ -40,7 +40,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
   const loadRecords = async () => {
     try {
       setLoading(true);
-      const data = await supabaseService.getPersonalRecords(userId);
+      const data = await supabaseService.getAllPersonalRecords(userId);
       setRecords(data);
     } catch (error) {
       telegramService.showAlert('Ошибка загрузки рекордов');
@@ -111,7 +111,8 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     );
   }
 
-  const uniqueExercises = Object.keys(groupedRecords).length;
+  const currentRecordsOnly = records.filter(r => r.is_current);
+  const uniqueExercises = new Set(currentRecordsOnly.map(r => normalizeExerciseName(r.exercise_name))).size;
 
   return (
     <div style={{ 
@@ -198,7 +199,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
             const exerciseRecords = groupedRecords[exerciseName].sort((a, b) => 
               new Date(b.achieved_at).getTime() - new Date(a.achieved_at).getTime()
             );
-            const currentRecord = exerciseRecords[0];
+            const currentRecord = exerciseRecords.find(r => r.is_current) || exerciseRecords[0];
             const isExpanded = expandedRecords.has(exerciseName);
             const hasHistory = exerciseRecords.length > 1;
 
@@ -270,7 +271,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                         История рекордов
                       </Caption>
                     </div>
-                    {exerciseRecords.slice(1).map((record, index) => (
+                    {exerciseRecords.filter(r => !r.is_current).map((record, index) => (
                       <div
                         key={record.id}
                         style={{
