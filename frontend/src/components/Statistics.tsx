@@ -169,18 +169,32 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
           <Card style={{ width: '100%', padding: '16px' }}>
             <div style={{
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
+              gap: '4px',
               marginBottom: '8px'
             }}>
-              <CalendarDays size={20} color="var(--tg-theme-link-color)" />
-              <Text style={{ fontSize: '15px', fontWeight: '600' }}>
-                {last7Days.split_size 
-                  ? `${last7Days.workout_count} из ${last7Days.split_size} тренировок основного сплита`
-                  : formatWorkoutCount(last7Days.workout_count)
-                }
-              </Text>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <CalendarDays size={20} color="var(--tg-theme-link-color)" />
+                <Text style={{ fontSize: '16px', fontWeight: '600' }}>
+                  {last7Days.split_size 
+                    ? `${last7Days.workout_count} из ${last7Days.split_size}`
+                    : formatWorkoutCount(last7Days.workout_count)
+                  }
+                </Text>
+              </div>
+              {last7Days.split_size && (
+                <Caption level="1" style={{
+                  fontSize: '13px',
+                  color: 'var(--tg-theme-hint-color)'
+                }}>
+                  тренировок основного сплита
+                </Caption>
+              )}
             </div>
 
             {last7Days.split_size && last7Days.progress_percent !== undefined && (
