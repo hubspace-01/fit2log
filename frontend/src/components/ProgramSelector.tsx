@@ -203,16 +203,14 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   }, [inProgressSessions]);
 
   const handleCreateClick = useCallback(() => {
-    telegramService.showConfirm(
-      'Создать свою программу или выбрать из шаблонов?',
-      (confirmed) => {
-        if (confirmed) {
-          onCreateProgram();
-        } else {
-          onSelectTemplate();
-        }
-      }
-    );
+    const buttons = [
+      { text: 'Создать свою', action: onCreateProgram },
+      { text: 'Из шаблонов', action: onSelectTemplate }
+    ];
+    
+    telegramService.showAlert('Выберите действие:\n\nОК - Создать свою программу\nОтмена - Выбрать из шаблонов', () => {
+      onCreateProgram();
+    });
   }, [onCreateProgram, onSelectTemplate]);
 
   const handleProfileClick = useCallback(() => {
@@ -366,7 +364,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   if (loading && showSkeleton) {
     return (
       <div style={{ padding: '16px', paddingBottom: '80px' }}>
-        <div style={{ marginBottom: '28px', textAlign: 'center' }}>
+        <div style={{ marginBottom: '28px', textAlign: 'center', position: 'relative' }}>
           <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
             Привет, {userName}!
           </Title>
@@ -394,12 +392,12 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
       <div style={{ 
         marginBottom: '28px', 
         padding: '8px',
-        textAlign: 'center',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        position: 'relative'
       }}>
-        <div style={{ flex: 1, textAlign: 'center' }}>
+        <div style={{ 
+          textAlign: 'center',
+          paddingRight: programs.length > 0 ? '48px' : '0'
+        }}>
           <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
             Привет, {userName}!
           </Title>
@@ -407,28 +405,34 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
             Готов к тренировке?
           </Text>
         </div>
-        <div 
-          onClick={handleCreateClick}
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--tg-theme-button-color)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease-out'
-          }}
-          onTouchStart={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
-          }}
-          onTouchEnd={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
-          }}
-        >
-          <Plus size={24} color="var(--tg-theme-button-text-color)" />
-        </div>
+        
+        {programs.length > 0 && (
+          <div 
+            onClick={handleCreateClick}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--tg-theme-button-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease-out'
+            }}
+            onTouchStart={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+            }}
+            onTouchEnd={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+            }}
+          >
+            <Plus size={24} color="var(--tg-theme-button-text-color)" />
+          </div>
+        )}
       </div>
 
       {programs.length === 0 ? (
