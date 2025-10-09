@@ -34,10 +34,8 @@ export const ProgramDetails: React.FC<Props> = ({
   const [hasInProgressSession, setHasInProgressSession] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // ✅ ИСПРАВЛЕНО: Не скрываем BackButton при unmount
   useEffect(() => {
     telegramService.showBackButton(onBack);
-    // Cleanup удалён - BackButton остаётся видимым
   }, [onBack]);
 
   useEffect(() => {
@@ -61,22 +59,13 @@ export const ProgramDetails: React.FC<Props> = ({
     (a, b) => a.order_index - b.order_index
   );
 
-  const handleDelete = () => {
-    const webApp = window.Telegram?.WebApp;
+  const handleDelete = async () => {
+    const confirmed = await telegramService.showConfirm(
+      `Удалить программу "${program.program_name}"?`
+    );
     
-    if (webApp && 'showConfirm' in webApp && typeof (webApp as any).showConfirm === 'function') {
-      (webApp as any).showConfirm(
-        `Удалить программу "${program.program_name}"?`,
-        (confirmed: boolean) => {
-          if (confirmed) {
-            onDelete(program.id);
-          }
-        }
-      );
-    } else {
-      if (confirm(`Удалить программу "${program.program_name}"?`)) {
-        onDelete(program.id);
-      }
+    if (confirmed) {
+      onDelete(program.id);
     }
   };
 
