@@ -14,8 +14,7 @@ import {
   ChevronUp,
   History,
   Grid3x3,
-  TrendingUp,
-  Award
+  TrendingUp
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
