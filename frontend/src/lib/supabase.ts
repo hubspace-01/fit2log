@@ -39,15 +39,11 @@ class SupabaseService {
         
         if (data.access_token) {
           customHeaders['Authorization'] = `Bearer ${data.access_token}`;
-          console.log('✅ JWT token received and set');
         }
-        
-        console.log('✅ Telegram user validated:', validatedTelegramId);
       }
 
       return data;
     } catch (error) {
-      console.error('Validation error:', error);
       throw error;
     }
   }
@@ -87,8 +83,6 @@ class SupabaseService {
 
   async copyTemplate(templateId: string, userId: string) {
     try {
-      console.log('🔍 Copying template:', templateId, 'for user:', userId);
-      
       const { data: template, error: templateError } = await supabase
         .from('program_templates')
         .select(`
@@ -100,8 +94,6 @@ class SupabaseService {
 
       if (templateError) throw templateError;
       if (!template) throw new Error('Template not found');
-
-      console.log('✅ Template loaded:', template);
 
       const { data: program, error: programError } = await supabase
         .from('programs')
@@ -116,8 +108,6 @@ class SupabaseService {
         .single();
 
       if (programError) throw programError;
-
-      console.log('✅ Program created:', program);
 
       if (template.template_exercises && template.template_exercises.length > 0) {
         const exercises = template.template_exercises.map((ex: any) => ({
@@ -139,13 +129,10 @@ class SupabaseService {
           .insert(exercises);
 
         if (exercisesError) throw exercisesError;
-
-        console.log('✅ Exercises copied:', exercises.length);
       }
 
       return { ok: true, program };
     } catch (error) {
-      console.error('❌ Copy template error:', error);
       throw error;
     }
   }
@@ -289,7 +276,6 @@ class SupabaseService {
       .single();
 
     if (error) throw error;
-    console.log('✅ Workout session created:', data.id);
     return data;
   }
 
@@ -306,7 +292,6 @@ class SupabaseService {
       .single();
 
     if (error) throw error;
-    console.log('✅ Workout session updated:', sessionId, updates.status);
     return data;
   }
 
@@ -478,7 +463,6 @@ class SupabaseService {
           .eq('session_id', workout.id);
 
         if (logsError) {
-          console.error('Error fetching logs for workout:', workout.id, logsError);
           return {
             ...workout,
             exercises_count: 0,
@@ -528,10 +512,6 @@ class SupabaseService {
     });
   }
 
-  // ==========================================
-  // ✅ НОВОЕ: Personal Records
-  // ==========================================
-
   async getPersonalRecords(userId: string, exerciseName?: string) {
     let query = this.supabase
       .from('personal_records')
@@ -578,7 +558,7 @@ class SupabaseService {
       .from('personal_records')
       .select('*')
       .eq('user_id', userId)
-      .order('achieved_at', { ascending: false });
+      .order('achieved_at', { ascending: false});
 
     if (error) throw error;
     return data || [];
@@ -601,9 +581,6 @@ class SupabaseService {
     if (error) throw error;
     return data || [];
   }
-}
-
-export const supabaseService = new SupabaseService();
 
   async getBasicStats(userId: string) {
     const { data: workouts, error: workoutsError } = await this.supabase
@@ -641,6 +618,7 @@ export const supabaseService = new SupabaseService();
       const sortedWeeks = Array.from(weeks).sort().reverse();
       const currentWeek = new Date();
       currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
+      const currentWeekStr = currentWeek.toISOString().split('T')[0];
 
       for (let i = 0; i < sortedWeeks.length; i++) {
         const expectedWeek = new Date(currentWeek);
@@ -712,3 +690,4 @@ export const supabaseService = new SupabaseService();
   }
 }
 
+export const supabaseService = new SupabaseService();
