@@ -1,6 +1,5 @@
 import React from 'react';
 import { Cell, Caption } from '@telegram-apps/telegram-ui';
-import { TrendingUp } from 'lucide-react';
 
 interface TopExerciseItemProps {
   rank: number;
@@ -33,9 +32,6 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({ rank, name, se
         }}>
           {rank}
         </div>
-      }
-      after={
-        <TrendingUp size={20} color="var(--tg-theme-hint-color)" />
       }
       subtitle={
         <Caption level="1" style={{ 

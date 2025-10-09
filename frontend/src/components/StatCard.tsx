@@ -12,7 +12,7 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle
   return (
     <Card style={{ 
       width: '100%',
-      padding: '20px',
+      padding: '16px',
       textAlign: 'center'
     }}>
       <div style={{
@@ -37,8 +37,6 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle
         <Caption level="1" style={{ 
           fontSize: '13px',
           color: 'var(--tg-theme-hint-color)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
           fontWeight: '600'
         }}>
           {label}

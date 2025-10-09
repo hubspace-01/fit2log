@@ -64,6 +64,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
     return `${weeks} недель`;
   };
 
+  const formatWorkoutCount = (count: number): string => {
+    if (count === 1) return '1 тренировка';
+    if (count < 5) return `${count} тренировки`;
+    return `${count} тренировок`;
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -159,7 +165,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
       </Section>
 
       {last7Days && (
-        <Section header="Последняя неделя" style={{ marginTop: '16px' }}>
+        <Section header="Эта неделя" style={{ marginTop: '16px' }}>
           <Card style={{ width: '100%', padding: '16px' }}>
             <div style={{
               display: 'flex',
@@ -170,7 +176,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
             }}>
               <CalendarDays size={20} color="var(--tg-theme-link-color)" />
               <Text style={{ fontSize: '15px', fontWeight: '600' }}>
-                {last7Days.workout_count} {last7Days.workout_count === 1 ? 'тренировка' : last7Days.workout_count < 5 ? 'тренировки' : 'тренировок'}
+                {formatWorkoutCount(last7Days.workout_count)}
               </Text>
             </div>
             <WeekActivityBar workoutDates={last7Days.workout_dates} />
