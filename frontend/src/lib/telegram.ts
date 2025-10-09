@@ -222,3 +222,14 @@ declare global {
 }
 
 export const telegramService = new TelegramService();
+
+  openTelegramLink(url: string) {
+    window.open(url, '_blank');
+  }
+
+  async showConfirm(message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const result = confirm(message);
+      resolve(result);
+    });
+  }

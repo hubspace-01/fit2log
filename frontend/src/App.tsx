@@ -10,7 +10,8 @@ import {
   WorkoutSummary,
   WorkoutHistory,
   WorkoutDetail,
-  StatisticsWithTabs
+  StatisticsWithTabs,
+  Profile
 } from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate, WorkoutHistoryItem } from './types';
@@ -105,6 +106,10 @@ const App: React.FC = () => {
   }, [setScreen]);
 
   const handleViewStatistics = useCallback(() => {
+
+  const handleViewProfile = useCallback(() => {
+    setScreen(AppScreen.PROFILE);
+  }, [setScreen]);
     setScreen(AppScreen.STATISTICS);
   }, [setScreen]);
 
@@ -275,6 +280,11 @@ const App: React.FC = () => {
           onViewHistory={handleViewHistory}
           onViewRecords={handleViewRecords}
           onViewStatistics={handleViewStatistics}
+          onViewProfile={handleViewProfile}
+
+  const handleViewProfile = useCallback(() => {
+    setScreen(AppScreen.PROFILE);
+  }, [setScreen]);
         />
       )}
 
@@ -350,7 +360,8 @@ const App: React.FC = () => {
       )}
 
       {state.screen === AppScreen.STATISTICS && user && (
-        <StatisticsWithTabs
+        <StatisticsWithTabs,
+  Profile
           userId={user.id}
           onBack={handleBack}
         />

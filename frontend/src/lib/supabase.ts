@@ -758,3 +758,37 @@ class SupabaseService {
 }
 
 export const supabaseService = new SupabaseService();
+
+  async clearWorkoutHistory(userId: string) {
+    try {
+      // Удаляем все логи
+      const { error: logsError } = await this.supabase
+        .from('logs')
+        .delete()
+        .eq('user_id', userId);
+
+      if (logsError) throw logsError;
+
+      // Удаляем все сессии
+      const { error: sessionsError } = await this.supabase
+        .from('workout_sessions')
+        .delete()
+        .eq('user_id', userId);
+
+      if (sessionsError) throw sessionsError;
+
+      // Удаляем все рекорды
+      const { error: recordsError } = await this.supabase
+        .from('personal_records')
+        .delete()
+        .eq('user_id', userId);
+
+      if (recordsError) throw recordsError;
+
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+

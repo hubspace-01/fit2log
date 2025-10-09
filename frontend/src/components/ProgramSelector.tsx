@@ -29,7 +29,9 @@ interface Props {
   onSelectProgram: (program: Program) => void;
   onViewHistory: () => void;
   onViewRecords: () => void;
-  onViewStatistics: () => void;
+  onViewStatistics: () => void;,
+  onViewProfile
+  onViewProfile: () => void;
 }
 
 interface BottomNavProps {
@@ -120,7 +122,8 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   onSelectTemplate,
   onSelectProgram,
   onViewHistory,
-  onViewStatistics
+  onViewStatistics,
+  onViewProfile
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -201,13 +204,15 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
   const handleStatisticsClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    onViewStatistics();
-  }, [onViewStatistics]);
+    onViewStatistics();,
+  onViewProfile
+  }, [onViewStatistics]);,
+  onViewProfile
 
   const handleProfileClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    telegramService.showAlert('Раздел "Профиль" в разработке');
-  }, []);
+    onViewProfile();
+  }, [onViewProfile]);
 
   const handleInfoClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
