@@ -7,10 +7,10 @@ import {
   Card,
   Spinner
 } from '@telegram-apps/telegram-ui';
+import { Trophy, History, FileText, Plus } from 'lucide-react';
 import type { Program } from '../types';
 import { supabaseService } from '../lib/supabase';
 import { telegramService } from '../lib/telegram';
-
 
 interface Props {
   programs: Program[];
@@ -19,9 +19,9 @@ interface Props {
   onCreateProgram: () => void;
   onSelectTemplate: () => void;
   onSelectProgram: (program: Program) => void;
-  onViewHistory: () => void; // ✅ НОВОЕ
+  onViewHistory: () => void;
+  onViewRecords: () => void;
 }
-
 
 export const ProgramSelector: React.FC<Props> = ({
   programs,
@@ -30,16 +30,15 @@ export const ProgramSelector: React.FC<Props> = ({
   onCreateProgram,
   onSelectTemplate,
   onSelectProgram,
-  onViewHistory // ✅ НОВОЕ
+  onViewHistory,
+  onViewRecords
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     telegramService.hideBackButton();
   }, []);
-
 
   useEffect(() => {
     const loadInProgressSessions = async () => {
@@ -50,24 +49,21 @@ export const ProgramSelector: React.FC<Props> = ({
           .eq('user_id', userId)
           .eq('status', 'in_progress');
 
-
         if (data) {
           const sessionSet = new Set(data.map((s: any) => s.program_id));
           setInProgressSessions(sessionSet);
         }
       } catch (error) {
-        console.error('Error loading in-progress sessions:', error);
+        
       } finally {
         setLoading(false);
       }
     };
 
-
     if (userId) {
       loadInProgressSessions();
     }
   }, [userId, programs]);
-
 
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
@@ -80,11 +76,9 @@ export const ProgramSelector: React.FC<Props> = ({
     return { weeklySplit: split, otherPrograms: others };
   }, [programs]);
 
-
   const hasInProgressSession = (programId: string) => {
     return inProgressSessions.has(programId);
   };
-
 
   if (loading) {
     return (
@@ -98,7 +92,6 @@ export const ProgramSelector: React.FC<Props> = ({
       </div>
     );
   }
-
 
   const renderProgramCard = (program: Program, isInSplit: boolean, index?: number) => {
     const inProgress = hasInProgressSession(program.id);
@@ -135,7 +128,6 @@ export const ProgramSelector: React.FC<Props> = ({
               {program.day_order}
             </div>
 
-
             {inProgress && (
               <div style={{
                 backgroundColor: '#FF9500',
@@ -152,7 +144,6 @@ export const ProgramSelector: React.FC<Props> = ({
             )}
           </div>
         )}
-
 
         {showNumber && (
           <div style={{
@@ -175,7 +166,6 @@ export const ProgramSelector: React.FC<Props> = ({
               {displayNumber}
             </div>
 
-
             {inProgress && (
               <div style={{
                 backgroundColor: '#FF9500',
@@ -192,7 +182,6 @@ export const ProgramSelector: React.FC<Props> = ({
             )}
           </div>
         )}
-
 
         <Card 
           style={{ 
@@ -244,7 +233,6 @@ export const ProgramSelector: React.FC<Props> = ({
     );
   };
 
-
   return (
     <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
       <div style={{ 
@@ -253,18 +241,17 @@ export const ProgramSelector: React.FC<Props> = ({
         textAlign: 'center'
       }}>
         <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
-          Привет, {userName}! 👋
+          Привет, {userName}!
         </Title>
         <Text style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px' }}>
           Готов к тренировке?
         </Text>
       </div>
 
-
       {programs.length === 0 ? (
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}></div>
             <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Начни свой путь
             </Title>
@@ -281,9 +268,10 @@ export const ProgramSelector: React.FC<Props> = ({
               size="m" 
               stretched 
               onClick={onSelectTemplate}
-              style={{ marginBottom: '12px', fontSize: '15px' }}
+              style={{ marginBottom: '12px', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
-              📋 Выбрать готовую программу
+              <FileText size={18} />
+              Выбрать готовую программу
             </Button>
             
             <Button 
@@ -291,9 +279,10 @@ export const ProgramSelector: React.FC<Props> = ({
               stretched 
               mode="outline"
               onClick={onCreateProgram}
-              style={{ fontSize: '15px' }}
+              style={{ fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
-              ✏️ Создать свою программу
+              <Plus size={18} />
+              Создать свою программу
             </Button>
           </Card>
         </Section>
@@ -311,17 +300,6 @@ export const ProgramSelector: React.FC<Props> = ({
                   <Title level="3" weight="2" style={{ fontSize: '18px', margin: 0 }}>
                     Основной сплит
                   </Title>
-                  <span 
-                    style={{ 
-                      fontSize: '16px', 
-                      cursor: 'pointer',
-                      color: 'var(--tg-theme-hint-color)'
-                    }}
-                    onClick={() => telegramService.showAlert('Основной сплит — это твои регулярные тренировки, выделенные зелёным.')}
-                    title="Подсказка"
-                  >
-                    ℹ️
-                  </span>
                 </div>
               }
             >
@@ -330,7 +308,6 @@ export const ProgramSelector: React.FC<Props> = ({
               </div>
             </Section>
           )}
-
 
           {otherPrograms.length > 0 && (
             <Section 
@@ -348,7 +325,6 @@ export const ProgramSelector: React.FC<Props> = ({
             </Section>
           )}
 
-
           <Section style={{ marginTop: '24px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
               <Button 
@@ -356,31 +332,45 @@ export const ProgramSelector: React.FC<Props> = ({
                 stretched 
                 mode="outline"
                 onClick={onSelectTemplate}
-                style={{ fontSize: '14px' }}
+                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
-                📋 Шаблоны
+                <FileText size={16} />
+                Шаблоны
               </Button>
               <Button 
                 size="m" 
                 stretched 
                 mode="outline"
                 onClick={onCreateProgram}
-                style={{ fontSize: '14px' }}
+                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
-                ➕ Создать
+                <Plus size={16} />
+                Создать
               </Button>
             </div>
             
-            {/* ✅ НОВОЕ: Кнопка истории */}
-            <Button 
-              size="m" 
-              stretched 
-              mode="outline"
-              onClick={onViewHistory}
-              style={{ fontSize: '14px', marginTop: '8px' }}
-            >
-              📖 История тренировок
-            </Button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <Button 
+                size="m" 
+                stretched 
+                mode="outline"
+                onClick={onViewHistory}
+                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <History size={16} />
+                История
+              </Button>
+              <Button 
+                size="m" 
+                stretched 
+                mode="outline"
+                onClick={onViewRecords}
+                style={{ fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <Trophy size={16} />
+                Рекорды
+              </Button>
+            </div>
           </Section>
         </>
       )}

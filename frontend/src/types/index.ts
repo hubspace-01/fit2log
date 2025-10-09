@@ -6,7 +6,6 @@ export interface User {
   language_code?: string;
 }
 
-
 export interface Program {
   id: string;
   user_id: string;
@@ -19,9 +18,7 @@ export interface Program {
   exercises?: Exercise[];
 }
 
-
 export type ExerciseType = 'reps' | 'time' | 'distance';
-
 
 export interface Exercise {
   id: string;
@@ -37,7 +34,6 @@ export interface Exercise {
   order_index: number;
   notes?: string;
 }
-
 
 export interface LogItem {
   id: string;
@@ -56,7 +52,6 @@ export interface LogItem {
   comments?: string;
 }
 
-
 export interface ProgramTemplate {
   id: string;
   template_name: string;
@@ -66,7 +61,6 @@ export interface ProgramTemplate {
   created_at: string;
   template_exercises?: TemplateExercise[];
 }
-
 
 export interface TemplateExercise {
   id: string;
@@ -82,7 +76,6 @@ export interface TemplateExercise {
   notes?: string;
 }
 
-
 export interface WorkoutSessionDB {
   id: string;
   user_id: string;
@@ -96,7 +89,6 @@ export interface WorkoutSessionDB {
   updated_at: string;
 }
 
-
 export interface WorkoutSession {
   id?: string;
   program_id: string;
@@ -107,8 +99,6 @@ export interface WorkoutSession {
   logs: LogItem[];
 }
 
-
-// ✅ НОВОЕ: Типы для истории тренировок
 export interface WorkoutHistoryItem {
   id: string;
   program_name: string;
@@ -118,14 +108,12 @@ export interface WorkoutHistoryItem {
   total_sets: number;
 }
 
-
 export interface WorkoutDetailLog {
   exercise_name: string;
   set_no: number;
   display_value: string;
   rpe?: number;
 }
-
 
 export interface AppState {
   screen: AppScreen;
@@ -134,14 +122,12 @@ export interface AppState {
   workout_session?: WorkoutSession;
   workout_completed_sets?: any[];
   workout_duration?: number;
-  // ✅ НОВОЕ: Состояние для истории
   workout_history?: WorkoutHistoryItem[];
   current_workout_detail?: WorkoutDetailLog[];
   current_workout_info?: WorkoutHistoryItem;
   loading: boolean;
   error?: string;
 }
-
 
 export enum AppScreen {
   LOADING = 'LOADING',
@@ -152,32 +138,20 @@ export enum AppScreen {
   TEMPLATE_LIST = 'TEMPLATE_LIST',
   WORKOUT_LOGGER = 'WORKOUT_LOGGER',
   WORKOUT_SUMMARY = 'WORKOUT_SUMMARY',
-  // ✅ НОВОЕ: Экраны истории
   WORKOUT_HISTORY = 'WORKOUT_HISTORY',
-  WORKOUT_DETAIL = 'WORKOUT_DETAIL'
+  WORKOUT_DETAIL = 'WORKOUT_DETAIL',
+  PERSONAL_RECORDS = 'PERSONAL_RECORDS'
 }
-
-// ==========================================
-// Personal Records Types
-// ==========================================
 
 export interface PersonalRecord {
   id: string;
   user_id: string;
   exercise_name: string;
   exercise_type: ExerciseType;
-  
-  // Для reps
   record_weight?: number;
   record_reps?: number;
-  
-  // Для time
   record_duration?: number;
-  
-  // Для distance
   record_distance?: number;
-  
-  // Метаданные
   estimated_1rm?: number;
   achieved_at: string;
   session_id?: string;

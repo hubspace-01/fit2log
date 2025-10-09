@@ -5,7 +5,7 @@
 ## Технологии
 - React + TypeScript + Vite
 - Supabase (PostgreSQL + Edge Functions)
-- Telegram Mini Apps SDK
+- Telegram Mini Apps SDKcd fit2log
 - Netlify (деплой)
 
 ## Установка
