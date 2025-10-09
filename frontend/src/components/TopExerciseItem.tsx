@@ -1,5 +1,6 @@
 import React from 'react';
 import { Cell, Caption } from '@telegram-apps/telegram-ui';
+import { Award, Trophy } from 'lucide-react';
 
 interface TopExerciseItemProps {
   rank: number;
@@ -14,11 +15,29 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({
   sets, 
   secondaryMetric 
 }) => {
-  const getGradient = (rank: number) => {
-    if (rank === 1) return 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
-    if (rank === 2) return 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)';
-    if (rank === 3) return 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)';
-    return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  const getMedalConfig = (rank: number) => {
+    if (rank === 1) {
+      return {
+        gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+        icon: <Trophy size={20} strokeWidth={2.5} />
+      };
+    }
+    if (rank === 2) {
+      return {
+        gradient: 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)',
+        icon: <Award size={20} strokeWidth={2.5} />
+      };
+    }
+    if (rank === 3) {
+      return {
+        gradient: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
+        icon: <Award size={20} strokeWidth={2.5} />
+      };
+    }
+    return {
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: <span style={{ fontSize: '16px', fontWeight: '700' }}>{rank}</span>
+    };
   };
 
   const formatSets = (sets: number): string => {
@@ -27,6 +46,8 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({
     return `${sets} подходов`;
   };
 
+  const medalConfig = getMedalConfig(rank);
+
   return (
     <Cell
       before={
@@ -34,15 +55,13 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({
           width: '36px',
           height: '36px',
           borderRadius: '50%',
-          background: getGradient(rank),
+          background: medalConfig.gradient,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
-          fontSize: '16px',
-          fontWeight: '700'
+          color: 'white'
         }}>
-          {rank}
+          {medalConfig.icon}
         </div>
       }
       subtitle={
