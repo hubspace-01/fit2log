@@ -66,7 +66,7 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
   onProfileClick
 }) => {
   const handleNavClick = useCallback((action: () => void) => {
-    telegramService.showBackButton(() => {});
+    telegramService.hapticFeedback('impact', 'light');
     action();
   }, []);
 
@@ -206,7 +206,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
   const handleCreateClick = useCallback(() => {
     telegramService.showConfirm(
-      'Что хотите сделать?',
+      'Создать свою программу или выбрать из шаблонов?',
       (confirmed) => {
         if (confirmed) {
           onCreateProgram();
