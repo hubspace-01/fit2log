@@ -1,14 +1,12 @@
 export { ProgramSelector } from './ProgramSelector';
-export { ProgramEditor } from './ProgramEditor';
 export { TemplateList } from './TemplateList';
+export { ProgramEditor } from './ProgramEditor';
 export { ProgramDetails } from './ProgramDetails';
-export { Stepper } from './Stepper';
 export { WorkoutLogger } from './WorkoutLogger';
 export { WorkoutSummary } from './WorkoutSummary';
 export { WorkoutHistory } from './WorkoutHistory';
 export { WorkoutDetail } from './WorkoutDetail';
-export { PersonalRecords } from './PersonalRecords';
+export { StatisticsWithTabs } from './StatisticsWithTabs';
 export { StatCard } from './StatCard';
 export { WeekActivityBar } from './WeekActivityBar';
 export { TopExerciseItem } from './TopExerciseItem';
-export { Statistics } from './Statistics';
