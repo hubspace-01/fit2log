@@ -67,10 +67,7 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
   onProfileClick,
   activeTab = 'programs'
 }) => {
-  const handleNavClick = useCallback((action: () => void, haptic: boolean = true) => {
-    if (haptic) {
-      telegramService.hapticFeedback('impact', 'light');
-    }
+  const handleNavClick = useCallback((action: () => void) => {
     action();
   }, []);
 
@@ -89,15 +86,16 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
       right: 0,
       height: '72px',
       backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-      borderTop: '1px solid rgba(0,0,0,0.1)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
+      borderTop: '0.5px solid rgba(0, 0, 0, 0.15)',
+      backdropFilter: 'saturate(180%) blur(20px)',
+      WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
       paddingTop: '12px',
       paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-      zIndex: 10
+      zIndex: 10,
+      opacity: 0.95
     }}>
       {navItems.map((item) => {
         const Icon = item.icon;
@@ -150,7 +148,6 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 }) => {
   const [inProgressSessions, setInProgressSessions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [showSkeleton, setShowSkeleton] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
@@ -158,17 +155,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   }, []);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
     const loadInProgressSessions = async () => {
-      const startTime = Date.now();
-      
-      timer = setTimeout(() => {
-        if (Date.now() - startTime > 300) {
-          setShowSkeleton(true);
-        }
-      }, 300);
-
       try {
         const { data } = await supabaseService.supabase
           .from('workout_sessions')
@@ -183,20 +170,14 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
       } catch (error) {
         telegramService.showAlert('Ошибка загрузки данных');
       } finally {
-        clearTimeout(timer);
         setLoading(false);
-        setShowSkeleton(false);
       }
     };
 
     if (userId) {
       loadInProgressSessions();
     }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [userId, programs]);
+  }, [userId, programs.length]);
 
   const { weeklySplit, otherPrograms } = useMemo(() => {
     const split = programs
@@ -240,7 +221,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
   const handleInfoClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    telegramService.showAlert('Основной сплит — это программы с установленным порядком дней тренировок');
+    telegramService.showAlert('Это ваша основная программа тренировок. Программы в этом разделе имеют установленный порядок дней.');
   }, []);
 
   const handleProgramClick = useCallback((program: Program) => {
@@ -392,10 +373,10 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
     );
   }, [hasInProgressSession, handleProgramClick]);
 
-  if (loading && showSkeleton) {
+  if (loading && programs.length === 0) {
     return (
       <div style={{ padding: '16px', paddingBottom: '88px' }}>
-        <div style={{ marginBottom: '28px', textAlign: 'center', position: 'relative' }}>
+        <div style={{ marginBottom: '28px', textAlign: 'center' }}>
           <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
             Привет, {userName}!
           </Title>
@@ -424,12 +405,15 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
       <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '88px' }}>
         <div style={{ 
           marginBottom: '28px', 
-          padding: '8px',
-          position: 'relative'
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '8px'
         }}>
           <div style={{ 
             textAlign: 'center',
-            paddingRight: programs.length > 0 ? '48px' : '0'
+            flex: 1
           }}>
             <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
               Привет, {userName}!
@@ -454,7 +438,8 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                transition: 'transform 0.15s ease-out'
+                transition: 'transform 0.15s ease-out',
+                flexShrink: 0
               }}
               onTouchStart={(e) => {
                 (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
