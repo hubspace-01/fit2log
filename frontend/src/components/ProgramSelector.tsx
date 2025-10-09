@@ -225,6 +225,13 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
     const showNumber = !isInSplit && index !== undefined;
     const displayNumber = showNumber ? index + 1 : program.day_order;
     
+    let borderColor = 'transparent';
+    if (inProgress) {
+      borderColor = '#FF9500';
+    } else if (isInSplit) {
+      borderColor = '#10B981';
+    }
+    
     return (
       <div 
         key={program.id}
@@ -316,11 +323,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
         <Card 
           style={{ 
             width: '100%',
-            border: inProgress 
-              ? '2px solid #FF9500'
-              : isInSplit 
-              ? '2px solid #10B981'
-              : undefined
+            border: `2px solid ${borderColor}`
           }}
         >
           <div style={{ 
