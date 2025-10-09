@@ -14,9 +14,7 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
 
-        await telegramService.init();
-        
-        const telegramUser = telegramService.getUser();
+        const telegramUser = telegramService.getUserData();
         const initData = telegramService.getInitData();
         
         if (telegramUser && initData) {
@@ -25,7 +23,7 @@ export const useAuth = () => {
           try {
             const validationResult = await supabaseService.validateTelegramInitData(initData);
             
-            if (validationResult.ok) {  // ✅ ИСПРАВЛЕНО: убрали проверку access_token
+            if (validationResult.ok) {
               console.log('✅ Telegram initData validated');
               
               const userId = telegramUser.id.toString();

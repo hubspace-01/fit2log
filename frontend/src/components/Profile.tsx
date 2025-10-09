@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Section, Cell, Title, Text, Switch } from '@telegram-apps/telegram-ui';
 import { 
-  User,
   Bell,
   Palette,
   Globe,
