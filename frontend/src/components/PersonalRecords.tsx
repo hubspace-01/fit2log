@@ -95,21 +95,6 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     setExpandedRecords(newExpanded);
   };
 
-  const getRecordHistory = async (exerciseName: string): Promise<PersonalRecord[]> => {
-    try {
-      const { data } = await supabaseService.supabase
-        .from('personal_records')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('exercise_name', exerciseName)
-        .order('achieved_at', { ascending: false });
-      
-      return data || [];
-    } catch (error) {
-      return [];
-    }
-  };
-
   if (loading) {
     return (
       <div style={{ 
