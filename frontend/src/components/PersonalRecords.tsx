@@ -5,14 +5,14 @@ import {
   Dumbbell, 
   Timer, 
   Footprints,
-  Award,
   Calendar,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  History
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
-import { formatRecordValue } from '../lib/personalRecords';
+import { formatRecordValue, normalizeExerciseName } from '../lib/personalRecords';
 import type { PersonalRecord, ExerciseType } from '../types';
 
 interface PersonalRecordsProps {
@@ -55,7 +55,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
   });
 
   const groupedRecords = filteredRecords.reduce((acc, record) => {
-    const name = record.exercise_name;
+    const name = normalizeExerciseName(record.exercise_name);
     if (!acc[name]) {
       acc[name] = [];
     }
@@ -85,7 +85,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
   };
 
-  const toggleExpand = (exerciseName: string) => {
+  const toggleExpand = async (exerciseName: string) => {
     const newExpanded = new Set(expandedRecords);
     if (newExpanded.has(exerciseName)) {
       newExpanded.delete(exerciseName);
@@ -93,6 +93,21 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
       newExpanded.add(exerciseName);
     }
     setExpandedRecords(newExpanded);
+  };
+
+  const getRecordHistory = async (exerciseName: string): Promise<PersonalRecord[]> => {
+    try {
+      const { data } = await supabaseService.supabase
+        .from('personal_records')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('exercise_name', exerciseName)
+        .order('achieved_at', { ascending: false });
+      
+      return data || [];
+    } catch (error) {
+      return [];
+    }
   };
 
   if (loading) {
@@ -111,6 +126,8 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
     );
   }
 
+  const uniqueExercises = Object.keys(groupedRecords).length;
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -125,41 +142,21 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
           <Trophy size={32} color="var(--tg-theme-link-color)" />
         </div>
-        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '8px' }}>
+        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
           Мои рекорды
         </Title>
         <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-          {records.length} {records.length === 1 ? 'рекорд' : 'рекордов'}
+          {uniqueExercises} {uniqueExercises === 1 ? 'упражнение' : uniqueExercises < 5 ? 'упражнения' : 'упражнений'}
         </Caption>
       </div>
 
-      {records.length > 0 && (
-        <div style={{
-          padding: '12px 16px',
-          backgroundColor: 'var(--tg-theme-link-color)',
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={20} />
-            <Text style={{ fontSize: '14px', color: 'white', fontWeight: '600' }}>
-              Всего рекордов
-            </Text>
-          </div>
-          <Text style={{ fontSize: '20px', color: 'white', fontWeight: '700' }}>
-            {records.length}
-          </Text>
-        </div>
-      )}
-
       <Section style={{ marginTop: '8px' }}>
         <div style={{
-          padding: '12px 16px',
+          padding: '8px 16px',
           display: 'flex',
           gap: '8px',
-          overflowX: 'auto'
+          overflowX: 'auto',
+          justifyContent: 'center'
         }}>
           <Button
             size="s"
@@ -176,7 +173,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
             style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <Dumbbell size={14} />
-            Reps
+            Вес
           </Button>
           <Button
             size="s"
@@ -185,7 +182,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
             style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <Timer size={14} />
-            Time
+            Время
           </Button>
           <Button
             size="s"
@@ -194,7 +191,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
             style={{ fontSize: '13px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             <Footprints size={14} />
-            Distance
+            Дистанция
           </Button>
         </div>
       </Section>
@@ -213,14 +210,17 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
       ) : (
         <Section header="Упражнения" style={{ marginTop: '8px' }}>
           {sortedExerciseNames.map((exerciseName) => {
-            const exerciseRecords = groupedRecords[exerciseName];
+            const exerciseRecords = groupedRecords[exerciseName].sort((a, b) => 
+              new Date(b.achieved_at).getTime() - new Date(a.achieved_at).getTime()
+            );
             const currentRecord = exerciseRecords[0];
             const isExpanded = expandedRecords.has(exerciseName);
+            const hasHistory = exerciseRecords.length > 1;
 
             return (
               <div key={exerciseName} style={{ marginBottom: '8px' }}>
                 <Cell
-                  onClick={() => toggleExpand(exerciseName)}
+                  onClick={() => hasHistory && toggleExpand(exerciseName)}
                   before={
                     <div style={{
                       width: '40px',
@@ -234,7 +234,9 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                       {getExerciseIcon(currentRecord.exercise_type)}
                     </div>
                   }
-                  after={isExpanded ? <ChevronUp size={20} color="var(--tg-theme-hint-color)" /> : <ChevronDown size={20} color="var(--tg-theme-hint-color)" />}
+                  after={hasHistory ? (
+                    isExpanded ? <ChevronUp size={20} color="var(--tg-theme-hint-color)" /> : <ChevronDown size={20} color="var(--tg-theme-hint-color)" />
+                  ) : null}
                   subtitle={
                     <div style={{ marginTop: '4px' }}>
                       <div style={{ 
@@ -251,7 +253,7 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                   }
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <Text style={{ fontSize: '15px', fontWeight: '500' }}>
+                    <Text style={{ fontSize: '15px', fontWeight: '500', textTransform: 'capitalize' }}>
                       {exerciseName}
                     </Text>
                     <Text style={{ fontSize: '18px', fontWeight: '700', color: 'var(--tg-theme-link-color)' }}>
@@ -260,38 +262,54 @@ export const PersonalRecords: React.FC<PersonalRecordsProps> = ({ userId, onBack
                   </div>
                 </Cell>
 
-                {isExpanded && exerciseRecords.length > 1 && (
+                {isExpanded && hasHistory && (
                   <div style={{
-                    padding: '12px 16px',
+                    padding: '16px',
                     backgroundColor: 'var(--tg-theme-secondary-bg-color)',
                     borderTop: '0.5px solid var(--tg-theme-section-separator-color)'
                   }}>
-                    <Caption level="1" style={{ 
-                      fontSize: '12px', 
-                      color: 'var(--tg-theme-hint-color)',
-                      marginBottom: '8px',
-                      display: 'block'
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '12px'
                     }}>
-                      История рекордов
-                    </Caption>
+                      <History size={16} color="var(--tg-theme-hint-color)" />
+                      <Caption level="1" style={{ 
+                        fontSize: '13px', 
+                        color: 'var(--tg-theme-hint-color)',
+                        fontWeight: '600',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        История рекордов
+                      </Caption>
+                    </div>
                     {exerciseRecords.slice(1).map((record, index) => (
                       <div
                         key={record.id}
                         style={{
-                          padding: '8px 0',
+                          padding: '12px 0',
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           borderBottom: index < exerciseRecords.length - 2 ? '0.5px solid var(--tg-theme-section-separator-color)' : 'none'
                         }}
                       >
-                        <div>
-                          <Text style={{ fontSize: '14px', fontWeight: '500' }}>
+                        <div style={{ flex: 1 }}>
+                          <Text style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
                             {formatRecordValue(record)}
                           </Text>
-                          <Caption level="1" style={{ fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
-                            {formatDate(record.achieved_at)}
-                          </Caption>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            <Calendar size={11} color="var(--tg-theme-hint-color)" />
+                            <Caption level="1" style={{ fontSize: '12px', color: 'var(--tg-theme-hint-color)' }}>
+                              {formatDate(record.achieved_at)}
+                            </Caption>
+                          </div>
                         </div>
                       </div>
                     ))}
