@@ -320,8 +320,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
               ? '2px solid #FF9500'
               : isInSplit 
               ? '2px solid #10B981'
-              : undefined,
-            transition: 'border 0.2s ease-out'
+              : undefined
           }}
         >
           <div style={{ 
@@ -378,7 +377,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
             <Spinner size="l" />
           </div>
         ) : (
-          <div style={{ padding: '16px' }}>
+          <div className="fade-in" style={{ padding: '16px' }}>
             <div style={{ 
               marginBottom: '28px', 
               position: 'relative',
@@ -541,6 +540,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
       {showCreateModal && (
         <div
+          className="fade-in"
           style={{
             position: 'fixed',
             top: 0,
@@ -561,8 +561,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
               borderTopRightRadius: '16px',
               padding: '24px',
               paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
-              width: '100%',
-              animation: 'slideUp 0.3s ease-out'
+              width: '100%'
             }}
             onClick={(e) => e.stopPropagation()}
           >
