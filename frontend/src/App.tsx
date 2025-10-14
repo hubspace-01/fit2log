@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
-import { Spinner } from '@telegram-apps/telegram-ui';
+import { Spinner, Card, Title, Text } from '@telegram-apps/telegram-ui';
+import { AlertCircle } from 'lucide-react';
 import { useAuth, useAppState, usePrograms } from './hooks';
 import { 
   ProgramSelector, 
@@ -93,18 +94,16 @@ const App: React.FC = () => {
       const history = await supabaseService.getCompletedWorkouts(user.id);
       setWorkoutHistory(history);
       setScreen(AppScreen.WORKOUT_HISTORY);
+      telegramService.hapticFeedback('impact', 'light');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       setError(`Ошибка загрузки истории: ${errorMessage}`);
       telegramService.showAlert(`Ошибка загрузки истории: ${errorMessage}`);
+      telegramService.hapticFeedback('impact', 'medium');
     } finally {
       setLoading(false);
     }
   }, [user, setWorkoutHistory, setLoading, clearError, setError, setScreen]);
-
-  const handleViewRecords = useCallback(() => {
-    setScreen(AppScreen.STATISTICS);
-  }, [setScreen]);
 
   const handleViewStatistics = useCallback(() => {
     setScreen(AppScreen.STATISTICS);
@@ -121,10 +120,12 @@ const App: React.FC = () => {
       const details = await supabaseService.getWorkoutDetail(workout.id);
       setCurrentWorkoutDetail(details, workout);
       setScreen(AppScreen.WORKOUT_DETAIL);
+      telegramService.hapticFeedback('impact', 'light');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       setError(`Ошибка загрузки деталей: ${errorMessage}`);
       telegramService.showAlert(`Ошибка загрузки деталей: ${errorMessage}`);
+      telegramService.hapticFeedback('impact', 'medium');
     } finally {
       setLoading(false);
     }
@@ -145,13 +146,26 @@ const App: React.FC = () => {
         user_id: user.id
       };
       
+      let savedProgramId = state.current_program?.id;
+      
       if (state.current_program) {
         await updateProgram(state.current_program.id, dataWithUserId);
       } else {
-        await createProgram(dataWithUserId);
+        const newProgram = await createProgram(dataWithUserId);
+        savedProgramId = newProgram.id;
       }
       
       await loadPrograms();
+      
+      if (savedProgramId) {
+        const updatedProgram = programs.find(p => p.id === savedProgramId);
+        if (updatedProgram) {
+          setCurrentProgram(updatedProgram);
+          setScreen(AppScreen.PROGRAM_DETAILS);
+          return;
+        }
+      }
+      
       setScreen(AppScreen.PROGRAM_SELECTOR);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
@@ -160,7 +174,7 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, state.current_program, createProgram, updateProgram, loadPrograms, setLoading, clearError, setError, setScreen]);
+  }, [user, state.current_program, createProgram, updateProgram, loadPrograms, programs, setCurrentProgram, setLoading, clearError, setError, setScreen]);
 
   const handleTemplateSelect = useCallback(async (template: ProgramTemplate) => {
     if (!user) return;
@@ -238,6 +252,18 @@ const App: React.FC = () => {
     setScreen(AppScreen.PROGRAM_SELECTOR);
   }, [setScreen]);
 
+  const handleBackFromDetails = useCallback(() => {
+    setScreen(AppScreen.PROGRAM_SELECTOR);
+  }, [setScreen]);
+
+  const handleBackFromEditor = useCallback(() => {
+    if (state.current_program) {
+      setScreen(AppScreen.PROGRAM_DETAILS);
+    } else {
+      setScreen(AppScreen.PROGRAM_SELECTOR);
+    }
+  }, [state.current_program, setScreen]);
+
   const handleBackToHistory = useCallback(() => {
     setScreen(AppScreen.WORKOUT_HISTORY);
   }, [setScreen]);
@@ -248,10 +274,15 @@ const App: React.FC = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh',
+        minHeight: '100vh',
+        flexDirection: 'column',
+        gap: '12px',
         backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
         <Spinner size="l" />
+        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+          Загрузка...
+        </Text>
       </div>
     );
   }
@@ -259,11 +290,43 @@ const App: React.FC = () => {
   if (authError || state.screen === AppScreen.AUTH_ERROR) {
     return (
       <div style={{ 
-        padding: '20px', 
-        textAlign: 'center',
-        color: 'var(--tg-theme-destructive-text-color)'
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        padding: '16px',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
-        {authError}
+        <Card style={{
+          textAlign: 'center',
+          padding: '60px 16px',
+          maxWidth: '400px'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            marginBottom: '16px'
+          }}>
+            <AlertCircle 
+              size={64} 
+              color="var(--tg-theme-destructive-text-color)" 
+              strokeWidth={1.5}
+            />
+          </div>
+          <Title level="3" weight="2" style={{ 
+            marginBottom: '8px', 
+            fontSize: '18px'
+          }}>
+            Ошибка авторизации
+          </Title>
+          <Text style={{ 
+            color: 'var(--tg-theme-hint-color)', 
+            fontSize: '14px',
+            display: 'block'
+          }}>
+            {authError}
+          </Text>
+        </Card>
       </div>
     );
   }
@@ -279,7 +342,7 @@ const App: React.FC = () => {
           onSelectTemplate={handleSelectTemplate}
           onSelectProgram={handleSelectProgram}
           onViewHistory={handleViewHistory}
-          onViewRecords={handleViewRecords}
+          onViewRecords={handleViewStatistics}
           onViewStatistics={handleViewStatistics}
           onViewProfile={handleViewProfile}
         />
@@ -289,7 +352,7 @@ const App: React.FC = () => {
         <ProgramDetails
           program={state.current_program}
           userId={user.id}
-          onBack={handleBack}
+          onBack={handleBackFromDetails}
           onEdit={handleEditProgram}
           onDelete={handleDeleteProgram}
           onStartWorkout={handleStartWorkout}
@@ -308,7 +371,7 @@ const App: React.FC = () => {
       {state.screen === AppScreen.PROGRAM_EDITOR && user && (
         <ProgramEditor
           onSave={handleProgramEditorSave}
-          onBack={handleBack}
+          onBack={handleBackFromEditor}
           initialData={state.current_program}
           userId={user.id}
         />
