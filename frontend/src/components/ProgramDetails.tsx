@@ -17,7 +17,8 @@ import {
   Dumbbell, 
   Edit3, 
   Trash2,
-  Zap
+  Zap,
+  MoreVertical
 } from 'lucide-react';
 import type { Program, Exercise } from '../types';
 import { telegramService } from '../lib/telegram';
@@ -42,6 +43,7 @@ export const ProgramDetails: React.FC<Props> = ({
 }) => {
   const [hasInProgressSession, setHasInProgressSession] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showActionsModal, setShowActionsModal] = useState(false);
 
   useEffect(() => {
     telegramService.showBackButton(onBack);
@@ -72,23 +74,36 @@ export const ProgramDetails: React.FC<Props> = ({
     );
   }, [program.exercises]);
 
+  const handleOpenActions = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    setShowActionsModal(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    setShowActionsModal(false);
+  }, []);
+
+  const handleEdit = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    setShowActionsModal(false);
+    onEdit(program);
+  }, [program, onEdit]);
+
   const handleDelete = useCallback(() => {
-    telegramService.hapticFeedback('impact', 'medium');
+    telegramService.hapticFeedback('impact', 'light');
+    setShowActionsModal(false);
+    
     telegramService.showConfirm(
       `Удалить программу "${program.program_name}"?`,
       (confirmed: boolean) => {
         if (confirmed) {
-          telegramService.hapticFeedback('impact', 'light');
+          telegramService.hapticFeedback('impact', 'medium');
           onDelete(program.id);
         }
       }
     );
   }, [program.program_name, program.id, onDelete]);
-
-  const handleEdit = useCallback(() => {
-    telegramService.hapticFeedback('impact', 'light');
-    onEdit(program);
-  }, [program, onEdit]);
 
   const handleStartWorkout = useCallback(() => {
     telegramService.hapticFeedback('impact', 'medium');
@@ -185,168 +200,243 @@ export const ProgramDetails: React.FC<Props> = ({
   }
 
   return (
-    <div className="fade-in" style={{ 
-      minHeight: '100vh',
-      paddingBottom: exercises.length > 0 ? '140px' : '100px',
-      backgroundColor: 'var(--tg-theme-bg-color)'
-    }}>
-      <div style={{
-        padding: '20px 16px',
-        textAlign: 'center'
+    <>
+      <div className="fade-in" style={{ 
+        minHeight: '100vh',
+        paddingBottom: exercises.length > 0 ? '88px' : '40px',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-          <ClipboardList size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
-        </div>
-        
-        {hasInProgressSession && (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: '#FF9500',
-            color: '#FFFFFF',
-            padding: '6px 12px',
-            borderRadius: '12px',
-            fontSize: '12px',
-            fontWeight: '600',
-            marginBottom: '12px'
+        <div style={{
+          padding: '20px 16px',
+          textAlign: 'center',
+          position: 'relative'
+        }}>
+          <div 
+            onClick={handleOpenActions}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '16px',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              borderRadius: '50%',
+              transition: 'transform 0.15s ease-out',
+              WebkitTapHighlightColor: 'transparent'
+            }}
+            onTouchStart={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+            }}
+            onTouchEnd={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+            }}
+          >
+            <MoreVertical 
+              size={24} 
+              color="var(--tg-theme-text-color)" 
+              strokeWidth={2}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <ClipboardList size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
+          </div>
+          
+          {hasInProgressSession && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#FF9500',
+              color: '#FFFFFF',
+              padding: '6px 12px',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: '600',
+              marginBottom: '12px'
+            }}>
+              <Zap size={14} fill="#FFFFFF" strokeWidth={0} />
+              <span>В процессе</span>
+            </div>
+          )}
+          
+          <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+            {program.program_name}
+          </Title>
+          <Text style={{ 
+            color: 'var(--tg-theme-hint-color)',
+            fontSize: '14px'
           }}>
-            <Zap size={14} fill="#FFFFFF" strokeWidth={0} />
-            <span>В процессе</span>
+            {exercises.length} {exercises.length === 1 ? 'упражнение' : exercises.length < 5 ? 'упражнения' : 'упражнений'}
+          </Text>
+        </div>
+
+        {exercises.length > 0 ? (
+          <Section header={`Упражнения (${exercises.length})`} style={{ marginTop: '8px' }}>
+            <List>
+              {exercises.map((exercise) => (
+                <Cell
+                  key={exercise.id}
+                  before={
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        minWidth: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--tg-theme-link-color)',
+                        color: 'var(--tg-theme-button-text-color)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {getExerciseIcon(exercise)}
+                    </div>
+                  }
+                  subtitle={
+                    <div>
+                      {getExerciseInfo(exercise)}
+                    </div>
+                  }
+                >
+                  <Text weight="2" style={{ fontSize: '15px' }}>
+                    {exercise.exercise_name}
+                  </Text>
+                </Cell>
+              ))}
+            </List>
+          </Section>
+        ) : (
+          <Section style={{ marginTop: '8px' }}>
+            <Card style={{
+              textAlign: 'center',
+              padding: '60px 16px'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                marginBottom: '16px'
+              }}>
+                <Dumbbell 
+                  size={64} 
+                  color="var(--tg-theme-hint-color)" 
+                  strokeWidth={1.5}
+                />
+              </div>
+              <Title level="3" weight="2" style={{ 
+                marginBottom: '8px', 
+                fontSize: '18px'
+              }}>
+                Нет упражнений
+              </Title>
+              <Text style={{ 
+                color: 'var(--tg-theme-hint-color)', 
+                fontSize: '14px',
+                display: 'block'
+              }}>
+                Добавьте упражнения, чтобы начать тренировку
+              </Text>
+            </Card>
+          </Section>
+        )}
+
+        {exercises.length > 0 && (
+          <div
+            style={{
+              position: 'fixed',
+              bottom: '0',
+              left: '0',
+              right: '0',
+              padding: '12px 16px',
+              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+              backgroundColor: 'var(--tg-theme-bg-color)',
+              borderTop: '0.5px solid var(--tg-theme-hint-color)',
+              zIndex: 10
+            }}
+          >
+            <Button
+              size="l"
+              stretched
+              onClick={handleStartWorkout}
+            >
+              {hasInProgressSession ? 'Продолжить тренировку' : 'Начать тренировку'}
+            </Button>
           </div>
         )}
-        
-        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
-          {program.program_name}
-        </Title>
-        <Text style={{ 
-          color: 'var(--tg-theme-hint-color)',
-          fontSize: '14px'
-        }}>
-          {exercises.length} {exercises.length === 1 ? 'упражнение' : exercises.length < 5 ? 'упражнения' : 'упражнений'}
-        </Text>
       </div>
 
-      {exercises.length > 0 ? (
-        <Section header={`Упражнения (${exercises.length})`} style={{ marginTop: '8px' }}>
-          <List>
-            {exercises.map((exercise) => (
-              <Cell
-                key={exercise.id}
-                before={
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      minWidth: '40px',
-                      borderRadius: '50%',
-                      backgroundColor: 'var(--tg-theme-link-color)',
-                      color: 'var(--tg-theme-button-text-color)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    {getExerciseIcon(exercise)}
-                  </div>
-                }
-                subtitle={
-                  <div>
-                    {getExerciseInfo(exercise)}
-                  </div>
-                }
-              >
-                <Text weight="2" style={{ fontSize: '15px' }}>
-                  {exercise.exercise_name}
-                </Text>
-              </Cell>
-            ))}
-          </List>
-        </Section>
-      ) : (
-        <Section style={{ marginTop: '8px' }}>
-          <Card style={{
-            textAlign: 'center',
-            padding: '60px 16px'
-          }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              marginBottom: '16px'
-            }}>
-              <Dumbbell 
-                size={64} 
-                color="var(--tg-theme-hint-color)" 
-                strokeWidth={1.5}
-              />
-            </div>
-            <Title level="3" weight="2" style={{ 
-              marginBottom: '8px', 
-              fontSize: '18px'
-            }}>
-              Нет упражнений
+      {showActionsModal && (
+        <div
+          className="fade-in"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            zIndex: 1000
+          }}
+          onClick={handleCloseModal}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--tg-theme-bg-color)',
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px',
+              padding: '24px',
+              paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+              width: '100%'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Title level="2" weight="2" style={{ marginBottom: '16px', fontSize: '20px', textAlign: 'center' }}>
+              Действия
             </Title>
-            <Text style={{ 
-              color: 'var(--tg-theme-hint-color)', 
-              fontSize: '14px',
-              display: 'block'
-            }}>
-              Добавьте упражнения, чтобы начать тренировку
-            </Text>
-          </Card>
-        </Section>
-      )}
+            
+            <Button 
+              size="l" 
+              stretched 
+              onClick={handleEdit}
+              style={{ marginBottom: '12px', fontSize: '16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                <Edit3 size={20} strokeWidth={2} />
+                <span>Редактировать</span>
+              </div>
+            </Button>
+            
+            <Button 
+              size="l" 
+              stretched 
+              mode="outline"
+              onClick={handleDelete}
+              style={{ marginBottom: '12px', fontSize: '16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                <Trash2 size={20} strokeWidth={2} color="var(--tg-theme-destructive-text-color)" />
+                <span style={{ color: 'var(--tg-theme-destructive-text-color)' }}>Удалить</span>
+              </div>
+            </Button>
 
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '0',
-          left: '0',
-          right: '0',
-          padding: '12px 16px',
-          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          backgroundColor: 'var(--tg-theme-bg-color)',
-          borderTop: '0.5px solid var(--tg-theme-hint-color)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px'
-        }}
-      >
-        {exercises.length > 0 && (
-          <Button
-            size="l"
-            stretched
-            onClick={handleStartWorkout}
-          >
-            {hasInProgressSession ? 'Продолжить тренировку' : 'Начать тренировку'}
-          </Button>
-        )}
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <Button
-            size="m"
-            mode="outline"
-            stretched
-            onClick={handleEdit}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              <Edit3 size={16} strokeWidth={2} />
-              <span>Редактировать</span>
-            </div>
-          </Button>
-          <Button
-            size="m"
-            mode="outline"
-            stretched
-            onClick={handleDelete}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              <Trash2 size={16} strokeWidth={2} color="var(--tg-theme-destructive-text-color)" />
-              <span style={{ color: 'var(--tg-theme-destructive-text-color)' }}>Удалить</span>
-            </div>
-          </Button>
+            <Button 
+              size="l" 
+              stretched 
+              mode="plain"
+              onClick={handleCloseModal}
+              style={{ fontSize: '16px' }}
+            >
+              Отмена
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
