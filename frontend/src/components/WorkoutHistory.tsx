@@ -8,12 +8,12 @@ import {
   Spinner
 } from '@telegram-apps/telegram-ui';
 import { 
-  BookOpen, 
   AlertCircle, 
   Calendar, 
   Clock, 
   Dumbbell, 
-  BarChart2 
+  BarChart2,
+  ChevronRight
 } from 'lucide-react';
 import type { WorkoutHistoryItem } from '../types';
 import { supabaseService } from '../lib/supabase';
@@ -104,7 +104,8 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '50vh' 
+        minHeight: '100vh',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
         <Spinner size="m" />
       </div>
@@ -113,7 +114,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
 
   if (error) {
     return (
-      <div className="fade-in" style={{ padding: '16px' }}>
+      <div className="fade-in" style={{ padding: '16px', minHeight: '100vh' }}>
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
             <div style={{ 
@@ -152,16 +153,11 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
   }
 
   return (
-    <div className="fade-in" style={{ padding: '16px' }}>
+    <div className="fade-in" style={{ padding: '16px', minHeight: '100vh' }}>
       <div style={{ 
         marginBottom: '24px', 
-        textAlign: 'center',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px'
+        textAlign: 'center'
       }}>
-        <BookOpen size={24} color="var(--tg-theme-text-color)" strokeWidth={2} />
         <Title level="2" weight="2" style={{ fontSize: '22px' }}>
           История тренировок
         </Title>
@@ -197,12 +193,19 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
         <Section>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {workouts.map((workout) => (
-              <Card key={workout.id} style={{ width: '100%' }}>
+              <Card 
+                key={workout.id} 
+                style={{ 
+                  width: '100%',
+                  cursor: 'pointer'
+                }}
+                onClick={() => handleViewDetail(workout)}
+              >
                 <div style={{ 
                   padding: '16px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   gap: '12px'
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -217,7 +220,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
                       fontSize: '13px',
                       color: 'var(--tg-theme-hint-color)',
                       display: 'block',
-                      marginBottom: '6px'
+                      marginBottom: '8px'
                     }}>
                       {formatDate(workout.completed_at)}
                     </Text>
@@ -268,17 +271,17 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
                       </div>
                     </div>
                   </div>
-                  <Button 
-                    size="s" 
-                    mode="outline"
-                    onClick={() => handleViewDetail(workout)}
-                    style={{ 
-                      fontSize: '13px',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    Подробнее
-                  </Button>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    paddingTop: '4px'
+                  }}>
+                    <ChevronRight 
+                      size={20} 
+                      color="var(--tg-theme-hint-color)" 
+                      strokeWidth={2}
+                    />
+                  </div>
                 </div>
               </Card>
             ))}
