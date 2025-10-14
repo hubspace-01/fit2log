@@ -4,7 +4,6 @@ import {
   Button, 
   Title, 
   Text,
-  Card,
   Spinner
 } from '@telegram-apps/telegram-ui';
 import { 
@@ -323,52 +322,50 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
           </div>
         )}
 
-        <Card 
+        <div 
           style={{ 
             width: '100%',
             border: `2px solid ${borderColor}`,
-            backgroundColor: 'transparent'
-          }}
-        >
-          <div style={{ 
+            borderRadius: '12px',
+            backgroundColor: 'transparent',
             padding: '14px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: '12px'
-          }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text weight="2" style={{ 
-                fontSize: '16px',
-                display: 'block',
-                marginBottom: '4px'
-              }}>
-                {program.program_name}
-              </Text>
-              <Text style={{ 
-                fontSize: '13px',
-                color: 'var(--tg-theme-hint-color)'
-              }}>
-                {program.weekday_hint && `${program.weekday_hint} • `}
-                {program.exercises?.length || 0} упражнений
-              </Text>
-            </div>
-            <Button 
-              size="s" 
-              mode="filled"
-              style={{ 
-                fontSize: '13px',
-                whiteSpace: 'nowrap'
-              }}
-              onClick={() => {
-                telegramService.hapticFeedback('impact', 'light');
-                handleProgramClick(program);
-              }}
-            >
-              {inProgress ? 'Продолжить' : 'Начать'}
-            </Button>
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text weight="2" style={{ 
+              fontSize: '16px',
+              display: 'block',
+              marginBottom: '4px'
+            }}>
+              {program.program_name}
+            </Text>
+            <Text style={{ 
+              fontSize: '13px',
+              color: 'var(--tg-theme-hint-color)'
+            }}>
+              {program.weekday_hint && `${program.weekday_hint} • `}
+              {program.exercises?.length || 0} упражнений
+            </Text>
           </div>
-        </Card>
+          <Button 
+            size="s" 
+            mode="filled"
+            style={{ 
+              fontSize: '13px',
+              whiteSpace: 'nowrap'
+            }}
+            onClick={() => {
+              telegramService.hapticFeedback('impact', 'light');
+              handleProgramClick(program);
+            }}
+          >
+            {inProgress ? 'Продолжить' : 'Начать'}
+          </Button>
+        </div>
       </div>
     );
   }, [hasInProgressSession, handleProgramClick]);
@@ -441,7 +438,12 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
             {programs.length === 0 ? (
               <Section>
-                <Card style={{ textAlign: 'center', padding: '32px 16px', backgroundColor: 'transparent' }}>
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '32px 16px',
+                  borderRadius: '12px',
+                  backgroundColor: 'transparent'
+                }}>
                   <div style={{ 
                     display: 'flex', 
                     justifyContent: 'center', 
@@ -484,7 +486,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
                   >
                     Создать свою программу
                   </Button>
-                </Card>
+                </div>
               </Section>
             ) : (
               <>
