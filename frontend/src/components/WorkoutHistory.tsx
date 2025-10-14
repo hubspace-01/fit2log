@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Section, 
   Button, 
@@ -7,10 +7,17 @@ import {
   Card,
   Spinner
 } from '@telegram-apps/telegram-ui';
+import { 
+  BookOpen, 
+  AlertCircle, 
+  Calendar, 
+  Clock, 
+  Dumbbell, 
+  BarChart2 
+} from 'lucide-react';
 import type { WorkoutHistoryItem } from '../types';
 import { supabaseService } from '../lib/supabase';
 import { telegramService } from '../lib/telegram';
-
 
 interface Props {
   userId: string;
@@ -18,39 +25,44 @@ interface Props {
   onViewDetail: (workout: WorkoutHistoryItem) => void;
 }
 
-
 export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }) => {
   const [workouts, setWorkouts] = useState<WorkoutHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-
 
   useEffect(() => {
     telegramService.showBackButton(onBack);
     return () => telegramService.hideBackButton();
   }, [onBack]);
 
-
-  useEffect(() => {
-    const loadWorkouts = async () => {
-      try {
-        setLoading(true);
-        setError(undefined);
-        const data = await supabaseService.getCompletedWorkouts(userId);
-        setWorkouts(data);
-      } catch (err) {
-        console.error('Error loading workout history:', err);
-        setError('Ошибка загрузки истории тренировок');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadWorkouts();
+  const loadWorkouts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(undefined);
+      const data = await supabaseService.getCompletedWorkouts(userId);
+      setWorkouts(data);
+    } catch (err) {
+      setError('Ошибка загрузки истории тренировок');
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
+  useEffect(() => {
+    loadWorkouts();
+  }, [loadWorkouts]);
 
-  const formatDate = (dateString: string) => {
+  const handleRetry = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    loadWorkouts();
+  }, [loadWorkouts]);
+
+  const handleViewDetail = useCallback((workout: WorkoutHistoryItem) => {
+    telegramService.hapticFeedback('impact', 'light');
+    onViewDetail(workout);
+  }, [onViewDetail]);
+
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -75,22 +87,20 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
         minute: '2-digit'
       });
     }
-  };
+  }, []);
 
-
-  const formatDuration = (seconds: number) => {
+  const formatDuration = useCallback((seconds: number) => {
     if (seconds < 60) return `${seconds}с`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}мин`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return `${hours}ч ${remainingMinutes}мин`;
-  };
-
+  }, []);
 
   if (loading) {
     return (
-      <div className="app-container" style={{ 
+      <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
@@ -101,13 +111,22 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
     );
   }
 
-
   if (error) {
     return (
-      <div className="app-container" style={{ padding: '16px' }}>
+      <div className="fade-in" style={{ padding: '16px' }}>
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '16px'
+            }}>
+              <AlertCircle 
+                size={48} 
+                color="var(--tg-theme-destructive-text-color)" 
+                strokeWidth={1.5}
+              />
+            </div>
             <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Ошибка
             </Title>
@@ -122,7 +141,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
             <Button 
               size="m" 
               stretched 
-              onClick={() => window.location.reload()}
+              onClick={handleRetry}
             >
               Попробовать снова
             </Button>
@@ -132,23 +151,36 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
     );
   }
 
-
   return (
-    <div className="app-container fade-in" style={{ padding: '16px' }}>
+    <div className="fade-in" style={{ padding: '16px' }}>
       <div style={{ 
         marginBottom: '24px', 
-        textAlign: 'center'
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px'
       }}>
+        <BookOpen size={24} color="var(--tg-theme-text-color)" strokeWidth={2} />
         <Title level="2" weight="2" style={{ fontSize: '22px' }}>
-          📖 История тренировок
+          История тренировок
         </Title>
       </div>
-
 
       {workouts.length === 0 ? (
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📅</div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '16px'
+            }}>
+              <Calendar 
+                size={48} 
+                color="var(--tg-theme-hint-color)" 
+                strokeWidth={1.5}
+              />
+            </div>
             <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               История пуста
             </Title>
@@ -177,7 +209,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
                     <Text weight="2" style={{ 
                       fontSize: '16px',
                       display: 'block',
-                      marginBottom: '4px'
+                      marginBottom: '6px'
                     }}>
                       {workout.program_name}
                     </Text>
@@ -185,23 +217,61 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
                       fontSize: '13px',
                       color: 'var(--tg-theme-hint-color)',
                       display: 'block',
-                      marginBottom: '4px'
+                      marginBottom: '6px'
                     }}>
                       {formatDate(workout.completed_at)}
                     </Text>
-                    <Text style={{ 
-                      fontSize: '13px',
-                      color: 'var(--tg-theme-hint-color)'
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
+                      flexWrap: 'wrap'
                     }}>
-                      ⏱️ {formatDuration(workout.total_duration || 0)} | 
-                      🏋️ {workout.exercises_count} упражн. | 
-                      📊 {workout.total_sets} подходов
-                    </Text>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock 
+                          size={14} 
+                          color="var(--tg-theme-hint-color)" 
+                          strokeWidth={2}
+                        />
+                        <Text style={{ 
+                          fontSize: '13px',
+                          color: 'var(--tg-theme-hint-color)'
+                        }}>
+                          {formatDuration(workout.total_duration || 0)}
+                        </Text>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Dumbbell 
+                          size={14} 
+                          color="var(--tg-theme-hint-color)" 
+                          strokeWidth={2}
+                        />
+                        <Text style={{ 
+                          fontSize: '13px',
+                          color: 'var(--tg-theme-hint-color)'
+                        }}>
+                          {workout.exercises_count} упр.
+                        </Text>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <BarChart2 
+                          size={14} 
+                          color="var(--tg-theme-hint-color)" 
+                          strokeWidth={2}
+                        />
+                        <Text style={{ 
+                          fontSize: '13px',
+                          color: 'var(--tg-theme-hint-color)'
+                        }}>
+                          {workout.total_sets} подх.
+                        </Text>
+                      </div>
+                    </div>
                   </div>
                   <Button 
                     size="s" 
                     mode="outline"
-                    onClick={() => onViewDetail(workout)}
+                    onClick={() => handleViewDetail(workout)}
                     style={{ 
                       fontSize: '13px',
                       whiteSpace: 'nowrap'
