@@ -257,8 +257,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         </Title>
       </div>
 
-      <div style={{ padding: '0 16px', marginBottom: '24px' }}>
-        <Card style={{ padding: '16px' }}>
+      <div style={{ padding: '16px' }}>
+        <Card style={{ padding: '16px', marginBottom: '16px' }}>
           <Text weight="2" style={{ 
             fontSize: '14px', 
             marginBottom: '10px', 
@@ -280,10 +280,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             }}
           />
         </Card>
-      </div>
 
-      <div style={{ padding: '0 16px', marginBottom: '24px' }}>
-        <Card style={{ padding: '16px' }}>
+        <Card style={{ padding: '16px', marginBottom: '16px' }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
@@ -383,9 +381,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             </>
           )}
         </Card>
-      </div>
 
-      <div style={{ padding: '0 16px' }}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
