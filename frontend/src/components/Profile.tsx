@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Section, Cell, Avatar, Title, Switch } from '@telegram-apps/telegram-ui';
+import { Section, Cell, Title, Switch } from '@telegram-apps/telegram-ui';
 import { Settings, Palette, Globe, Weight, Trash2, MessageCircle, Info, Shield, Copy } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import type { User, Settings as SettingsType } from '../types';
