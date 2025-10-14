@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Input,
   Textarea,
@@ -6,38 +6,62 @@ import {
   Text,
   Button,
   Select,
-  Checkbox
+  Checkbox,
+  Card,
+  Spinner
 } from '@telegram-apps/telegram-ui';
+import { 
+  Edit3, 
+  Plus, 
+  Dumbbell, 
+  Clock, 
+  Route, 
+  Trash2, 
+  Save 
+} from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
-import type { Program } from '../types';
+import type { Program, Exercise } from '../types';
 
 interface Props {
-  onSave: (data: any) => void;
+  onSave: (data: Partial<Program>) => void;
   onBack: () => void;
   initialData?: Program;
-  userId: string;  // ✅ НОВОЕ
+  userId: string;
 }
+
+interface ExerciseFormData extends Omit<Exercise, 'id' | 'program_id' | 'order_index'> {}
 
 export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, userId }) => {
   const [programName, setProgramName] = useState('');
-  const [exercises, setExercises] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<ExerciseFormData[]>([]);
   const [isInWeeklySplit, setIsInWeeklySplit] = useState(false);
   const [dayOrder, setDayOrder] = useState<number>(1);
   const [weekdayHint, setWeekdayHint] = useState<string>('');
   const [existingPrograms, setExistingPrograms] = useState<Program[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    telegramService.showBackButton(onBack);
+    return () => telegramService.hideBackButton();
+  }, [onBack]);
 
   useEffect(() => {
     const loadPrograms = async () => {
       try {
-        const programs = await supabaseService.getPrograms(userId);  // ✅ ИСПРАВЛЕНО
+        setLoading(true);
+        const programs = await supabaseService.getPrograms(userId);
         setExistingPrograms(programs);
+        telegramService.hapticFeedback('impact', 'light');
       } catch (error) {
-        console.error('Error loading programs:', error);
+        telegramService.showAlert('Ошибка загрузки программ');
+        telegramService.hapticFeedback('impact', 'medium');
+      } finally {
+        setLoading(false);
       }
     };
     loadPrograms();
-  }, [userId]);  // ✅ ИСПРАВЛЕНО: добавлена зависимость
+  }, [userId]);
 
   useEffect(() => {
     if (initialData) {
@@ -66,7 +90,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     }
   }, [initialData]);
 
-  const addExercise = () => {
+  const addExercise = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
     setExercises([...exercises, {
       exercise_name: '',
       exercise_type: 'reps',
@@ -77,13 +102,14 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       distance: 0,
       notes: ''
     }]);
-  };
+  }, [exercises]);
 
-  const updateExercise = (index: number, field: string, value: any) => {
+  const updateExercise = useCallback((index: number, field: string, value: any) => {
     const updated = [...exercises];
     updated[index][field] = value;
     
     if (field === 'exercise_type') {
+      telegramService.hapticFeedback('impact', 'light');
       if (value === 'reps') {
         updated[index].duration = 0;
         updated[index].distance = 0;
@@ -100,13 +126,22 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     }
     
     setExercises(updated);
-  };
+  }, [exercises]);
 
-  const removeExercise = (index: number) => {
-    setExercises(exercises.filter((_, i) => i !== index));
-  };
+  const removeExercise = useCallback((index: number) => {
+    telegramService.hapticFeedback('impact', 'light');
+    telegramService.showConfirm(
+      'Удалить упражнение?',
+      (confirmed: boolean) => {
+        if (confirmed) {
+          telegramService.hapticFeedback('impact', 'medium');
+          setExercises(exercises.filter((_, i) => i !== index));
+        }
+      }
+    );
+  }, [exercises]);
 
-  const validateDayOrder = (): boolean => {
+  const validateDayOrder = useCallback((): boolean => {
     if (!isInWeeklySplit) return true;
     
     const duplicate = existingPrograms.find(p => 
@@ -120,46 +155,44 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     }
     
     return true;
-  };
+  }, [isInWeeklySplit, dayOrder, existingPrograms, initialData]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!programName.trim()) {
+      telegramService.hapticFeedback('impact', 'medium');
       telegramService.showAlert('Введите название программы');
       return;
     }
     
     if (exercises.length === 0) {
+      telegramService.hapticFeedback('impact', 'medium');
       telegramService.showAlert('Добавьте хотя бы одно упражнение');
       return;
     }
     
     if (!validateDayOrder()) {
+      telegramService.hapticFeedback('impact', 'medium');
       return;
     }
     
     const validExercises = exercises.filter(ex => ex.exercise_name.trim());
     
+    if (validExercises.length === 0) {
+      telegramService.hapticFeedback('impact', 'medium');
+      telegramService.showAlert('Заполните названия упражнений');
+      return;
+    }
+    
+    telegramService.hapticFeedback('impact', 'light');
     onSave({ 
       program_name: programName, 
       exercises: validExercises,
       day_order: isInWeeklySplit ? dayOrder : null,
       weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : null
     });
-  };
+  }, [programName, exercises, isInWeeklySplit, dayOrder, weekdayHint, validateDayOrder, onSave]);
 
-  useEffect(() => {
-    telegramService.showBackButton(() => {
-      onBack();
-    });
-
-    return () => {
-      // Не скрываем BackButton
-    };
-  }, [onBack]);
-
-  const title = initialData ? '✏️ Редактирование программы' : '➕ Новая программа';
-
-  const getPlaceholder = (type: string) => {
+  const getPlaceholder = useCallback((type: string) => {
     switch(type) {
       case 'reps':
         return 'Например: Жим лежа';
@@ -170,30 +203,53 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       default:
         return 'Введите название';
     }
-  };
+  }, []);
+
+  const isEditing = useMemo(() => !!initialData, [initialData]);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        flexDirection: 'column',
+        gap: '12px',
+        backgroundColor: 'var(--tg-theme-bg-color)'
+      }}>
+        <Spinner size="l" />
+        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+          Загрузка...
+        </Text>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ 
+    <div className="fade-in" style={{ 
       minHeight: '100vh',
-      paddingBottom: '40px',
+      paddingBottom: '88px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
-      <div style={{ 
-        padding: '16px',
-        textAlign: 'center',
-        marginBottom: '20px'
+      <div style={{
+        padding: '20px 16px',
+        textAlign: 'center'
       }}>
-        <Title level="2" weight="2" style={{ fontSize: '24px' }}>
-          {title}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+          {isEditing ? (
+            <Edit3 size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
+          ) : (
+            <Plus size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
+          )}
+        </div>
+        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+          {isEditing ? 'Редактирование программы' : 'Новая программа'}
         </Title>
       </div>
 
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
-        <div style={{ 
-          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-          borderRadius: '12px',
-          padding: '16px'
-        }}>
+        <Card style={{ padding: '16px' }}>
           <Text weight="2" style={{ 
             fontSize: '14px', 
             marginBottom: '10px', 
@@ -214,15 +270,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
               textAlign: 'center'
             }}
           />
-        </div>
+        </Card>
       </div>
 
       <div style={{ padding: '0 16px', marginBottom: '24px' }}>
-        <div style={{ 
-          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-          borderRadius: '12px',
-          padding: '16px'
-        }}>
+        <Card style={{ padding: '16px' }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
@@ -231,7 +283,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
           }}>
             <Checkbox
               checked={isInWeeklySplit}
-              onChange={(e) => setIsInWeeklySplit(e.target.checked)}
+              onChange={(e) => {
+                telegramService.hapticFeedback('impact', 'light');
+                setIsInWeeklySplit(e.target.checked);
+              }}
             />
             <div>
               <Text weight="2" style={{ fontSize: '15px', display: 'block' }}>
@@ -262,7 +317,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                 </Text>
                 <Select
                   value={dayOrder}
-                  onChange={(e) => setDayOrder(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    telegramService.hapticFeedback('impact', 'light');
+                    setDayOrder(parseInt(e.target.value));
+                  }}
                   style={{ 
                     fontSize: '15px', 
                     width: '100%',
@@ -292,7 +350,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                 </Text>
                 <Select
                   value={weekdayHint}
-                  onChange={(e) => setWeekdayHint(e.target.value)}
+                  onChange={(e) => {
+                    telegramService.hapticFeedback('impact', 'light');
+                    setWeekdayHint(e.target.value);
+                  }}
                   style={{ 
                     fontSize: '15px', 
                     width: '100%',
@@ -312,7 +373,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
               </div>
             </>
           )}
-        </div>
+        </Card>
       </div>
 
       <div style={{ padding: '0 16px' }}>
@@ -331,44 +392,48 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             onClick={addExercise} 
             style={{ fontSize: '14px' }}
           >
-            + Добавить
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Plus size={16} strokeWidth={2} />
+              <span>Добавить</span>
+            </div>
           </Button>
         </div>
 
         {exercises.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '60px 20px',
+          <Card style={{
+            textAlign: 'center',
+            padding: '60px 16px',
             marginBottom: '20px'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💪</div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '16px'
+            }}>
+              <Dumbbell 
+                size={64} 
+                color="var(--tg-theme-hint-color)" 
+                strokeWidth={1.5}
+              />
+            </div>
+            <Title level="3" weight="2" style={{ 
+              marginBottom: '8px', 
+              fontSize: '18px'
+            }}>
+              Нет упражнений
+            </Title>
             <Text style={{ 
               color: 'var(--tg-theme-hint-color)', 
-              fontSize: '15px',
-              display: 'block',
-              marginBottom: '8px'
+              fontSize: '14px',
+              display: 'block'
             }}>
               Добавьте упражнения в программу
             </Text>
-            <Text style={{ 
-              color: 'var(--tg-theme-hint-color)', 
-              fontSize: '13px',
-              display: 'block'
-            }}>
-              Нажмите кнопку "+ Добавить"
-            </Text>
-          </div>
+          </Card>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
             {exercises.map((ex, i) => (
-              <div 
-                key={i} 
-                style={{ 
-                  backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-                  borderRadius: '12px',
-                  padding: '16px'
-                }}
-              >
+              <Card key={i} style={{ padding: '16px' }}>
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
@@ -388,11 +453,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                     style={{ 
                       color: 'var(--tg-theme-destructive-text-color)',
                       borderColor: 'var(--tg-theme-destructive-text-color)',
-                      fontSize: '12px',
-                      padding: '4px 10px'
+                      fontSize: '12px'
                     }}
                   >
-                    🗑️
+                    <Trash2 size={14} strokeWidth={2} />
                   </Button>
                 </div>
 
@@ -408,7 +472,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   </Text>
                   <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gridTemplateColumns: 'repeat(3, 1fr)', 
                     gap: '8px'
                   }}>
                     <Button
@@ -417,7 +481,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       onClick={() => updateExercise(i, 'exercise_type', 'reps')}
                       style={{ fontSize: '11px' }}
                     >
-                      💪 Повт
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                        <Dumbbell size={14} strokeWidth={2} />
+                        <span>Повт</span>
+                      </div>
                     </Button>
                     <Button
                       size="s"
@@ -425,7 +492,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       onClick={() => updateExercise(i, 'exercise_type', 'time')}
                       style={{ fontSize: '11px' }}
                     >
-                      ⏱ Время
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                        <Clock size={14} strokeWidth={2} />
+                        <span>Время</span>
+                      </div>
                     </Button>
                     <Button
                       size="s"
@@ -433,7 +503,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       onClick={() => updateExercise(i, 'exercise_type', 'distance')}
                       style={{ fontSize: '11px' }}
                     >
-                      🏃 Расст
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                        <Route size={14} strokeWidth={2} />
+                        <span>Расст</span>
+                      </div>
                     </Button>
                   </div>
                 </div>
@@ -463,7 +536,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                 {ex.exercise_type === 'reps' && (
                   <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gridTemplateColumns: 'repeat(3, 1fr)', 
                     gap: '10px',
                     marginBottom: '14px'
                   }}>
@@ -479,8 +552,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       </Text>
                       <Input
                         type="number"
+                        min="1"
                         value={ex.target_sets}
-                        onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -501,8 +575,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       </Text>
                       <Input
                         type="number"
+                        min="1"
                         value={ex.target_reps}
-                        onChange={(e) => updateExercise(i, 'target_reps', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateExercise(i, 'target_reps', Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -523,8 +598,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       </Text>
                       <Input
                         type="number"
+                        min="0"
+                        step="0.5"
                         value={ex.target_weight}
-                        onChange={(e) => updateExercise(i, 'target_weight', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateExercise(i, 'target_weight', Math.max(0, parseFloat(e.target.value) || 0))}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -555,8 +632,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       </Text>
                       <Input
                         type="number"
+                        min="1"
                         value={ex.target_sets}
-                        onChange={(e) => updateExercise(i, 'target_sets', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -577,8 +655,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       </Text>
                       <Input
                         type="number"
+                        min="1"
                         value={ex.duration}
-                        onChange={(e) => updateExercise(i, 'duration', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateExercise(i, 'duration', Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -603,8 +682,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                     </Text>
                     <Input
                       type="number"
+                      min="1"
                       value={ex.distance}
-                      onChange={(e) => updateExercise(i, 'distance', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateExercise(i, 'distance', Math.max(1, parseInt(e.target.value) || 1))}
                       style={{ 
                         fontSize: '14px', 
                         width: '100%', 
@@ -637,23 +717,38 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                     }}
                   />
                 </div>
-              </div>
+              </Card>
             ))}
-
-            <div style={{ marginTop: '8px' }}>
-              <Button 
-                size="l"
-                stretched
-                mode="filled"
-                onClick={handleSave}
-                disabled={!programName.trim() || exercises.length === 0}
-                style={{ fontSize: '16px' }}
-              >
-                💾 Сохранить программу
-              </Button>
-            </div>
           </div>
         )}
+      </div>
+
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '0',
+          left: '0',
+          right: '0',
+          padding: '12px 16px',
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+          backgroundColor: 'var(--tg-theme-bg-color)',
+          borderTop: '0.5px solid var(--tg-theme-hint-color)',
+          zIndex: 10
+        }}
+      >
+        <Button 
+          size="l"
+          stretched
+          mode="filled"
+          onClick={handleSave}
+          disabled={!programName.trim() || exercises.length === 0}
+          style={{ fontSize: '16px' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+            <Save size={20} strokeWidth={2} />
+            <span>Сохранить программу</span>
+          </div>
+        </Button>
       </div>
     </div>
   );
