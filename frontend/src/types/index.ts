@@ -6,6 +6,10 @@ export interface User {
   language_code?: string;
 }
 
+export interface Settings {
+  hapticEnabled: boolean;
+}
+
 export interface Program {
   id: string;
   user_id: string;
@@ -125,6 +129,7 @@ export interface AppState {
   workout_history?: WorkoutHistoryItem[];
   current_workout_detail?: WorkoutDetailLog[];
   current_workout_info?: WorkoutHistoryItem;
+  settings: Settings;
   loading: boolean;
   error?: string;
 }
@@ -141,7 +146,8 @@ export enum AppScreen {
   WORKOUT_HISTORY = 'WORKOUT_HISTORY',
   WORKOUT_DETAIL = 'WORKOUT_DETAIL',
   STATISTICS = 'STATISTICS',
-  PERSONAL_RECORDS = 'PERSONAL_RECORDS'
+  PERSONAL_RECORDS = 'PERSONAL_RECORDS',
+  PROFILE = 'PROFILE'
 }
 
 export interface PersonalRecord {

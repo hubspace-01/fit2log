@@ -31,11 +31,6 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
     telegramService.hapticFeedback('impact', 'light');
   }, []);
 
-  const handleFeedbackClick = useCallback(() => {
-    telegramService.hapticFeedback('impact', 'light');
-    window.open('https://t.me/your_support_bot', '_blank');
-  }, []);
-
   const handleAboutClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
     telegramService.showAlert('Fit2Log v1.9.0\n\nТвой персональный дневник тренировок с прогрессивной системой логирования и анализом рекордов.');
@@ -48,11 +43,11 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
       <div style={{ padding: '24px 16px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Avatar
-            size={64}
+            size={48}
             style={{
               backgroundColor: 'var(--tgui--link_color)',
               color: '#FFFFFF',
-              fontSize: '28px',
+              fontSize: '24px',
               fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
