@@ -1,13 +1,28 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AppScreen } from '../types';
-import type { Program, WorkoutSession, AppState, WorkoutHistoryItem, WorkoutDetailLog } from '../types';
+import type { Program, WorkoutSession, AppState, WorkoutHistoryItem, WorkoutDetailLog, Settings } from '../types';
+import { telegramService } from '../lib/telegram';
+
+const HAPTIC_STORAGE_KEY = 'fit2log_haptic_enabled';
+
+const loadSettings = (): Settings => {
+  const hapticEnabled = localStorage.getItem(HAPTIC_STORAGE_KEY);
+  return {
+    hapticEnabled: hapticEnabled !== 'false'
+  };
+};
 
 export const useAppState = () => {
   const [state, setState] = useState<AppState>({
     screen: AppScreen.LOADING,
     programs: [],
+    settings: loadSettings(),
     loading: false
   });
+
+  useEffect(() => {
+    telegramService.setHapticEnabled(state.settings.hapticEnabled);
+  }, [state.settings.hapticEnabled]);
 
   const setScreen = useCallback((screen: AppScreen) => {
     setState(prev => ({ ...prev, screen }));
@@ -34,7 +49,6 @@ export const useAppState = () => {
     setState(prev => ({ ...prev, workout_session: session }));
   }, []);
 
-  // ✅ ИСПРАВЛЕНО: Принимаем sessionId и обновляем session.id
   const setWorkoutSummary = useCallback((completedSets: any[], duration: number, sessionId?: string) => {
     setState(prev => ({
       ...prev,
@@ -42,7 +56,7 @@ export const useAppState = () => {
       workout_duration: duration,
       workout_session: prev.workout_session ? {
         ...prev.workout_session,
-        id: sessionId || prev.workout_session.id // ✅ Обновляем id если передан
+        id: sessionId || prev.workout_session.id
       } : prev.workout_session
     }));
   }, []);
@@ -60,6 +74,12 @@ export const useAppState = () => {
       current_workout_detail: detail,
       current_workout_info: workoutInfo
     }));
+  }, []);
+
+  const setSettings = useCallback((settings: Settings) => {
+    localStorage.setItem(HAPTIC_STORAGE_KEY, String(settings.hapticEnabled));
+    telegramService.setHapticEnabled(settings.hapticEnabled);
+    setState(prev => ({ ...prev, settings }));
   }, []);
 
   const setLoading = useCallback((loading: boolean) => {
@@ -83,6 +103,7 @@ export const useAppState = () => {
     setWorkoutSummary,
     setWorkoutHistory,
     setCurrentWorkoutDetail,
+    setSettings,
     setLoading,
     setError,
     clearError,

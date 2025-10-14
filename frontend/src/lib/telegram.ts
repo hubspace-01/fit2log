@@ -1,6 +1,7 @@
 class TelegramService {
   private initialized = false;
   private currentBackHandler: (() => void) | null = null;
+  private hapticEnabled = true;
 
   async init(): Promise<void> {
     if (this.initialized) return;
@@ -17,6 +18,10 @@ class TelegramService {
     } catch (error) {
       
     }
+  }
+
+  setHapticEnabled(enabled: boolean): void {
+    this.hapticEnabled = enabled;
   }
 
   getInitData(): string {
@@ -166,6 +171,8 @@ class TelegramService {
   }
 
   hapticFeedback(type: 'impact' | 'notification' | 'selection' = 'impact', style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'light'): void {
+    if (!this.hapticEnabled) return;
+    
     try {
       const haptic = window.Telegram?.WebApp?.HapticFeedback;
       if (haptic) {
