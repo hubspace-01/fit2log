@@ -8,6 +8,7 @@ import {
   Spinner
 } from '@telegram-apps/telegram-ui';
 import { 
+  History,
   AlertCircle, 
   Calendar, 
   Clock, 
@@ -41,7 +42,9 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
       setError(undefined);
       const data = await supabaseService.getCompletedWorkouts(userId);
       setWorkouts(data);
+      telegramService.hapticFeedback('impact', 'light');
     } catch (err) {
+      telegramService.hapticFeedback('impact', 'medium');
       setError('Ошибка загрузки истории тренировок');
     } finally {
       setLoading(false);
@@ -114,7 +117,20 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
 
   if (error) {
     return (
-      <div className="fade-in" style={{ padding: '16px', minHeight: '100vh' }}>
+      <div className="fade-in" style={{ padding: '16px', minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
+        <div style={{ 
+          marginBottom: '24px', 
+          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <History size={24} color="var(--tg-theme-link-color)" strokeWidth={2} />
+          <Title level="2" weight="2" style={{ fontSize: '22px' }}>
+            История тренировок
+          </Title>
+        </div>
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
             <div style={{ 
@@ -143,6 +159,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
               size="m" 
               stretched 
               onClick={handleRetry}
+              style={{ fontSize: '15px' }}
             >
               Попробовать снова
             </Button>
@@ -153,11 +170,16 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
   }
 
   return (
-    <div className="fade-in" style={{ padding: '16px', minHeight: '100vh' }}>
+    <div className="fade-in" style={{ padding: '16px', minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
       <div style={{ 
         marginBottom: '24px', 
-        textAlign: 'center'
+        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '8px'
       }}>
+        <History size={24} color="var(--tg-theme-link-color)" strokeWidth={2} />
         <Title level="2" weight="2" style={{ fontSize: '22px' }}>
           История тренировок
         </Title>
