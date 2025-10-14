@@ -38,7 +38,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
       setTopExercises(topEx);
       telegramService.hapticFeedback('impact', 'light');
     } catch (error) {
-      telegramService.hapticFeedback('notification', 'error');
+      telegramService.hapticFeedback('impact', 'medium');
       telegramService.showAlert('Ошибка загрузки статистики');
     } finally {
       setLoading(false);
