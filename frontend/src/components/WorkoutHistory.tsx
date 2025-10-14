@@ -8,7 +8,6 @@ import {
   Spinner
 } from '@telegram-apps/telegram-ui';
 import { 
-  History,
   AlertCircle, 
   Calendar, 
   Clock, 
@@ -42,9 +41,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
       setError(undefined);
       const data = await supabaseService.getCompletedWorkouts(userId);
       setWorkouts(data);
-      telegramService.hapticFeedback('impact', 'light');
     } catch (err) {
-      telegramService.hapticFeedback('impact', 'medium');
       setError('Ошибка загрузки истории тренировок');
     } finally {
       setLoading(false);
@@ -103,61 +100,35 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
         minHeight: '100vh',
-        flexDirection: 'column',
-        gap: '12px',
         backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
-        <Spinner size="l" />
-        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
-          Загрузка истории...
-        </Text>
+        <Spinner size="m" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="fade-in" style={{
-        minHeight: '100vh',
-        paddingBottom: '40px',
-        backgroundColor: 'var(--tg-theme-bg-color)'
-      }}>
-        <div style={{
-          padding: '20px 16px',
-          textAlign: 'center'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-            <History size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
-          </div>
-          <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
-            История тренировок
-          </Title>
-        </div>
-        <Section style={{ marginTop: '8px' }}>
-          <Card style={{
-            textAlign: 'center',
-            padding: '60px 16px'
-          }}>
+      <div className="fade-in" style={{ padding: '16px', minHeight: '100vh' }}>
+        <Section>
+          <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
             <div style={{ 
               display: 'flex', 
               justifyContent: 'center', 
               marginBottom: '16px'
             }}>
               <AlertCircle 
-                size={64} 
+                size={48} 
                 color="var(--tg-theme-destructive-text-color)" 
                 strokeWidth={1.5}
               />
             </div>
-            <Title level="3" weight="2" style={{ 
-              marginBottom: '8px', 
-              fontSize: '18px'
-            }}>
+            <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               Ошибка
             </Title>
             <Text style={{ 
@@ -182,44 +153,31 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
   }
 
   return (
-    <div className="fade-in" style={{
-      minHeight: '100vh',
-      paddingBottom: '40px',
-      backgroundColor: 'var(--tg-theme-bg-color)'
-    }}>
-      <div style={{
-        padding: '20px 16px',
+    <div className="fade-in" style={{ padding: '16px', minHeight: '100vh' }}>
+      <div style={{ 
+        marginBottom: '24px', 
         textAlign: 'center'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-          <History size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
-        </div>
-        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+        <Title level="2" weight="2" style={{ fontSize: '22px' }}>
           История тренировок
         </Title>
       </div>
 
       {workouts.length === 0 ? (
-        <Section style={{ marginTop: '8px' }}>
-          <Card style={{
-            textAlign: 'center',
-            padding: '60px 16px'
-          }}>
+        <Section>
+          <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
             <div style={{ 
               display: 'flex', 
               justifyContent: 'center', 
               marginBottom: '16px'
             }}>
               <Calendar 
-                size={64} 
+                size={48} 
                 color="var(--tg-theme-hint-color)" 
                 strokeWidth={1.5}
               />
             </div>
-            <Title level="3" weight="2" style={{ 
-              marginBottom: '8px', 
-              fontSize: '18px'
-            }}>
+            <Title level="3" weight="2" style={{ marginBottom: '8px', fontSize: '18px' }}>
               История пуста
             </Title>
             <Text style={{ 
@@ -232,7 +190,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
           </Card>
         </Section>
       ) : (
-        <Section style={{ marginTop: '8px' }}>
+        <Section>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {workouts.map((workout) => (
               <Card 
