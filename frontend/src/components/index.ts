@@ -11,3 +11,4 @@ export { StatCard } from './StatCard';
 export { WeekActivityBar } from './WeekActivityBar';
 export { TopExerciseItem } from './TopExerciseItem';
 export { Profile } from './Profile';
+
