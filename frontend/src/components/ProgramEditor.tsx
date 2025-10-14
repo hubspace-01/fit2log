@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
-import type { Program, Exercise } from '../types';
+import type { Program } from '../types';
 
 interface Props {
   onSave: (data: Partial<Program>) => void;
@@ -30,7 +30,16 @@ interface Props {
   userId: string;
 }
 
-interface ExerciseFormData extends Omit<Exercise, 'id' | 'program_id' | 'order_index'> {}
+interface ExerciseFormData {
+  exercise_name: string;
+  exercise_type: 'reps' | 'time' | 'distance';
+  target_sets: number;
+  target_reps: number;
+  target_weight: number;
+  duration: number;
+  distance: number;
+  notes: string;
+}
 
 export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, userId }) => {
   const [programName, setProgramName] = useState('');
@@ -104,9 +113,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     }]);
   }, [exercises]);
 
-  const updateExercise = useCallback((index: number, field: string, value: any) => {
+  const updateExercise = useCallback((index: number, field: keyof ExerciseFormData, value: any) => {
     const updated = [...exercises];
-    updated[index][field] = value;
+    updated[index] = { ...updated[index], [field]: value };
     
     if (field === 'exercise_type') {
       telegramService.hapticFeedback('impact', 'light');
@@ -186,9 +195,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     telegramService.hapticFeedback('impact', 'light');
     onSave({ 
       program_name: programName, 
-      exercises: validExercises,
-      day_order: isInWeeklySplit ? dayOrder : null,
-      weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : null
+      exercises: validExercises as any,
+      day_order: isInWeeklySplit ? dayOrder : undefined,
+      weekday_hint: isInWeeklySplit && weekdayHint ? weekdayHint : undefined
     });
   }, [programName, exercises, isInWeeklySplit, dayOrder, weekdayHint, validateDayOrder, onSave]);
 
@@ -349,7 +358,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   День недели (опционально)
                 </Text>
                 <Select
-                  value={weekdayHint}
+                  value={weekdayHint || ''}
                   onChange={(e) => {
                     telegramService.hapticFeedback('impact', 'light');
                     setWeekdayHint(e.target.value);
