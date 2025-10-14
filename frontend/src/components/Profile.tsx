@@ -71,7 +71,7 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
   const handleAboutClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    telegramService.showAlert('Fit2Log v1.9.2\n\nТвой персональный дневник тренировок с прогрессивной системой логирования и анализом рекордов.\n\nТема приложения автоматически синхронизируется с настройками Telegram.');
+    telegramService.showAlert('Fit2Log v1.9.2\n\nТвой персональный дневник тренировок с прогрессивной системой логирования и анализом рекордов.');
   }, []);
 
   const avatarLetter = user.first_name.charAt(0).toUpperCase();
