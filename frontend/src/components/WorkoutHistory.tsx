@@ -8,6 +8,7 @@ import {
   Spinner
 } from '@telegram-apps/telegram-ui';
 import { 
+  BookOpen, 
   AlertCircle, 
   Calendar, 
   Clock, 
@@ -61,35 +62,31 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
     onViewDetail(workout);
   }, [onViewDetail]);
 
-  const getDateInfo = useCallback((dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    let label = '';
-    let badgeColor = '';
-
     if (date.toDateString() === today.toDateString()) {
-      label = 'Сегодня';
-      badgeColor = '#10B981';
+      return `Сегодня в ${date.toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })}`;
     } else if (date.toDateString() === yesterday.toDateString()) {
-      label = 'Вчера';
-      badgeColor = '#F59E0B';
+      return `Вчера в ${date.toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })}`;
+    } else {
+      return date.toLocaleDateString('ru-RU', { 
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
-
-    const timeString = date.toLocaleTimeString('ru-RU', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-
-    const dateString = date.toLocaleDateString('ru-RU', { 
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-
-    return { label, badgeColor, timeString, dateString };
   }, []);
 
   const formatDuration = useCallback((seconds: number) => {
@@ -107,7 +104,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '60vh'
+        height: '50vh' 
       }}>
         <Spinner size="m" />
       </div>
@@ -116,7 +113,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
 
   if (error) {
     return (
-      <div className="fade-in" style={{ padding: '16px', minHeight: '60vh' }}>
+      <div className="fade-in" style={{ padding: '16px' }}>
         <Section>
           <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
             <div style={{ 
@@ -126,7 +123,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
             }}>
               <AlertCircle 
                 size={48} 
-                color="#EF4444"
+                color="var(--tg-theme-destructive-text-color)" 
                 strokeWidth={1.5}
               />
             </div>
@@ -155,11 +152,16 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
   }
 
   return (
-    <div className="fade-in" style={{ padding: '16px', minHeight: '60vh' }}>
+    <div className="fade-in" style={{ padding: '16px' }}>
       <div style={{ 
         marginBottom: '24px', 
-        textAlign: 'center'
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px'
       }}>
+        <BookOpen size={24} color="var(--tg-theme-text-color)" strokeWidth={2} />
         <Title level="2" weight="2" style={{ fontSize: '22px' }}>
           История тренировок
         </Title>
@@ -194,121 +196,92 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
       ) : (
         <Section>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {workouts.map((workout) => {
-              const dateInfo = getDateInfo(workout.completed_at);
-              return (
-                <Card 
-                  key={workout.id} 
-                  style={{ 
-                    width: '100%',
-                    border: '1px solid var(--tg-theme-hint-color)',
-                    borderOpacity: 0.1
-                  }}
-                >
-                  <div style={{ 
-                    padding: '16px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px'
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Text weight="2" style={{ 
-                        fontSize: '16px',
-                        display: 'block',
-                        marginBottom: '6px'
-                      }}>
-                        {workout.program_name}
-                      </Text>
-                      
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '8px'
-                      }}>
-                        {dateInfo.label && (
-                          <div style={{
-                            backgroundColor: dateInfo.badgeColor,
-                            color: '#FFFFFF',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                            fontSize: '11px',
-                            fontWeight: '600'
-                          }}>
-                            {dateInfo.label}
-                          </div>
-                        )}
+            {workouts.map((workout) => (
+              <Card key={workout.id} style={{ width: '100%' }}>
+                <div style={{ 
+                  padding: '16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '16px',
+                      display: 'block',
+                      marginBottom: '6px'
+                    }}>
+                      {workout.program_name}
+                    </Text>
+                    <Text style={{ 
+                      fontSize: '13px',
+                      color: 'var(--tg-theme-hint-color)',
+                      display: 'block',
+                      marginBottom: '6px'
+                    }}>
+                      {formatDate(workout.completed_at)}
+                    </Text>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
+                      flexWrap: 'wrap'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock 
+                          size={14} 
+                          color="var(--tg-theme-hint-color)" 
+                          strokeWidth={2}
+                        />
                         <Text style={{ 
                           fontSize: '13px',
                           color: 'var(--tg-theme-hint-color)'
                         }}>
-                          {dateInfo.label ? dateInfo.timeString : `${dateInfo.dateString} ${dateInfo.timeString}`}
+                          {formatDuration(workout.total_duration || 0)}
                         </Text>
                       </div>
-
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '12px',
-                        flexWrap: 'wrap'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock 
-                            size={14} 
-                            color="#3B82F6"
-                            strokeWidth={2}
-                          />
-                          <Text style={{ 
-                            fontSize: '13px',
-                            color: 'var(--tg-theme-hint-color)'
-                          }}>
-                            {formatDuration(workout.total_duration || 0)}
-                          </Text>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Dumbbell 
-                            size={14} 
-                            color="#8B5CF6"
-                            strokeWidth={2}
-                          />
-                          <Text style={{ 
-                            fontSize: '13px',
-                            color: 'var(--tg-theme-hint-color)'
-                          }}>
-                            {workout.exercises_count} упр.
-                          </Text>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <BarChart2 
-                            size={14} 
-                            color="#10B981"
-                            strokeWidth={2}
-                          />
-                          <Text style={{ 
-                            fontSize: '13px',
-                            color: 'var(--tg-theme-hint-color)'
-                          }}>
-                            {workout.total_sets} подх.
-                          </Text>
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Dumbbell 
+                          size={14} 
+                          color="var(--tg-theme-hint-color)" 
+                          strokeWidth={2}
+                        />
+                        <Text style={{ 
+                          fontSize: '13px',
+                          color: 'var(--tg-theme-hint-color)'
+                        }}>
+                          {workout.exercises_count} упр.
+                        </Text>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <BarChart2 
+                          size={14} 
+                          color="var(--tg-theme-hint-color)" 
+                          strokeWidth={2}
+                        />
+                        <Text style={{ 
+                          fontSize: '13px',
+                          color: 'var(--tg-theme-hint-color)'
+                        }}>
+                          {workout.total_sets} подх.
+                        </Text>
                       </div>
                     </div>
-                    <Button 
-                      size="s" 
-                      mode="outline"
-                      onClick={() => handleViewDetail(workout)}
-                      style={{ 
-                        fontSize: '13px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Подробнее
-                    </Button>
                   </div>
-                </Card>
-              );
-            })}
+                  <Button 
+                    size="s" 
+                    mode="outline"
+                    onClick={() => handleViewDetail(workout)}
+                    style={{ 
+                      fontSize: '13px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    Подробнее
+                  </Button>
+                </div>
+              </Card>
+            ))}
           </div>
         </Section>
       )}
