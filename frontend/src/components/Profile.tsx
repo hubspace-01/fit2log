@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Section, Cell, Title, Switch } from '@telegram-apps/telegram-ui';
-import { Settings, Palette, Globe, Weight, Trash2, MessageCircle, Info, Shield, Copy } from 'lucide-react';
+import { Settings, Globe, Weight, Trash2, MessageCircle, Info, Shield, Copy } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import type { User, Settings as SettingsType } from '../types';
 
@@ -71,7 +71,7 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
   const handleAboutClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    telegramService.showAlert('Fit2Log v1.9.0\n\nТвой персональный дневник тренировок с прогрессивной системой логирования и анализом рекордов.');
+    telegramService.showAlert('Fit2Log v1.9.2\n\nТвой персональный дневник тренировок с прогрессивной системой логирования и анализом рекордов.\n\nТема приложения автоматически синхронизируется с настройками Telegram.');
   }, []);
 
   const avatarLetter = user.first_name.charAt(0).toUpperCase();
@@ -146,21 +146,6 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
         </Cell>
       </Section>
 
-      <Section header="ВНЕШНИЙ ВИД (В РАЗРАБОТКЕ)">
-        <Cell
-          before={<Palette size={24} color="var(--tg-theme-hint-color)" />}
-          after={
-            <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-              Светлая
-            </span>
-          }
-          onClick={handleLockedClick}
-          style={{ opacity: 0.5 }}
-        >
-          Тема
-        </Cell>
-      </Section>
-
       <Section header="ЯЗЫК (В РАЗРАБОТКЕ)">
         <Cell
           before={<Globe size={24} color="var(--tg-theme-hint-color)" />}
@@ -214,7 +199,7 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
           before={<Info size={24} color="var(--tg-theme-text-color)" />}
           after={
             <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-              v1.9.0
+              v1.9.2
             </span>
           }
           onClick={handleAboutClick}
