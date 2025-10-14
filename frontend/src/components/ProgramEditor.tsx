@@ -36,6 +36,7 @@ interface ExerciseFormData {
   target_sets: number;
   target_reps: number;
   target_weight: number;
+  target_rpe: number;
   duration: number;
   distance: number;
   notes: string;
@@ -92,6 +93,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         target_sets: ex.target_sets,
         target_reps: ex.target_reps,
         target_weight: ex.target_weight,
+        target_rpe: ex.target_rpe || 0,
         duration: ex.duration || 0,
         distance: ex.distance || 0,
         notes: ex.notes || ''
@@ -107,6 +109,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       target_sets: 3,
       target_reps: 10,
       target_weight: 0,
+      target_rpe: 0,
       duration: 0,
       distance: 0,
       notes: ''
@@ -124,11 +127,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         updated[index].distance = 0;
       } else if (value === 'time') {
         updated[index].target_reps = 0;
+        updated[index].target_rpe = 0;
         updated[index].distance = 0;
         updated[index].duration = updated[index].duration || 60;
       } else if (value === 'distance') {
         updated[index].target_reps = 0;
         updated[index].target_weight = 0;
+        updated[index].target_rpe = 0;
         updated[index].duration = 0;
         updated[index].distance = updated[index].distance || 1000;
       }
@@ -257,7 +262,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         </Title>
       </div>
 
-      <div style={{ padding: '16px' }}>
+      <div style={{ padding: '0 16px 16px' }}>
         <Card style={{ padding: '16px', marginBottom: '16px' }}>
           <Text weight="2" style={{ 
             fontSize: '14px', 
@@ -407,8 +412,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         {exercises.length === 0 ? (
           <Card style={{
             textAlign: 'center',
-            padding: '60px 16px',
-            marginBottom: '20px'
+            padding: '60px 16px'
           }}>
             <div style={{ 
               display: 'flex', 
@@ -436,7 +440,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             </Text>
           </Card>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {exercises.map((ex, i) => (
               <Card key={i} style={{ padding: '16px' }}>
                 <div style={{ 
@@ -539,36 +543,86 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                 </div>
 
                 {ex.exercise_type === 'reps' && (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                    gap: '10px',
-                    marginBottom: '14px'
-                  }}>
-                    <div>
-                      <Text weight="2" style={{ 
-                        fontSize: '12px', 
-                        marginBottom: '8px', 
-                        display: 'block',
-                        color: 'var(--tg-theme-text-color)',
-                        textAlign: 'center'
-                      }}>
-                        Подходы
-                      </Text>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={ex.target_sets}
-                        onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
-                        style={{ 
-                          fontSize: '14px', 
-                          width: '100%', 
-                          textAlign: 'center',
-                          backgroundColor: 'var(--tg-theme-bg-color)'
-                        }}
-                      />
+                  <>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(3, 1fr)', 
+                      gap: '10px',
+                      marginBottom: '14px'
+                    }}>
+                      <div>
+                        <Text weight="2" style={{ 
+                          fontSize: '12px', 
+                          marginBottom: '8px', 
+                          display: 'block',
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
+                        }}>
+                          Подходы
+                        </Text>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={ex.target_sets}
+                          onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
+                          style={{ 
+                            fontSize: '14px', 
+                            width: '100%', 
+                            textAlign: 'center',
+                            backgroundColor: 'var(--tg-theme-bg-color)'
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Text weight="2" style={{ 
+                          fontSize: '12px', 
+                          marginBottom: '8px', 
+                          display: 'block',
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
+                        }}>
+                          Повторы
+                        </Text>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={ex.target_reps}
+                          onChange={(e) => updateExercise(i, 'target_reps', Math.max(1, parseInt(e.target.value) || 1))}
+                          style={{ 
+                            fontSize: '14px', 
+                            width: '100%', 
+                            textAlign: 'center',
+                            backgroundColor: 'var(--tg-theme-bg-color)'
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Text weight="2" style={{ 
+                          fontSize: '12px', 
+                          marginBottom: '8px', 
+                          display: 'block',
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
+                        }}>
+                          Вес (кг)
+                        </Text>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={ex.target_weight}
+                          onChange={(e) => updateExercise(i, 'target_weight', Math.max(0, parseFloat(e.target.value) || 0))}
+                          style={{ 
+                            fontSize: '14px', 
+                            width: '100%', 
+                            textAlign: 'center',
+                            backgroundColor: 'var(--tg-theme-bg-color)'
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div>
+
+                    <div style={{ marginBottom: '14px' }}>
                       <Text weight="2" style={{ 
                         fontSize: '12px', 
                         marginBottom: '8px', 
@@ -576,37 +630,19 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         color: 'var(--tg-theme-text-color)',
                         textAlign: 'center'
                       }}>
-                        Повторы
-                      </Text>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={ex.target_reps}
-                        onChange={(e) => updateExercise(i, 'target_reps', Math.max(1, parseInt(e.target.value) || 1))}
-                        style={{ 
-                          fontSize: '14px', 
-                          width: '100%', 
-                          textAlign: 'center',
-                          backgroundColor: 'var(--tg-theme-bg-color)'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Text weight="2" style={{ 
-                        fontSize: '12px', 
-                        marginBottom: '8px', 
-                        display: 'block',
-                        color: 'var(--tg-theme-text-color)',
-                        textAlign: 'center'
-                      }}>
-                        Вес (кг)
+                        RPE (опционально, 0-10)
                       </Text>
                       <Input
                         type="number"
                         min="0"
+                        max="10"
                         step="0.5"
-                        value={ex.target_weight}
-                        onChange={(e) => updateExercise(i, 'target_weight', Math.max(0, parseFloat(e.target.value) || 0))}
+                        placeholder="0"
+                        value={ex.target_rpe || ''}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          updateExercise(i, 'target_rpe', isNaN(val) ? 0 : Math.min(10, Math.max(0, val)));
+                        }}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -614,8 +650,17 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           backgroundColor: 'var(--tg-theme-bg-color)'
                         }}
                       />
+                      <Text style={{ 
+                        fontSize: '11px', 
+                        color: 'var(--tg-theme-hint-color)',
+                        display: 'block',
+                        marginTop: '4px',
+                        textAlign: 'center'
+                      }}>
+                        Оценка нагрузки (1-10)
+                      </Text>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {ex.exercise_type === 'time' && (
