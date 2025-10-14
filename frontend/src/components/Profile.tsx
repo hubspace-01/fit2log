@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Section, Cell, Avatar, Title, Switch } from '@telegram-apps/telegram-ui';
-import { Settings, Globe, Weight, Trash2, MessageCircle, Info, Shield, ChevronRight } from 'lucide-react';
+import { Settings, Palette, Globe, Weight, Trash2, MessageCircle, Info, Shield, Copy } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import type { User, Settings as SettingsType } from '../types';
 
@@ -27,6 +27,13 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
     }
   }, [settings, onSettingsChange]);
 
+  const handleCopyId = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    navigator.clipboard.writeText(user.id).then(() => {
+      telegramService.showAlert('ID скопирован в буфер обмена');
+    });
+  }, [user.id]);
+
   const handleLockedClick = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
   }, []);
@@ -39,55 +46,81 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
   const avatarLetter = user.first_name.charAt(0).toUpperCase();
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '24px' }}>
-      <div style={{ padding: '24px 16px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Avatar
-            size={48}
-            style={{
-              backgroundColor: 'var(--tgui--link_color)',
-              color: '#FFFFFF',
-              fontSize: '24px',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            {avatarLetter}
-          </Avatar>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Title level="2" weight="2" style={{ fontSize: '22px', marginBottom: '4px' }}>
-              {user.first_name} {user.last_name || ''}
-            </Title>
-            {user.username && (
-              <div style={{ 
-                fontSize: '14px', 
-                color: 'var(--tgui--hint_color)' 
-              }}>
-                @{user.username}
-              </div>
-            )}
+    <div style={{ minHeight: '100vh', paddingBottom: '24px', backgroundColor: 'var(--tgui--bg_color)' }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        padding: '40px 16px 24px',
+        backgroundColor: 'var(--tgui--bg_color)'
+      }}>
+        <Avatar
+          size={96}
+          style={{
+            backgroundColor: 'var(--tgui--link_color)',
+            color: '#FFFFFF',
+            fontSize: '48px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px'
+          }}
+        >
+          {avatarLetter}
+        </Avatar>
+        
+        <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '4px', textAlign: 'center' }}>
+          {user.first_name}
+        </Title>
+        
+        {user.username && (
+          <div style={{ 
+            fontSize: '17px', 
+            color: 'var(--tgui--hint_color)',
+            marginBottom: '8px'
+          }}>
+            @{user.username}
           </div>
+        )}
+
+        <div 
+          onClick={handleCopyId}
+          style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            backgroundColor: 'var(--tgui--secondary_bg_color)',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s'
+          }}
+        >
+          <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)', fontFamily: 'monospace' }}>
+            ID: {user.id}
+          </span>
+          <Copy size={16} color="var(--tgui--hint_color)" />
         </div>
       </div>
 
-      <Section header="Настройки">
+      <Section header="НАСТРОЙКИ">
         <Cell
           before={<Settings size={24} color="var(--tgui--plain_foreground)" />}
           after={<Switch checked={settings.hapticEnabled} onChange={handleHapticToggle} />}
         >
           Вибрация
         </Cell>
+      </Section>
 
+      <Section header="ВНЕШНИЙ ВИД (В РАЗРАБОТКЕ)">
         <Cell
-          before={<Globe size={24} color="var(--tgui--hint_color)" />}
+          before={<Palette size={24} color="var(--tgui--hint_color)" />}
           after={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--tgui--hint_color)' }}>
-                (В РАЗРАБОТКЕ)
+              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
+                Светлая
               </span>
-              <ChevronRight size={20} color="var(--tgui--hint_color)" />
             </div>
           }
           onClick={handleLockedClick}
@@ -95,15 +128,16 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
         >
           Тема
         </Cell>
+      </Section>
 
+      <Section header="ЯЗЫК (В РАЗРАБОТКЕ)">
         <Cell
           before={<Globe size={24} color="var(--tgui--hint_color)" />}
           after={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--tgui--hint_color)' }}>
-                (В РАЗРАБОТКЕ)
+              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
+                Русский
               </span>
-              <ChevronRight size={20} color="var(--tgui--hint_color)" />
             </div>
           }
           onClick={handleLockedClick}
@@ -111,53 +145,38 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
         >
           Язык
         </Cell>
+      </Section>
 
+      <Section header="ЕДИНИЦЫ (В РАЗРАБОТКЕ)">
         <Cell
           before={<Weight size={24} color="var(--tgui--hint_color)" />}
           after={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--tgui--hint_color)' }}>
-                (В РАЗРАБОТКЕ)
+              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
+                Килограммы
               </span>
-              <ChevronRight size={20} color="var(--tgui--hint_color)" />
             </div>
           }
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
         >
-          Единицы измерения
+          Вес
         </Cell>
       </Section>
 
-      <Section header="Данные">
+      <Section header="ДАННЫЕ">
         <Cell
-          before={<Trash2 size={24} color="var(--tgui--hint_color)" />}
-          after={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--tgui--hint_color)' }}>
-                (В РАЗРАБОТКЕ)
-              </span>
-              <ChevronRight size={20} color="var(--tgui--hint_color)" />
-            </div>
-          }
+          before={<Trash2 size={24} color="var(--tgui--destructive_text_color)" />}
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
         >
-          <span style={{ color: 'var(--tgui--hint_color)' }}>Очистить историю</span>
+          <span style={{ color: 'var(--tgui--destructive_text_color)' }}>Очистить историю тренировок</span>
         </Cell>
       </Section>
 
-      <Section header="Поддержка">
+      <Section header="ПОДДЕРЖКА">
         <Cell
-          before={<MessageCircle size={24} color="var(--tgui--hint_color)" />}
-          after={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--tgui--hint_color)' }}>
-                (В РАЗРАБОТКЕ)
-              </span>
-              <ChevronRight size={20} color="var(--tgui--hint_color)" />
-            </div>
-          }
+          before={<MessageCircle size={24} color="var(--tgui--plain_foreground)" />}
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
         >
@@ -166,22 +185,23 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
         <Cell
           before={<Info size={24} color="var(--tgui--plain_foreground)" />}
-          after={<ChevronRight size={20} color="var(--tgui--hint_color)" />}
           onClick={handleAboutClick}
         >
           О приложении
+          <div style={{ fontSize: '14px', color: 'var(--tgui--hint_color)', marginTop: '2px' }}>
+            v1.9.0
+          </div>
         </Cell>
       </Section>
 
-      <Section header="Конфиденциальность">
+      <Section header="КОНФИДЕНЦИАЛЬНОСТЬ (В РАЗРАБОТКЕ)">
         <Cell
           before={<Shield size={24} color="var(--tgui--hint_color)" />}
           after={
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--tgui--hint_color)' }}>
-                (В РАЗРАБОТКЕ)
+              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
+                Скоро
               </span>
-              <ChevronRight size={20} color="var(--tgui--hint_color)" />
             </div>
           }
           onClick={handleLockedClick}
