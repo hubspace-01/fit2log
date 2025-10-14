@@ -10,8 +10,9 @@ import {
   Cell,
   Modal
 } from '@telegram-apps/telegram-ui';
+import { Trophy, Zap, Dumbbell, Heart, Flame, Home, List, Clock, Route, Check, X } from 'lucide-react';
 import type { ProgramTemplate } from '../types';
-import { telegramService } from '../lib/telegram'; // ✅ НОВОЕ
+import { telegramService } from '../lib/telegram';
 
 interface Props {
   templates: ProgramTemplate[];
@@ -28,12 +29,9 @@ export const TemplateList: React.FC<Props> = ({
 }) => {
   const [previewTemplate, setPreviewTemplate] = useState<ProgramTemplate | null>(null);
 
-  // ✅ НОВОЕ: BackButton вместо кнопки снизу
   useEffect(() => {
     telegramService.showBackButton(onBack);
-    return () => {
-      // Не скрываем при unmount — следующий экран переопределит
-    };
+    return () => {};
   }, [onBack]);
 
   const groupedTemplates = useMemo(() => {
@@ -48,14 +46,14 @@ export const TemplateList: React.FC<Props> = ({
     return groups;
   }, [templates]);
 
-  const categoryConfig: Record<string, { icon: string; name: string; color: string }> = {
-    'Beginner': { icon: '🌱', name: 'Для новичков', color: '#4ade80' },
-    'Strength': { icon: '💪', name: 'Сила', color: '#f97316' },
-    'Hypertrophy': { icon: '🏋️', name: 'Масса', color: '#8b5cf6' },
-    'Cardio': { icon: '🏃', name: 'Кардио', color: '#06b6d4' },
-    'CrossFit': { icon: '🔥', name: 'CrossFit', color: '#ef4444' },
-    'Home Workout': { icon: '🏠', name: 'Дома', color: '#3b82f6' },
-    'Другое': { icon: '📋', name: 'Другое', color: '#64748b' }
+  const categoryConfig: Record<string, { icon: React.ReactNode; name: string; color: string }> = {
+    'Beginner': { icon: <Trophy size={18} strokeWidth={2} />, name: 'Для новичков', color: '#4ade80' },
+    'Strength': { icon: <Zap size={18} strokeWidth={2} />, name: 'Сила', color: '#f97316' },
+    'Hypertrophy': { icon: <Dumbbell size={18} strokeWidth={2} />, name: 'Масса', color: '#8b5cf6' },
+    'Cardio': { icon: <Heart size={18} strokeWidth={2} />, name: 'Кардио', color: '#06b6d4' },
+    'CrossFit': { icon: <Flame size={18} strokeWidth={2} />, name: 'CrossFit', color: '#ef4444' },
+    'Home Workout': { icon: <Home size={18} strokeWidth={2} />, name: 'Дома', color: '#3b82f6' },
+    'Другое': { icon: <List size={18} strokeWidth={2} />, name: 'Другое', color: '#64748b' }
   };
 
   const getExerciseTypeCounts = (template: ProgramTemplate) => {
@@ -69,9 +67,9 @@ export const TemplateList: React.FC<Props> = ({
   };
 
   const getTypeIcon = (type: string) => {
-    if (type === 'time') return '⏱';
-    if (type === 'distance') return '🏃';
-    return '💪';
+    if (type === 'time') return <Clock size={14} strokeWidth={2} />;
+    if (type === 'distance') return <Route size={14} strokeWidth={2} />;
+    return <Dumbbell size={14} strokeWidth={2} />;
   };
 
   if (loading) {
@@ -80,7 +78,8 @@ export const TemplateList: React.FC<Props> = ({
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
         <Spinner size="l" />
       </div>
@@ -89,8 +88,15 @@ export const TemplateList: React.FC<Props> = ({
 
   return (
     <>
-      <div className="app-container fade-in" style={{ padding: '16px', paddingBottom: '24px' }}>
-        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+      <div className="app-container fade-in" style={{ 
+        padding: '0 16px 24px',
+        minHeight: '100vh',
+        backgroundColor: 'var(--tg-theme-bg-color)'
+      }}>
+        <div style={{ 
+          padding: '20px 0 24px',
+          textAlign: 'center' 
+        }}>
           <Title level="2" weight="2" style={{ marginBottom: '6px', fontSize: '24px' }}>
             Готовые программы
           </Title>
@@ -113,7 +119,9 @@ export const TemplateList: React.FC<Props> = ({
                   gap: '8px',
                   padding: '8px 0'
                 }}>
-                  <span style={{ fontSize: '20px' }}>{config.icon}</span>
+                  <div style={{ color: config.color, display: 'flex', alignItems: 'center' }}>
+                    {config.icon}
+                  </div>
                   <Text weight="2" style={{ fontSize: '15px' }}>
                     {config.name}
                   </Text>
@@ -134,7 +142,10 @@ export const TemplateList: React.FC<Props> = ({
                         borderLeft: `3px solid ${config.color}`,
                         cursor: 'pointer'
                       }}
-                      onClick={() => setPreviewTemplate(template)}
+                      onClick={() => {
+                        telegramService.hapticFeedback('impact', 'light');
+                        setPreviewTemplate(template);
+                      }}
                     >
                       <div style={{ padding: '14px' }}>
                         <div style={{ marginBottom: '8px' }}>
@@ -164,37 +175,49 @@ export const TemplateList: React.FC<Props> = ({
                           {typeCounts.reps > 0 && (
                             <span style={{
                               fontSize: '11px',
-                              padding: '3px 8px',
+                              padding: '4px 8px',
                               borderRadius: '6px',
                               backgroundColor: 'rgba(139, 92, 246, 0.1)',
                               color: '#8b5cf6',
-                              fontWeight: '500'
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
                             }}>
-                              💪 {typeCounts.reps} повт
+                              <Dumbbell size={12} strokeWidth={2} />
+                              {typeCounts.reps} повт
                             </span>
                           )}
                           {typeCounts.time > 0 && (
                             <span style={{
                               fontSize: '11px',
-                              padding: '3px 8px',
+                              padding: '4px 8px',
                               borderRadius: '6px',
                               backgroundColor: 'rgba(240, 147, 251, 0.1)',
                               color: '#f093fb',
-                              fontWeight: '500'
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
                             }}>
-                              ⏱ {typeCounts.time} время
+                              <Clock size={12} strokeWidth={2} />
+                              {typeCounts.time} время
                             </span>
                           )}
                           {typeCounts.distance > 0 && (
                             <span style={{
                               fontSize: '11px',
-                              padding: '3px 8px',
+                              padding: '4px 8px',
                               borderRadius: '6px',
                               backgroundColor: 'rgba(79, 172, 254, 0.1)',
                               color: '#4facfe',
-                              fontWeight: '500'
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
                             }}>
-                              🏃 {typeCounts.distance} расст
+                              <Route size={12} strokeWidth={2} />
+                              {typeCounts.distance} расст
                             </span>
                           )}
                         </div>
@@ -208,14 +231,14 @@ export const TemplateList: React.FC<Props> = ({
                             fontSize: '12px', 
                             color: 'var(--tg-theme-hint-color)' 
                           }}>
-                            📊 {totalExercises} {totalExercises === 1 ? 'упражнение' : totalExercises < 5 ? 'упражнения' : 'упражнений'}
+                            {totalExercises} {totalExercises === 1 ? 'упражнение' : totalExercises < 5 ? 'упражнения' : 'упражнений'}
                           </Caption>
                           <Text style={{ 
                             fontSize: '12px', 
                             color: 'var(--tg-theme-link-color)',
                             fontWeight: '500'
                           }}>
-                            Просмотр →
+                            Просмотр
                           </Text>
                         </div>
                       </div>
@@ -226,15 +249,17 @@ export const TemplateList: React.FC<Props> = ({
             </Section>
           );
         })}
-
-        {/* ✅ УДАЛЕНО: Кнопка "← Назад" */}
       </div>
 
-      {/* Modal с превью программы */}
       {previewTemplate && (
         <Modal
           open={!!previewTemplate}
-          onOpenChange={(open) => !open && setPreviewTemplate(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              telegramService.hapticFeedback('impact', 'light');
+              setPreviewTemplate(null);
+            }
+          }}
           header={
             <div style={{ textAlign: 'center', width: '100%' }}>
               <Title level="2" weight="2" style={{ fontSize: '20px' }}>
@@ -286,16 +311,15 @@ export const TemplateList: React.FC<Props> = ({
                           width: '36px',
                           height: '36px',
                           borderRadius: '50%',
-                          background: type === 'reps' 
-                            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                          backgroundColor: type === 'reps' 
+                            ? '#8b5cf6'
                             : type === 'time'
-                            ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-                            : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                            ? '#f093fb'
+                            : '#4facfe',
                           color: 'white',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '18px'
+                          justifyContent: 'center'
                         }}>
                           {getTypeIcon(type)}
                         </div>
@@ -319,19 +343,29 @@ export const TemplateList: React.FC<Props> = ({
                 stretched
                 mode="filled"
                 onClick={() => {
+                  telegramService.hapticFeedback('impact', 'medium');
                   onSelectTemplate(previewTemplate);
                   setPreviewTemplate(null);
                 }}
               >
-                ✅ Добавить программу
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                  <Check size={20} strokeWidth={2} />
+                  <span>Добавить программу</span>
+                </div>
               </Button>
               <Button
                 size="m"
                 stretched
                 mode="outline"
-                onClick={() => setPreviewTemplate(null)}
+                onClick={() => {
+                  telegramService.hapticFeedback('impact', 'light');
+                  setPreviewTemplate(null);
+                }}
               >
-                Отмена
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                  <X size={18} strokeWidth={2} />
+                  <span>Отмена</span>
+                </div>
               </Button>
             </div>
           </div>
