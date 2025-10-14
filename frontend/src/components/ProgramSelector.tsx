@@ -62,8 +62,8 @@ const BottomNav: React.FC<BottomNavProps> = React.memo(({
       left: 0,
       right: 0,
       height: '72px',
-      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-      borderTop: '0.5px solid rgba(0, 0, 0, 0.2)',
+      backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+      borderTop: '0.5px solid var(--tg-theme-hint-color)',
       backdropFilter: 'saturate(180%) blur(30px)',
       WebkitBackdropFilter: 'saturate(180%) blur(30px)',
       display: 'flex',
@@ -181,6 +181,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
   }, []);
 
   const handleModalClose = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
     setShowCreateModal(false);
   }, []);
 
@@ -358,7 +359,10 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
                 fontSize: '13px',
                 whiteSpace: 'nowrap'
               }}
-              onClick={() => handleProgramClick(program)}
+              onClick={() => {
+                telegramService.hapticFeedback('impact', 'light');
+                handleProgramClick(program);
+              }}
             >
               {inProgress ? 'Продолжить' : 'Начать'}
             </Button>
@@ -422,6 +426,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
                     flexShrink: 0
                   }}
                   onTouchStart={(e) => {
+                    telegramService.hapticFeedback('impact', 'medium');
                     (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
                   }}
                   onTouchEnd={(e) => {
@@ -552,7 +557,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
             display: 'flex',
             alignItems: 'flex-end',
             zIndex: 1000
