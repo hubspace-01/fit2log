@@ -326,7 +326,8 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
         <Card 
           style={{ 
             width: '100%',
-            border: `2px solid ${borderColor}`
+            border: `2px solid ${borderColor}`,
+            backgroundColor: 'transparent'
           }}
         >
           <div style={{ 
@@ -440,7 +441,7 @@ export const ProgramSelector: React.FC<Props> = React.memo(({
 
             {programs.length === 0 ? (
               <Section>
-                <Card style={{ textAlign: 'center', padding: '32px 16px' }}>
+                <Card style={{ textAlign: 'center', padding: '32px 16px', backgroundColor: 'transparent' }}>
                   <div style={{ 
                     display: 'flex', 
                     justifyContent: 'center', 
