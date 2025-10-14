@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Section, 
-  Button, 
   Title, 
   Text,
   Card,
@@ -52,11 +51,6 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
   }, [userId]);
 
   useEffect(() => {
-    loadWorkouts();
-  }, [loadWorkouts]);
-
-  const handleRetry = useCallback(() => {
-    telegramService.hapticFeedback('impact', 'light');
     loadWorkouts();
   }, [loadWorkouts]);
 
@@ -120,13 +114,11 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
       <div className="fade-in" style={{ padding: '16px', minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
         <div style={{ 
           marginBottom: '24px', 
-          textAlign: 'center',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '8px'
+          textAlign: 'center'
         }}>
-          <History size={24} color="var(--tg-theme-link-color)" strokeWidth={2} />
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <History size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
+          </div>
           <Title level="2" weight="2" style={{ fontSize: '22px' }}>
             История тренировок
           </Title>
@@ -149,20 +141,11 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
             </Title>
             <Text style={{ 
               color: 'var(--tg-theme-hint-color)', 
-              marginBottom: '24px', 
               fontSize: '14px',
               display: 'block'
             }}>
               {error}
             </Text>
-            <Button 
-              size="m" 
-              stretched 
-              onClick={handleRetry}
-              style={{ fontSize: '15px' }}
-            >
-              Попробовать снова
-            </Button>
           </Card>
         </Section>
       </div>
@@ -173,13 +156,11 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
     <div className="fade-in" style={{ padding: '16px', minHeight: '100vh', backgroundColor: 'var(--tg-theme-bg-color)' }}>
       <div style={{ 
         marginBottom: '24px', 
-        textAlign: 'center',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '8px'
+        textAlign: 'center'
       }}>
-        <History size={24} color="var(--tg-theme-link-color)" strokeWidth={2} />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+          <History size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
+        </div>
         <Title level="2" weight="2" style={{ fontSize: '22px' }}>
           История тренировок
         </Title>
@@ -227,7 +208,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
                   padding: '16px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'flex-start',
+                  alignItems: 'center',
                   gap: '12px'
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -295,8 +276,7 @@ export const WorkoutHistory: React.FC<Props> = ({ userId, onBack, onViewDetail }
                   </div>
                   <div style={{ 
                     display: 'flex', 
-                    alignItems: 'center',
-                    paddingTop: '4px'
+                    alignItems: 'center'
                   }}>
                     <ChevronRight 
                       size={20} 
