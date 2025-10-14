@@ -390,16 +390,12 @@ export const ProgramDetails: React.FC<Props> = ({
               backgroundColor: 'var(--tg-theme-bg-color)',
               borderTopLeftRadius: '16px',
               borderTopRightRadius: '16px',
-              padding: '24px',
-              paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+              padding: '20px 16px',
+              paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
               width: '100%'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <Title level="2" weight="2" style={{ marginBottom: '16px', fontSize: '20px', textAlign: 'center' }}>
-              Действия
-            </Title>
-            
             <Button 
               size="l" 
               stretched 
