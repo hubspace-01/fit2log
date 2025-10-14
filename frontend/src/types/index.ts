@@ -33,6 +33,7 @@ export interface Exercise {
   target_sets: number;
   target_reps: number;
   target_weight: number;
+  target_rpe?: number;
   duration?: number;
   distance?: number;
   order_index: number;
@@ -74,6 +75,7 @@ export interface TemplateExercise {
   target_sets: number;
   target_reps: number;
   target_weight: number;
+  target_rpe?: number;
   duration?: number;
   distance?: number;
   order_index: number;
