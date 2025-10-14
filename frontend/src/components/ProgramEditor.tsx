@@ -263,7 +263,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       </div>
 
       <div style={{ padding: '0 16px 16px' }}>
-        <Card style={{ padding: '16px', marginBottom: '16px' }}>
+        <Card style={{ padding: '0 16px 16px', marginBottom: '16px' }}>
           <Text weight="2" style={{ 
             fontSize: '14px', 
             marginBottom: '10px', 
@@ -286,7 +286,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
           />
         </Card>
 
-        <Card style={{ padding: '16px', marginBottom: '16px' }}>
+        <Card style={{ padding: '0 16px 16px', marginBottom: '16px' }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
@@ -442,7 +442,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {exercises.map((ex, i) => (
-              <Card key={i} style={{ padding: '16px' }}>
+              <Card key={i} style={{ padding: '0 16px 16px' }}>
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
