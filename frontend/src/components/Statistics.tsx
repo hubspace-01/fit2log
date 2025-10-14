@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Section, Title, Text, Spinner, Card, Caption } from '@telegram-apps/telegram-ui';
 import { Dumbbell, Flame, Clock, CalendarDays, BarChart3 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
@@ -24,11 +24,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
     return () => telegramService.hideBackButton();
   }, [onBack]);
 
-  useEffect(() => {
-    loadStats();
-  }, [userId]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setLoading(true);
       const [basic, last7, topEx] = await Promise.all([
@@ -40,14 +36,20 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
       setBasicStats(basic);
       setLast7Days(last7);
       setTopExercises(topEx);
+      telegramService.hapticFeedback('impact', 'light');
     } catch (error) {
+      telegramService.hapticFeedback('notification', 'error');
       telegramService.showAlert('Ошибка загрузки статистики');
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const formatDuration = (minutes: number): string => {
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const formatDuration = useCallback((minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
 
@@ -55,14 +57,14 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
       return `${hours}ч ${mins}мин`;
     }
     return `${mins}мин`;
-  };
+  }, []);
 
-  const formatWeeks = (weeks: number): string => {
+  const formatWeeks = useCallback((weeks: number): string => {
     if (weeks === 0) return 'нет';
     if (weeks === 1) return '1 неделя';
     if (weeks < 5) return `${weeks} недели`;
     return `${weeks} недель`;
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -70,67 +72,83 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '100vh',
+        minHeight: '100vh',
         flexDirection: 'column',
-        gap: '12px'
+        gap: '12px',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
         <Spinner size="l" />
-        <Text>Загрузка статистики...</Text>
+        <Text style={{ color: 'var(--tg-theme-hint-color)' }}>
+          Загрузка статистики...
+        </Text>
       </div>
     );
   }
 
   if (!basicStats || basicStats.total_workouts === 0) {
     return (
-      <div style={{
+      <div className="fade-in" style={{
         minHeight: '100vh',
         paddingBottom: '40px',
         backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
         <div style={{
           padding: '20px 16px',
-          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
           textAlign: 'center'
         }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-            <BarChart3 size={32} color="var(--tg-theme-link-color)" />
+            <BarChart3 size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
           </div>
           <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
             Статистика
           </Title>
         </div>
         <Section style={{ marginTop: '16px' }}>
-          <div style={{
+          <Card style={{
             textAlign: 'center',
-            padding: '60px 16px',
-            color: 'var(--tg-theme-hint-color)'
+            padding: '60px 16px'
           }}>
-            <BarChart3 size={64} style={{ opacity: 0.2, marginBottom: '16px' }} />
-            <Title level="3" style={{ marginBottom: '8px', color: 'var(--tg-theme-text-color)' }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginBottom: '16px' 
+            }}>
+              <BarChart3 
+                size={64} 
+                color="var(--tg-theme-hint-color)" 
+                strokeWidth={1.5}
+              />
+            </div>
+            <Title level="3" weight="2" style={{ 
+              marginBottom: '8px', 
+              fontSize: '18px'
+            }}>
               Пока нет данных
             </Title>
-            <Text style={{ fontSize: '14px' }}>
+            <Text style={{ 
+              fontSize: '14px',
+              color: 'var(--tg-theme-hint-color)'
+            }}>
               Завершите первую тренировку, чтобы увидеть статистику
             </Text>
-          </div>
+          </Card>
         </Section>
       </div>
     );
   }
 
   return (
-    <div style={{
+    <div className="fade-in" style={{
       minHeight: '100vh',
       paddingBottom: '40px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
       <div style={{
         padding: '20px 16px',
-        backgroundColor: 'var(--tg-theme-secondary-bg-color)',
         textAlign: 'center'
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-          <BarChart3 size={32} color="var(--tg-theme-link-color)" />
+          <BarChart3 size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
         </div>
         <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
           Статистика
@@ -140,18 +158,18 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
       <Section header="Общая статистика" style={{ marginTop: '8px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <StatCard
-            icon={<Dumbbell size={24} />}
+            icon={<Dumbbell size={24} strokeWidth={2} />}
             label="Всего тренировок"
             value={basicStats.total_workouts}
           />
           <StatCard
-            icon={<Flame size={24} />}
+            icon={<Flame size={24} strokeWidth={2} />}
             label="Активных недель"
             value={formatWeeks(basicStats.active_weeks_streak)}
             subtitle={basicStats.active_weeks_streak > 0 ? 'подряд' : 'возобновите тренировки'}
           />
           <StatCard
-            icon={<Clock size={24} />}
+            icon={<Clock size={24} strokeWidth={2} />}
             label="Общее время"
             value={formatDuration(basicStats.total_duration_minutes)}
           />
@@ -172,13 +190,13 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--tg-theme-link-color) 0%, var(--tg-theme-button-color) 100%)',
+                backgroundColor: 'var(--tg-theme-link-color)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'white'
+                color: 'var(--tg-theme-button-text-color)'
               }}>
-                <CalendarDays size={24} />
+                <CalendarDays size={24} strokeWidth={2} />
               </div>
 
               <Title level="2" weight="2" style={{ 
@@ -208,10 +226,9 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
                 <div style={{
                   width: '100%',
                   height: '8px',
-                  backgroundColor: 'var(--tg-theme-hint-color)',
+                  backgroundColor: 'var(--tg-theme-secondary-bg-color)',
                   borderRadius: '4px',
                   overflow: 'hidden',
-                  opacity: 0.2,
                   marginBottom: '4px'
                 }}>
                   <div style={{
@@ -219,7 +236,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ userId, onBack }) => {
                     width: `${last7Days.progress_percent}%`,
                     backgroundColor: 'var(--tg-theme-link-color)',
                     borderRadius: '4px',
-                    opacity: 1,
                     transition: 'width 0.3s ease'
                   }} />
                 </div>

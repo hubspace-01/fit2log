@@ -19,24 +19,28 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({
     if (rank === 1) {
       return {
         gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-        icon: <Trophy size={20} strokeWidth={2.5} />
+        icon: <Trophy size={20} strokeWidth={2.5} />,
+        color: '#000000'
       };
     }
     if (rank === 2) {
       return {
         gradient: 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)',
-        icon: <Award size={20} strokeWidth={2.5} />
+        icon: <Award size={20} strokeWidth={2.5} />,
+        color: '#000000'
       };
     }
     if (rank === 3) {
       return {
         gradient: 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)',
-        icon: <Award size={20} strokeWidth={2.5} />
+        icon: <Award size={20} strokeWidth={2.5} />,
+        color: '#FFFFFF'
       };
     }
     return {
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      icon: <span style={{ fontSize: '16px', fontWeight: '700' }}>{rank}</span>
+      gradient: 'var(--tg-theme-link-color)',
+      icon: <span style={{ fontSize: '16px', fontWeight: '700' }}>{rank}</span>,
+      color: 'var(--tg-theme-button-text-color)'
     };
   };
 
@@ -59,7 +63,7 @@ export const TopExerciseItem: React.FC<TopExerciseItemProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white'
+          color: medalConfig.color
         }}>
           {medalConfig.icon}
         </div>

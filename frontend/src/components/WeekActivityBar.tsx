@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
 import { Text } from '@telegram-apps/telegram-ui';
 
@@ -9,7 +9,7 @@ interface WeekActivityBarProps {
 export const WeekActivityBar: React.FC<WeekActivityBarProps> = ({ workoutDates }) => {
   const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   
-  const getCurrentWeekDays = () => {
+  const currentWeekDays = useMemo(() => {
     const days = [];
     const today = new Date();
     const currentDay = today.getDay();
@@ -22,13 +22,13 @@ export const WeekActivityBar: React.FC<WeekActivityBarProps> = ({ workoutDates }
       days.push(date);
     }
     return days;
-  };
+  }, []);
 
-  const currentWeekDays = getCurrentWeekDays();
+  const workoutDatesSet = useMemo(() => new Set(workoutDates), [workoutDates]);
 
   const hasWorkout = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return workoutDates.includes(dateStr);
+    return workoutDatesSet.has(dateStr);
   };
 
   return (

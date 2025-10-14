@@ -25,11 +25,11 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, label, value, subtitle
           width: '48px',
           height: '48px',
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, var(--tg-theme-link-color) 0%, var(--tg-theme-button-color) 100%)',
+          backgroundColor: 'var(--tg-theme-link-color)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white'
+          color: 'var(--tg-theme-button-text-color)'
         }}>
           {icon}
         </div>
