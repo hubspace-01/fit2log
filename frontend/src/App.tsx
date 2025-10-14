@@ -10,7 +10,8 @@ import {
   WorkoutSummary,
   WorkoutHistory,
   WorkoutDetail,
-  StatisticsWithTabs
+  StatisticsWithTabs,
+  Profile
 } from './components';
 import { AppScreen } from './types';
 import type { Program, ProgramTemplate, WorkoutHistoryItem } from './types';
@@ -28,6 +29,7 @@ const App: React.FC = () => {
     setWorkoutSummary,
     setWorkoutHistory,
     setCurrentWorkoutDetail,
+    setSettings,
     setLoading, 
     setError, 
     clearError 
@@ -106,6 +108,10 @@ const App: React.FC = () => {
 
   const handleViewStatistics = useCallback(() => {
     setScreen(AppScreen.STATISTICS);
+  }, [setScreen]);
+
+  const handleViewProfile = useCallback(() => {
+    setScreen(AppScreen.PROFILE);
   }, [setScreen]);
 
   const handleViewWorkoutDetail = useCallback(async (workout: WorkoutHistoryItem) => {
@@ -275,6 +281,7 @@ const App: React.FC = () => {
           onViewHistory={handleViewHistory}
           onViewRecords={handleViewRecords}
           onViewStatistics={handleViewStatistics}
+          onViewProfile={handleViewProfile}
         />
       )}
 
@@ -353,6 +360,15 @@ const App: React.FC = () => {
         <StatisticsWithTabs
           userId={user.id}
           onBack={handleBack}
+        />
+      )}
+
+      {state.screen === AppScreen.PROFILE && user && (
+        <Profile
+          user={user}
+          settings={state.settings}
+          onBack={handleBack}
+          onSettingsChange={setSettings}
         />
       )}
     </div>
