@@ -29,9 +29,40 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
   const handleCopyId = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
-    navigator.clipboard.writeText(user.id).then(() => {
-      telegramService.showAlert('ID скопирован в буфер обмена');
-    });
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(user.id).then(() => {
+        telegramService.showAlert('ID скопирован в буфер обмена');
+      }).catch(() => {
+        const textArea = document.createElement('textarea');
+        textArea.value = user.id;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          telegramService.showAlert('ID скопирован в буфер обмена');
+        } catch (err) {
+          telegramService.showAlert('Не удалось скопировать ID');
+        }
+        document.body.removeChild(textArea);
+      });
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = user.id;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        telegramService.showAlert('ID скопирован в буфер обмена');
+      } catch (err) {
+        telegramService.showAlert('Не удалось скопировать ID');
+      }
+      document.body.removeChild(textArea);
+    }
   }, [user.id]);
 
   const handleLockedClick = useCallback(() => {
@@ -46,18 +77,20 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
   const avatarLetter = user.first_name.charAt(0).toUpperCase();
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '24px', backgroundColor: 'var(--tgui--bg_color)' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '24px', backgroundColor: 'var(--tg-theme-bg-color)' }}>
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center', 
         padding: '40px 16px 24px',
-        backgroundColor: 'var(--tgui--bg_color)'
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
-        <Avatar
-          size={96}
+        <div
           style={{
-            backgroundColor: 'var(--tgui--link_color)',
+            width: '96px',
+            height: '96px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--tg-theme-link-color)',
             color: '#FFFFFF',
             fontSize: '48px',
             fontWeight: '600',
@@ -68,7 +101,7 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
           }}
         >
           {avatarLetter}
-        </Avatar>
+        </div>
         
         <Title level="1" weight="2" style={{ fontSize: '28px', marginBottom: '4px', textAlign: 'center' }}>
           {user.first_name}
@@ -77,7 +110,7 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
         {user.username && (
           <div style={{ 
             fontSize: '17px', 
-            color: 'var(--tgui--hint_color)',
+            color: 'var(--tg-theme-hint-color)',
             marginBottom: '8px'
           }}>
             @{user.username}
@@ -92,21 +125,21 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
             gap: '6px',
             padding: '8px 12px',
             borderRadius: '8px',
-            backgroundColor: 'var(--tgui--secondary_bg_color)',
+            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
             cursor: 'pointer',
             transition: 'opacity 0.2s'
           }}
         >
-          <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)', fontFamily: 'monospace' }}>
+          <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', fontFamily: 'monospace' }}>
             ID: {user.id}
           </span>
-          <Copy size={16} color="var(--tgui--hint_color)" />
+          <Copy size={16} color="var(--tg-theme-hint-color)" />
         </div>
       </div>
 
       <Section header="НАСТРОЙКИ">
         <Cell
-          before={<Settings size={24} color="var(--tgui--plain_foreground)" />}
+          before={<Settings size={24} color="var(--tg-theme-text-color)" />}
           after={<Switch checked={settings.hapticEnabled} onChange={handleHapticToggle} />}
         >
           Вибрация
@@ -115,13 +148,11 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
       <Section header="ВНЕШНИЙ ВИД (В РАЗРАБОТКЕ)">
         <Cell
-          before={<Palette size={24} color="var(--tgui--hint_color)" />}
+          before={<Palette size={24} color="var(--tg-theme-hint-color)" />}
           after={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
-                Светлая
-              </span>
-            </div>
+            <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+              Светлая
+            </span>
           }
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
@@ -132,13 +163,11 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
       <Section header="ЯЗЫК (В РАЗРАБОТКЕ)">
         <Cell
-          before={<Globe size={24} color="var(--tgui--hint_color)" />}
+          before={<Globe size={24} color="var(--tg-theme-hint-color)" />}
           after={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
-                Русский
-              </span>
-            </div>
+            <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+              Русский
+            </span>
           }
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
@@ -149,13 +178,11 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
       <Section header="ЕДИНИЦЫ (В РАЗРАБОТКЕ)">
         <Cell
-          before={<Weight size={24} color="var(--tgui--hint_color)" />}
+          before={<Weight size={24} color="var(--tg-theme-hint-color)" />}
           after={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
-                Килограммы
-              </span>
-            </div>
+            <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+              Килограммы
+            </span>
           }
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
@@ -166,17 +193,17 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
 
       <Section header="ДАННЫЕ">
         <Cell
-          before={<Trash2 size={24} color="var(--tgui--destructive_text_color)" />}
+          before={<Trash2 size={24} color="var(--tg-theme-destructive-text-color)" />}
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
         >
-          <span style={{ color: 'var(--tgui--destructive_text_color)' }}>Очистить историю тренировок</span>
+          <span style={{ color: 'var(--tg-theme-destructive-text-color)' }}>Очистить историю тренировок</span>
         </Cell>
       </Section>
 
       <Section header="ПОДДЕРЖКА">
         <Cell
-          before={<MessageCircle size={24} color="var(--tgui--plain_foreground)" />}
+          before={<MessageCircle size={24} color="var(--tg-theme-text-color)" />}
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
         >
@@ -184,25 +211,25 @@ export const Profile: React.FC<Props> = ({ user, settings, onBack, onSettingsCha
         </Cell>
 
         <Cell
-          before={<Info size={24} color="var(--tgui--plain_foreground)" />}
+          before={<Info size={24} color="var(--tg-theme-text-color)" />}
+          after={
+            <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+              v1.9.0
+            </span>
+          }
           onClick={handleAboutClick}
         >
           О приложении
-          <div style={{ fontSize: '14px', color: 'var(--tgui--hint_color)', marginTop: '2px' }}>
-            v1.9.0
-          </div>
         </Cell>
       </Section>
 
       <Section header="КОНФИДЕНЦИАЛЬНОСТЬ (В РАЗРАБОТКЕ)">
         <Cell
-          before={<Shield size={24} color="var(--tgui--hint_color)" />}
+          before={<Shield size={24} color="var(--tg-theme-hint-color)" />}
           after={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--tgui--hint_color)' }}>
-                Скоро
-              </span>
-            </div>
+            <span style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+              Скоро
+            </span>
           }
           onClick={handleLockedClick}
           style={{ opacity: 0.5 }}
