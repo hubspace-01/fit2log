@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Title, Text, Button } from '@telegram-apps/telegram-ui';
-import { Dumbbell, Clock, Route, Weight, FileText, X } from 'lucide-react';
+import { Dumbbell, Weight, FileText, X } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
