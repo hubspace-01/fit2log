@@ -299,7 +299,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
   return (
     <div className="fade-in" style={{ 
       minHeight: '100vh',
-      paddingBottom: '88px',
+      paddingBottom: '24px',
       backgroundColor: 'var(--tg-theme-bg-color)'
     }}>
       <div style={{
@@ -325,7 +325,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             fontSize: '14px', 
             marginBottom: '10px', 
             display: 'block',
-            color: 'var(--tg-theme-text-color)'
+            color: 'var(--tg-theme-text-color)',
+            textAlign: 'center'
           }}>
             Название программы
           </Text>
@@ -379,7 +380,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   fontSize: '13px', 
                   marginBottom: '8px', 
                   display: 'block',
-                  color: 'var(--tg-theme-text-color)'
+                  color: 'var(--tg-theme-text-color)',
+                  textAlign: 'center'
                 }}>
                   Номер тренировки
                 </Text>
@@ -411,7 +413,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   fontSize: '13px', 
                   marginBottom: '8px', 
                   display: 'block',
-                  color: 'var(--tg-theme-text-color)'
+                  color: 'var(--tg-theme-text-color)',
+                  textAlign: 'center'
                 }}>
                   День недели (опционально)
                 </Text>
@@ -568,7 +571,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       fontSize: '13px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)'
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
                     }}>
                       Тип упражнения
                     </Text>
@@ -619,7 +623,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       fontSize: '13px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)'
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
                     }}>
                       Название упражнения
                     </Text>
@@ -648,16 +653,18 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)'
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
                         }}>
                           Подходы
                         </Text>
                         <Input
                           type="number"
                           min="1"
-                          value={ex.target_sets}
+                          placeholder="3"
+                          value={ex.target_sets || ''}
                           onFocus={(e) => e.target.select()}
-                          onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
+                          onChange={(e) => updateExercise(i, 'target_sets', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
                             width: '100%',
@@ -670,16 +677,18 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)'
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
                         }}>
                           Повторы
                         </Text>
                         <Input
                           type="number"
                           min="1"
-                          value={ex.target_reps}
+                          placeholder="10"
+                          value={ex.target_reps || ''}
                           onFocus={(e) => e.target.select()}
-                          onChange={(e) => updateExercise(i, 'target_reps', Math.max(1, parseInt(e.target.value) || 1))}
+                          onChange={(e) => updateExercise(i, 'target_reps', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
                             width: '100%',
@@ -692,7 +701,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)'
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
                         }}>
                           Вес (кг)
                         </Text>
@@ -727,16 +737,18 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)'
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
                         }}>
                           Подходы
                         </Text>
                         <Input
                           type="number"
                           min="1"
-                          value={ex.target_sets}
+                          placeholder="3"
+                          value={ex.target_sets || ''}
                           onFocus={(e) => e.target.select()}
-                          onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
+                          onChange={(e) => updateExercise(i, 'target_sets', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
                             width: '100%',
@@ -749,16 +761,18 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)'
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
                         }}>
                           Минуты
                         </Text>
                         <Input
                           type="number"
                           min="0"
-                          value={ex.time_minutes}
+                          placeholder="1"
+                          value={ex.time_minutes || ''}
                           onFocus={(e) => e.target.select()}
-                          onChange={(e) => updateExercise(i, 'time_minutes', Math.max(0, parseInt(e.target.value) || 0))}
+                          onChange={(e) => updateExercise(i, 'time_minutes', e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                           style={{ 
                             fontSize: '14px', 
                             width: '100%',
@@ -771,7 +785,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)'
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
                         }}>
                           Секунды
                         </Text>
@@ -779,9 +794,10 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           type="number"
                           min="0"
                           max="59"
-                          value={ex.time_seconds}
+                          placeholder="0"
+                          value={ex.time_seconds || ''}
                           onFocus={(e) => e.target.select()}
-                          onChange={(e) => updateExercise(i, 'time_seconds', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+                          onChange={(e) => updateExercise(i, 'time_seconds', e.target.value === '' ? 0 : Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
                           style={{ 
                             fontSize: '14px', 
                             width: '100%',
@@ -799,7 +815,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         fontSize: '12px', 
                         marginBottom: '8px', 
                         display: 'block',
-                        color: 'var(--tg-theme-text-color)'
+                        color: 'var(--tg-theme-text-color)',
+                        textAlign: 'center'
                       }}>
                         Расстояние (метры)
                       </Text>
@@ -825,7 +842,8 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       fontSize: '13px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)'
+                      color: 'var(--tg-theme-text-color)',
+                      textAlign: 'center'
                     }}>
                       Заметки (опционально)
                     </Text>
@@ -857,37 +875,22 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                 <span>Добавить упражнение</span>
               </div>
             </Button>
+
+            <Button 
+              size="l"
+              stretched
+              mode="filled"
+              onClick={handleSave}
+              disabled={!programName.trim() || exercises.length === 0}
+              style={{ fontSize: '16px', marginTop: '16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                <Save size={20} strokeWidth={2} />
+                <span>Сохранить программу</span>
+              </div>
+            </Button>
           </>
         )}
-      </div>
-
-
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '0',
-          left: '0',
-          right: '0',
-          padding: '12px 16px',
-          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          backgroundColor: 'var(--tg-theme-bg-color)',
-          borderTop: '0.5px solid var(--tg-theme-hint-color)',
-          zIndex: 10
-        }}
-      >
-        <Button 
-          size="l"
-          stretched
-          mode="filled"
-          onClick={handleSave}
-          disabled={!programName.trim() || exercises.length === 0}
-          style={{ fontSize: '16px' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <Save size={20} strokeWidth={2} />
-            <span>Сохранить программу</span>
-          </div>
-        </Button>
       </div>
     </div>
   );
