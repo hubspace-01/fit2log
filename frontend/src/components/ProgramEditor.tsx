@@ -487,6 +487,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             <Title level="3" weight="2" style={{ 
               marginBottom: '8px', 
               fontSize: '18px'
+              textAlign: 'center'
             }}>
               Нет упражнений
             </Title>
