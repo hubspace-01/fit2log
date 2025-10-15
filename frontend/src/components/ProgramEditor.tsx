@@ -17,11 +17,14 @@ import {
   Clock, 
   Route, 
   Trash2, 
-  Save 
+  Save,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
 import type { Program } from '../types';
+
 
 interface Props {
   onSave: (data: Partial<Program>) => void;
@@ -30,17 +33,20 @@ interface Props {
   userId: string;
 }
 
+
 interface ExerciseFormData {
   exercise_name: string;
   exercise_type: 'reps' | 'time' | 'distance';
   target_sets: number;
   target_reps: number;
   target_weight: number;
-  target_rpe: number;
   duration: number;
   distance: number;
   notes: string;
+  time_minutes: number;
+  time_seconds: number;
 }
+
 
 export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, userId }) => {
   const [programName, setProgramName] = useState('');
@@ -51,10 +57,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
   const [existingPrograms, setExistingPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     telegramService.showBackButton(onBack);
     return () => telegramService.hideBackButton();
   }, [onBack]);
+
 
   useEffect(() => {
     const loadPrograms = async () => {
@@ -73,6 +81,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     loadPrograms();
   }, [userId]);
 
+
   useEffect(() => {
     if (initialData) {
       setProgramName(initialData.program_name);
@@ -87,19 +96,27 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         (a, b) => a.order_index - b.order_index
       );
       
-      setExercises(sortedExercises.map(ex => ({
-        exercise_name: ex.exercise_name,
-        exercise_type: ex.exercise_type || 'reps',
-        target_sets: ex.target_sets,
-        target_reps: ex.target_reps,
-        target_weight: ex.target_weight,
-        target_rpe: ex.target_rpe || 0,
-        duration: ex.duration || 0,
-        distance: ex.distance || 0,
-        notes: ex.notes || ''
-      })));
+      setExercises(sortedExercises.map(ex => {
+        const totalSeconds = ex.duration || 0;
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        
+        return {
+          exercise_name: ex.exercise_name,
+          exercise_type: ex.exercise_type || 'reps',
+          target_sets: ex.target_sets,
+          target_reps: ex.target_reps,
+          target_weight: ex.target_weight,
+          duration: ex.duration || 0,
+          distance: ex.distance || 0,
+          notes: ex.notes || '',
+          time_minutes: minutes,
+          time_seconds: seconds
+        };
+      }));
     }
   }, [initialData]);
+
 
   const addExercise = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
@@ -109,12 +126,14 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       target_sets: 3,
       target_reps: 10,
       target_weight: 0,
-      target_rpe: 0,
       duration: 0,
       distance: 0,
-      notes: ''
+      notes: '',
+      time_minutes: 0,
+      time_seconds: 0
     }]);
   }, [exercises]);
+
 
   const updateExercise = useCallback((index: number, field: keyof ExerciseFormData, value: any) => {
     const updated = [...exercises];
@@ -125,22 +144,35 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       if (value === 'reps') {
         updated[index].duration = 0;
         updated[index].distance = 0;
+        updated[index].time_minutes = 0;
+        updated[index].time_seconds = 0;
       } else if (value === 'time') {
         updated[index].target_reps = 0;
-        updated[index].target_rpe = 0;
         updated[index].distance = 0;
-        updated[index].duration = updated[index].duration || 60;
+        if (updated[index].duration === 0) {
+          updated[index].time_minutes = 1;
+          updated[index].time_seconds = 0;
+          updated[index].duration = 60;
+        }
       } else if (value === 'distance') {
         updated[index].target_reps = 0;
         updated[index].target_weight = 0;
-        updated[index].target_rpe = 0;
         updated[index].duration = 0;
+        updated[index].time_minutes = 0;
+        updated[index].time_seconds = 0;
         updated[index].distance = updated[index].distance || 1000;
       }
     }
     
+    if (field === 'time_minutes' || field === 'time_seconds') {
+      const minutes = field === 'time_minutes' ? value : updated[index].time_minutes;
+      const seconds = field === 'time_seconds' ? value : updated[index].time_seconds;
+      updated[index].duration = minutes * 60 + seconds;
+    }
+    
     setExercises(updated);
   }, [exercises]);
+
 
   const removeExercise = useCallback((index: number) => {
     telegramService.hapticFeedback('impact', 'light');
@@ -154,6 +186,25 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       }
     );
   }, [exercises]);
+
+
+  const moveExerciseUp = useCallback((index: number) => {
+    if (index === 0) return;
+    telegramService.hapticFeedback('impact', 'light');
+    const updated = [...exercises];
+    [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+    setExercises(updated);
+  }, [exercises]);
+
+
+  const moveExerciseDown = useCallback((index: number) => {
+    if (index === exercises.length - 1) return;
+    telegramService.hapticFeedback('impact', 'light');
+    const updated = [...exercises];
+    [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+    setExercises(updated);
+  }, [exercises]);
+
 
   const validateDayOrder = useCallback((): boolean => {
     if (!isInWeeklySplit) return true;
@@ -170,6 +221,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     
     return true;
   }, [isInWeeklySplit, dayOrder, existingPrograms, initialData]);
+
 
   const handleSave = useCallback(() => {
     if (!programName.trim()) {
@@ -206,6 +258,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     });
   }, [programName, exercises, isInWeeklySplit, dayOrder, weekdayHint, validateDayOrder, onSave]);
 
+
   const getPlaceholder = useCallback((type: string) => {
     switch(type) {
       case 'reps':
@@ -219,7 +272,9 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     }
   }, []);
 
+
   const isEditing = useMemo(() => !!initialData, [initialData]);
+
 
   if (loading) {
     return (
@@ -239,6 +294,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       </div>
     );
   }
+
 
   return (
     <div className="fade-in" style={{ 
@@ -262,14 +318,14 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         </Title>
       </div>
 
+
       <div style={{ padding: '0 16px 16px' }}>
         <Card style={{ padding: '16px', marginBottom: '16px' }}>
           <Text weight="2" style={{ 
             fontSize: '14px', 
             marginBottom: '10px', 
             display: 'block',
-            color: 'var(--tg-theme-text-color)',
-            textAlign: 'center'
+            color: 'var(--tg-theme-text-color)'
           }}>
             Название программы
           </Text>
@@ -280,11 +336,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             style={{ 
               fontSize: '15px', 
               width: '100%',
-              backgroundColor: 'var(--tg-theme-bg-color)',
-              textAlign: 'center'
+              backgroundColor: 'var(--tg-theme-bg-color)'
             }}
           />
         </Card>
+
 
         <Card style={{ padding: '16px', marginBottom: '16px' }}>
           <div style={{ 
@@ -315,6 +371,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             </div>
           </div>
 
+
           {isInWeeklySplit && (
             <>
               <div style={{ marginBottom: '14px' }}>
@@ -322,8 +379,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   fontSize: '13px', 
                   marginBottom: '8px', 
                   display: 'block',
-                  color: 'var(--tg-theme-text-color)',
-                  textAlign: 'center'
+                  color: 'var(--tg-theme-text-color)'
                 }}>
                   Номер тренировки
                 </Text>
@@ -336,8 +392,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   style={{ 
                     fontSize: '15px', 
                     width: '100%',
-                    backgroundColor: 'var(--tg-theme-bg-color)',
-                    textAlign: 'center'
+                    backgroundColor: 'var(--tg-theme-bg-color)'
                   }}
                 >
                   <option value={1}>1</option>
@@ -350,13 +405,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                 </Select>
               </div>
 
+
               <div>
                 <Text weight="2" style={{ 
                   fontSize: '13px', 
                   marginBottom: '8px', 
                   display: 'block',
-                  color: 'var(--tg-theme-text-color)',
-                  textAlign: 'center'
+                  color: 'var(--tg-theme-text-color)'
                 }}>
                   День недели (опционально)
                 </Text>
@@ -369,8 +424,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                   style={{ 
                     fontSize: '15px', 
                     width: '100%',
-                    backgroundColor: 'var(--tg-theme-bg-color)',
-                    textAlign: 'center'
+                    backgroundColor: 'var(--tg-theme-bg-color)'
                   }}
                 >
                   <option value="">Не указано</option>
@@ -386,6 +440,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             </>
           )}
         </Card>
+
 
         <div style={{ 
           display: 'flex', 
@@ -408,6 +463,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             </div>
           </Button>
         </div>
+
 
         {exercises.length === 0 ? (
           <Card style={{
@@ -440,110 +496,147 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             </Text>
           </Card>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {exercises.map((ex, i) => (
-              <Card style={{ padding: '16px', marginBottom: '16px' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  marginBottom: '12px'
-                }}>
-                  <Text weight="2" style={{ 
-                    fontSize: '14px', 
-                    color: 'var(--tg-theme-hint-color)' 
-                  }}>
-                    Упражнение #{i + 1}
-                  </Text>
-                  <Button 
-                    size="s" 
-                    mode="outline"
-                    onClick={() => removeExercise(i)}
-                    style={{ 
-                      color: 'var(--tg-theme-destructive-text-color)',
-                      borderColor: 'var(--tg-theme-destructive-text-color)',
-                      fontSize: '12px'
-                    }}
-                  >
-                    <Trash2 size={14} strokeWidth={2} />
-                  </Button>
-                </div>
-
-                <div style={{ marginBottom: '14px' }}>
-                  <Text weight="2" style={{ 
-                    fontSize: '13px', 
-                    marginBottom: '8px', 
-                    display: 'block',
-                    color: 'var(--tg-theme-text-color)',
-                    textAlign: 'center'
-                  }}>
-                    Тип упражнения
-                  </Text>
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {exercises.map((ex, i) => (
+                <Card key={i} style={{ padding: '16px' }}>
                   <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                    gap: '8px'
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: '12px'
                   }}>
-                    <Button
-                      size="s"
-                      mode={ex.exercise_type === 'reps' ? 'filled' : 'outline'}
-                      onClick={() => updateExercise(i, 'exercise_type', 'reps')}
-                      style={{ fontSize: '11px' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                        <Dumbbell size={14} strokeWidth={2} />
-                        <span>Повт</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Text weight="2" style={{ 
+                        fontSize: '14px', 
+                        color: 'var(--tg-theme-hint-color)' 
+                      }}>
+                        Упражнение #{i + 1}
+                      </Text>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {i > 0 && (
+                          <div
+                            onClick={() => moveExerciseUp(i)}
+                            style={{
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
+                            }}
+                          >
+                            <ChevronUp size={16} color="var(--tg-theme-link-color)" strokeWidth={2} />
+                          </div>
+                        )}
+                        {i < exercises.length - 1 && (
+                          <div
+                            onClick={() => moveExerciseDown(i)}
+                            style={{
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
+                            }}
+                          >
+                            <ChevronDown size={16} color="var(--tg-theme-link-color)" strokeWidth={2} />
+                          </div>
+                        )}
                       </div>
-                    </Button>
-                    <Button
-                      size="s"
-                      mode={ex.exercise_type === 'time' ? 'filled' : 'outline'}
-                      onClick={() => updateExercise(i, 'exercise_type', 'time')}
-                      style={{ fontSize: '11px' }}
+                    </div>
+                    <Button 
+                      size="s" 
+                      mode="outline"
+                      onClick={() => removeExercise(i)}
+                      style={{ 
+                        color: 'var(--tg-theme-destructive-text-color)',
+                        borderColor: 'var(--tg-theme-destructive-text-color)',
+                        fontSize: '12px'
+                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                        <Clock size={14} strokeWidth={2} />
-                        <span>Время</span>
-                      </div>
-                    </Button>
-                    <Button
-                      size="s"
-                      mode={ex.exercise_type === 'distance' ? 'filled' : 'outline'}
-                      onClick={() => updateExercise(i, 'exercise_type', 'distance')}
-                      style={{ fontSize: '11px' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                        <Route size={14} strokeWidth={2} />
-                        <span>Расст</span>
-                      </div>
+                      <Trash2 size={14} strokeWidth={2} />
                     </Button>
                   </div>
-                </div>
 
-                <div style={{ marginBottom: '14px' }}>
-                  <Text weight="2" style={{ 
-                    fontSize: '13px', 
-                    marginBottom: '8px', 
-                    display: 'block',
-                    color: 'var(--tg-theme-text-color)',
-                    textAlign: 'center'
-                  }}>
-                    Название упражнения
-                  </Text>
-                  <Input
-                    placeholder={getPlaceholder(ex.exercise_type)}
-                    value={ex.exercise_name}
-                    onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
-                    style={{ 
-                      fontSize: '15px', 
-                      width: '100%',
-                      backgroundColor: 'var(--tg-theme-bg-color)'
-                    }}
-                  />
-                </div>
 
-                {ex.exercise_type === 'reps' && (
-                  <>
+                  <div style={{ marginBottom: '14px' }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '13px', 
+                      marginBottom: '8px', 
+                      display: 'block',
+                      color: 'var(--tg-theme-text-color)'
+                    }}>
+                      Тип упражнения
+                    </Text>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(3, 1fr)', 
+                      gap: '8px'
+                    }}>
+                      <Button
+                        size="s"
+                        mode={ex.exercise_type === 'reps' ? 'filled' : 'outline'}
+                        onClick={() => updateExercise(i, 'exercise_type', 'reps')}
+                        style={{ fontSize: '11px' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                          <Dumbbell size={14} strokeWidth={2} />
+                          <span>Повт</span>
+                        </div>
+                      </Button>
+                      <Button
+                        size="s"
+                        mode={ex.exercise_type === 'time' ? 'filled' : 'outline'}
+                        onClick={() => updateExercise(i, 'exercise_type', 'time')}
+                        style={{ fontSize: '11px' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                          <Clock size={14} strokeWidth={2} />
+                          <span>Время</span>
+                        </div>
+                      </Button>
+                      <Button
+                        size="s"
+                        mode={ex.exercise_type === 'distance' ? 'filled' : 'outline'}
+                        onClick={() => updateExercise(i, 'exercise_type', 'distance')}
+                        style={{ fontSize: '11px' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                          <Route size={14} strokeWidth={2} />
+                          <span>Расст</span>
+                        </div>
+                      </Button>
+                    </div>
+                  </div>
+
+
+                  <div style={{ marginBottom: '14px' }}>
+                    <Text weight="2" style={{ 
+                      fontSize: '13px', 
+                      marginBottom: '8px', 
+                      display: 'block',
+                      color: 'var(--tg-theme-text-color)'
+                    }}>
+                      Название упражнения
+                    </Text>
+                    <Input
+                      placeholder={getPlaceholder(ex.exercise_type)}
+                      value={ex.exercise_name}
+                      onChange={(e) => updateExercise(i, 'exercise_name', e.target.value)}
+                      style={{ 
+                        fontSize: '15px', 
+                        width: '100%',
+                        backgroundColor: 'var(--tg-theme-bg-color)'
+                      }}
+                    />
+                  </div>
+
+
+                  {ex.exercise_type === 'reps' && (
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: 'repeat(3, 1fr)', 
@@ -621,7 +714,91 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         />
                       </div>
                     </div>
+                  )}
 
+
+                  {ex.exercise_type === 'time' && (
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr 1fr', 
+                      gap: '10px',
+                      marginBottom: '14px'
+                    }}>
+                      <div>
+                        <Text weight="2" style={{ 
+                          fontSize: '12px', 
+                          marginBottom: '8px', 
+                          display: 'block',
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
+                        }}>
+                          Подходы
+                        </Text>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={ex.target_sets}
+                          onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
+                          style={{ 
+                            fontSize: '14px', 
+                            width: '100%', 
+                            textAlign: 'center',
+                            backgroundColor: 'var(--tg-theme-bg-color)'
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Text weight="2" style={{ 
+                          fontSize: '12px', 
+                          marginBottom: '8px', 
+                          display: 'block',
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
+                        }}>
+                          Минуты
+                        </Text>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={ex.time_minutes}
+                          onChange={(e) => updateExercise(i, 'time_minutes', Math.max(0, parseInt(e.target.value) || 0))}
+                          style={{ 
+                            fontSize: '14px', 
+                            width: '100%', 
+                            textAlign: 'center',
+                            backgroundColor: 'var(--tg-theme-bg-color)'
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Text weight="2" style={{ 
+                          fontSize: '12px', 
+                          marginBottom: '8px', 
+                          display: 'block',
+                          color: 'var(--tg-theme-text-color)',
+                          textAlign: 'center'
+                        }}>
+                          Секунды
+                        </Text>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={ex.time_seconds}
+                          onChange={(e) => updateExercise(i, 'time_seconds', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+                          style={{ 
+                            fontSize: '14px', 
+                            width: '100%', 
+                            textAlign: 'center',
+                            backgroundColor: 'var(--tg-theme-bg-color)'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+
+                  {ex.exercise_type === 'distance' && (
                     <div style={{ marginBottom: '14px' }}>
                       <Text weight="2" style={{ 
                         fontSize: '12px', 
@@ -630,61 +807,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         color: 'var(--tg-theme-text-color)',
                         textAlign: 'center'
                       }}>
-                        RPE (опционально, 0-10)
-                      </Text>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="10"
-                        step="0.5"
-                        placeholder="0"
-                        value={ex.target_rpe || ''}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          updateExercise(i, 'target_rpe', isNaN(val) ? 0 : Math.min(10, Math.max(0, val)));
-                        }}
-                        style={{ 
-                          fontSize: '14px', 
-                          width: '100%', 
-                          textAlign: 'center',
-                          backgroundColor: 'var(--tg-theme-bg-color)'
-                        }}
-                      />
-                      <Text style={{ 
-                        fontSize: '11px', 
-                        color: 'var(--tg-theme-hint-color)',
-                        display: 'block',
-                        marginTop: '4px',
-                        textAlign: 'center'
-                      }}>
-                        Оценка нагрузки (1-10)
-                      </Text>
-                    </div>
-                  </>
-                )}
-
-                {ex.exercise_type === 'time' && (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr', 
-                    gap: '10px',
-                    marginBottom: '14px'
-                  }}>
-                    <div>
-                      <Text weight="2" style={{ 
-                        fontSize: '12px', 
-                        marginBottom: '8px', 
-                        display: 'block',
-                        color: 'var(--tg-theme-text-color)',
-                        textAlign: 'center'
-                      }}>
-                        Подходы
+                        Расстояние (метры)
                       </Text>
                       <Input
                         type="number"
                         min="1"
-                        value={ex.target_sets}
-                        onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
+                        value={ex.distance}
+                        onChange={(e) => updateExercise(i, 'distance', Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
                           width: '100%', 
@@ -693,85 +822,50 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         }}
                       />
                     </div>
-                    <div>
-                      <Text weight="2" style={{ 
-                        fontSize: '12px', 
-                        marginBottom: '8px', 
-                        display: 'block',
-                        color: 'var(--tg-theme-text-color)',
-                        textAlign: 'center'
-                      }}>
-                        Время (сек)
-                      </Text>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={ex.duration}
-                        onChange={(e) => updateExercise(i, 'duration', Math.max(1, parseInt(e.target.value) || 1))}
-                        style={{ 
-                          fontSize: '14px', 
-                          width: '100%', 
-                          textAlign: 'center',
-                          backgroundColor: 'var(--tg-theme-bg-color)'
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {ex.exercise_type === 'distance' && (
-                  <div style={{ marginBottom: '14px' }}>
+
+                  <div>
                     <Text weight="2" style={{ 
-                      fontSize: '12px', 
+                      fontSize: '13px', 
                       marginBottom: '8px', 
                       display: 'block',
-                      color: 'var(--tg-theme-text-color)',
-                      textAlign: 'center'
+                      color: 'var(--tg-theme-text-color)'
                     }}>
-                      Расстояние (метры)
+                      Заметки (опционально)
                     </Text>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={ex.distance}
-                      onChange={(e) => updateExercise(i, 'distance', Math.max(1, parseInt(e.target.value) || 1))}
+                    <Textarea
+                      placeholder="Техника, особенности..."
+                      value={ex.notes}
+                      onChange={(e) => updateExercise(i, 'notes', e.target.value)}
                       style={{ 
                         fontSize: '14px', 
-                        width: '100%', 
-                        textAlign: 'center',
+                        width: '100%',
+                        minHeight: '60px',
                         backgroundColor: 'var(--tg-theme-bg-color)'
                       }}
                     />
                   </div>
-                )}
+                </Card>
+              ))}
+            </div>
 
-                <div>
-                  <Text weight="2" style={{ 
-                    fontSize: '13px', 
-                    marginBottom: '8px', 
-                    display: 'block',
-                    color: 'var(--tg-theme-text-color)',
-                    textAlign: 'center'
-                  }}>
-                    Заметки (опционально)
-                  </Text>
-                  <Textarea
-                    placeholder="Техника, особенности..."
-                    value={ex.notes}
-                    onChange={(e) => updateExercise(i, 'notes', e.target.value)}
-                    style={{ 
-                      fontSize: '14px', 
-                      width: '100%',
-                      minHeight: '60px',
-                      backgroundColor: 'var(--tg-theme-bg-color)'
-                    }}
-                  />
-                </div>
-              </Card>
-            ))}
-          </div>
+            <Button 
+              size="m" 
+              stretched
+              mode="filled" 
+              onClick={addExercise} 
+              style={{ fontSize: '15px', marginTop: '16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                <Plus size={20} strokeWidth={2} />
+                <span>Добавить упражнение</span>
+              </div>
+            </Button>
+          </>
         )}
       </div>
+
 
       <div
         style={{
