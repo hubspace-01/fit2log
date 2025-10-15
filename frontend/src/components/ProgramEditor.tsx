@@ -19,11 +19,15 @@ import {
   Trash2, 
   Save,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Info
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
 import type { Program } from '../types';
+
+
+const ONBOARDING_KEY = 'fit2log_program_editor_onboarding';
 
 
 interface Props {
@@ -56,6 +60,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
   const [weekdayHint, setWeekdayHint] = useState<string>('');
   const [existingPrograms, setExistingPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
 
   useEffect(() => {
@@ -80,6 +85,14 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     };
     loadPrograms();
   }, [userId]);
+
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
+    if (!hasSeenOnboarding && !loading) {
+      setShowOnboarding(true);
+    }
+  }, [loading]);
 
 
   useEffect(() => {
@@ -116,6 +129,31 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
       }));
     }
   }, [initialData]);
+
+
+  const showHelp = useCallback(() => {
+    telegramService.hapticFeedback('impact', 'light');
+    telegramService.showAlert(
+      '📝 Как заполнять программу:\n\n' +
+      'Тип упражнения:\n' +
+      '• Повт - упражнения на количество (жим, присед)\n' +
+      '• Время - статические (планка)\n' +
+      '• Расст - кардио (бег, велосипед)\n\n' +
+      'Вес (кг):\n' +
+      'Для упражнений с собственным весом (подтягивания, отжимания) оставьте 0 или пусто.\n\n' +
+      'Заметки:\n' +
+      'Укажите технику выполнения или особенности.'
+    );
+  }, []);
+
+
+  useEffect(() => {
+    if (showOnboarding) {
+      showHelp();
+      localStorage.setItem(ONBOARDING_KEY, 'true');
+      setShowOnboarding(false);
+    }
+  }, [showOnboarding, showHelp]);
 
 
   const addExercise = useCallback(() => {
@@ -314,8 +352,34 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
     }}>
       <div style={{
         padding: '20px 16px',
-        textAlign: 'center'
+        textAlign: 'center',
+        position: 'relative'
       }}>
+        <div
+          onClick={showHelp}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '16px',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '50%',
+            transition: 'transform 0.15s ease-out',
+            WebkitTapHighlightColor: 'transparent'
+          }}
+          onTouchStart={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+          }}
+          onTouchEnd={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+          }}
+        >
+          <Info size={24} color="var(--tg-theme-hint-color)" strokeWidth={2} />
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
           {isEditing ? (
             <Edit3 size={32} color="var(--tg-theme-link-color)" strokeWidth={2} />
