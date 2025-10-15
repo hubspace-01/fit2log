@@ -1,6 +1,6 @@
 import React from 'react';
 import { Title, Text, Button } from '@telegram-apps/telegram-ui';
-import { Dumbbell, Weight, FileText, X } from 'lucide-react';
+import { Dumbbell, Clock, Route, Weight, FileText, X } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -35,7 +35,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           backgroundColor: 'var(--tg-theme-bg-color)',
           borderTopLeftRadius: '16px',
           borderTopRightRadius: '16px',
-          maxHeight: '80vh',
+          maxHeight: '85vh',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 1000,
@@ -62,7 +62,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div style={{
-          padding: '40px 24px 20px',
+          padding: '40px 24px 16px',
           textAlign: 'center'
         }}>
           <div style={{
@@ -78,111 +78,168 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <FileText size={40} color="rgb(76, 175, 80)" strokeWidth={2} />
           </div>
 
-          <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '8px' }}>
+          <Title level="1" weight="2" style={{ fontSize: '22px', marginBottom: '8px' }}>
             Как заполнять программу
           </Title>
           
           <Text style={{ 
-            fontSize: '14px', 
+            fontSize: '13px', 
             color: 'var(--tg-theme-hint-color)',
-            display: 'block'
+            display: 'block',
+            lineHeight: '1.4'
           }}>
-            Следуйте этим простым правилам при создании программы
+            Выберите тип упражнения и заполните параметры
           </Text>
         </div>
 
         <div style={{
-          padding: '0 24px 24px',
+          padding: '0 20px 20px',
           overflowY: 'auto',
           flex: 1
         }}>
           <div style={{
             display: 'flex',
-            gap: '16px',
-            marginBottom: '24px',
+            gap: '14px',
+            marginBottom: '20px',
             alignItems: 'flex-start'
           }}>
             <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
               backgroundColor: 'rgba(33, 150, 243, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <Dumbbell size={24} color="rgb(33, 150, 243)" strokeWidth={2} />
+              <Dumbbell size={22} color="rgb(33, 150, 243)" strokeWidth={2} />
             </div>
             <div style={{ flex: 1 }}>
-              <Text weight="2" style={{ fontSize: '16px', display: 'block', marginBottom: '6px' }}>
-                Типы упражнений
+              <Text weight="2" style={{ fontSize: '15px', display: 'block', marginBottom: '6px' }}>
+                Повторения
               </Text>
-              <Text style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
-                Повт — для жима, приседа, тяги. Время — для планки, удержания. Расст — для бега, велосипеда.
+              <Text style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Силовые упражнения со штангой, гантелями или на тренажёрах: жим лежа, приседания, становая тяга, подтягивания, отжимания, тяга блока.
               </Text>
             </div>
           </div>
 
           <div style={{
             display: 'flex',
-            gap: '16px',
-            marginBottom: '24px',
+            gap: '14px',
+            marginBottom: '20px',
             alignItems: 'flex-start'
           }}>
             <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(255, 152, 0, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <Weight size={24} color="rgb(255, 152, 0)" strokeWidth={2} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Text weight="2" style={{ fontSize: '16px', display: 'block', marginBottom: '6px' }}>
-                Вес (кг)
-              </Text>
-              <Text style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
-                Для упражнений с собственным весом (подтягивания, отжимания) оставьте поле пустым или 0.
-              </Text>
-            </div>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            gap: '16px',
-            alignItems: 'flex-start'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
               backgroundColor: 'rgba(156, 39, 176, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <FileText size={24} color="rgb(156, 39, 176)" strokeWidth={2} />
+              <Clock size={22} color="rgb(156, 39, 176)" strokeWidth={2} />
             </div>
             <div style={{ flex: 1 }}>
-              <Text weight="2" style={{ fontSize: '16px', display: 'block', marginBottom: '6px' }}>
+              <Text weight="2" style={{ fontSize: '15px', display: 'block', marginBottom: '6px' }}>
+                Время
+              </Text>
+              <Text style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Статические упражнения (планка, удержание) или кардио на время (бег/ходьба на беговой дорожке, эллипсоид, велотренажёр).
+              </Text>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '14px',
+            marginBottom: '20px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(255, 87, 34, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Route size={22} color="rgb(255, 87, 34)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text weight="2" style={{ fontSize: '15px', display: 'block', marginBottom: '6px' }}>
+                Расстояние
+              </Text>
+              <Text style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Кардио с измерением дистанции: бег на беговой дорожке, велосипед, эллипсоид, гребной тренажёр (в метрах или километрах).
+              </Text>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '14px',
+            marginBottom: '20px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(255, 152, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Weight size={22} color="rgb(255, 152, 0)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text weight="2" style={{ fontSize: '15px', display: 'block', marginBottom: '6px' }}>
+                Вес (кг)
+              </Text>
+              <Text style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Указывайте вес отягощений (штанга, гантели, блины). Для упражнений с собственным весом (подтягивания, отжимания) оставьте 0 или пусто.
+              </Text>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '14px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(76, 175, 80, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <FileText size={22} color="rgb(76, 175, 80)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text weight="2" style={{ fontSize: '15px', display: 'block', marginBottom: '6px' }}>
                 Заметки
               </Text>
-              <Text style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
-                Используйте для описания техники, особенностей выполнения или напоминаний.
+              <Text style={{ fontSize: '13px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Записывайте технику выполнения, особенности хвата, темп, углы наклона или напоминания о безопасности.
               </Text>
             </div>
           </div>
         </div>
 
         <div style={{
-          padding: '16px 24px',
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom))'
+          padding: '12px 20px',
+          paddingBottom: 'max(20px, env(safe-area-inset-bottom))'
         }}>
           <Button
             size="l"
