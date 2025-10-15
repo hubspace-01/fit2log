@@ -160,7 +160,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         updated[index].duration = 0;
         updated[index].time_minutes = 0;
         updated[index].time_seconds = 0;
-        updated[index].distance = updated[index].distance || 1000;
+        updated[index].distance = updated[index].distance || 0;
       }
     }
     
@@ -648,8 +648,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)',
-                          textAlign: 'center'
+                          color: 'var(--tg-theme-text-color)'
                         }}>
                           Подходы
                         </Text>
@@ -657,11 +656,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           type="number"
                           min="1"
                           value={ex.target_sets}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
-                            width: '100%', 
-                            textAlign: 'center',
+                            width: '100%',
                             backgroundColor: 'var(--tg-theme-bg-color)'
                           }}
                         />
@@ -671,8 +670,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)',
-                          textAlign: 'center'
+                          color: 'var(--tg-theme-text-color)'
                         }}>
                           Повторы
                         </Text>
@@ -680,11 +678,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           type="number"
                           min="1"
                           value={ex.target_reps}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => updateExercise(i, 'target_reps', Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
-                            width: '100%', 
-                            textAlign: 'center',
+                            width: '100%',
                             backgroundColor: 'var(--tg-theme-bg-color)'
                           }}
                         />
@@ -694,8 +692,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)',
-                          textAlign: 'center'
+                          color: 'var(--tg-theme-text-color)'
                         }}>
                           Вес (кг)
                         </Text>
@@ -703,12 +700,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           type="number"
                           min="0"
                           step="0.5"
-                          value={ex.target_weight}
-                          onChange={(e) => updateExercise(i, 'target_weight', Math.max(0, parseFloat(e.target.value) || 0))}
+                          placeholder="0"
+                          value={ex.target_weight || ''}
+                          onFocus={(e) => e.target.select()}
+                          onChange={(e) => updateExercise(i, 'target_weight', e.target.value === '' ? 0 : Math.max(0, parseFloat(e.target.value) || 0))}
                           style={{ 
                             fontSize: '14px', 
-                            width: '100%', 
-                            textAlign: 'center',
+                            width: '100%',
                             backgroundColor: 'var(--tg-theme-bg-color)'
                           }}
                         />
@@ -729,8 +727,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)',
-                          textAlign: 'center'
+                          color: 'var(--tg-theme-text-color)'
                         }}>
                           Подходы
                         </Text>
@@ -738,11 +735,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           type="number"
                           min="1"
                           value={ex.target_sets}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => updateExercise(i, 'target_sets', Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
-                            width: '100%', 
-                            textAlign: 'center',
+                            width: '100%',
                             backgroundColor: 'var(--tg-theme-bg-color)'
                           }}
                         />
@@ -752,8 +749,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)',
-                          textAlign: 'center'
+                          color: 'var(--tg-theme-text-color)'
                         }}>
                           Минуты
                         </Text>
@@ -761,11 +757,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           type="number"
                           min="0"
                           value={ex.time_minutes}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => updateExercise(i, 'time_minutes', Math.max(0, parseInt(e.target.value) || 0))}
                           style={{ 
                             fontSize: '14px', 
-                            width: '100%', 
-                            textAlign: 'center',
+                            width: '100%',
                             backgroundColor: 'var(--tg-theme-bg-color)'
                           }}
                         />
@@ -775,8 +771,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           fontSize: '12px', 
                           marginBottom: '8px', 
                           display: 'block',
-                          color: 'var(--tg-theme-text-color)',
-                          textAlign: 'center'
+                          color: 'var(--tg-theme-text-color)'
                         }}>
                           Секунды
                         </Text>
@@ -785,11 +780,11 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                           min="0"
                           max="59"
                           value={ex.time_seconds}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => updateExercise(i, 'time_seconds', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
                           style={{ 
                             fontSize: '14px', 
-                            width: '100%', 
-                            textAlign: 'center',
+                            width: '100%',
                             backgroundColor: 'var(--tg-theme-bg-color)'
                           }}
                         />
@@ -804,20 +799,20 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         fontSize: '12px', 
                         marginBottom: '8px', 
                         display: 'block',
-                        color: 'var(--tg-theme-text-color)',
-                        textAlign: 'center'
+                        color: 'var(--tg-theme-text-color)'
                       }}>
                         Расстояние (метры)
                       </Text>
                       <Input
                         type="number"
                         min="1"
-                        value={ex.distance}
-                        onChange={(e) => updateExercise(i, 'distance', Math.max(1, parseInt(e.target.value) || 1))}
+                        placeholder="1000"
+                        value={ex.distance || ''}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => updateExercise(i, 'distance', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
-                          width: '100%', 
-                          textAlign: 'center',
+                          width: '100%',
                           backgroundColor: 'var(--tg-theme-bg-color)'
                         }}
                       />
