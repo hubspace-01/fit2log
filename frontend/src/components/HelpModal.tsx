@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Title, Text, Button } from '@telegram-apps/telegram-ui';
+import { Title, Text, Button } from '@telegram-apps/telegram-ui';
 import { Dumbbell, Weight, FileText, X } from 'lucide-react';
 
 interface HelpModalProps {
@@ -42,90 +42,147 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           animation: 'slideUp 0.3s ease-out'
         }}
       >
+        <div
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '50%',
+            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+            zIndex: 10
+          }}
+        >
+          <X size={20} color="var(--tg-theme-hint-color)" strokeWidth={2} />
+        </div>
+
         <div style={{
-          padding: '20px 16px 16px',
-          borderBottom: '1px solid var(--tg-theme-hint-color)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+          padding: '40px 24px 20px',
+          textAlign: 'center'
         }}>
-          <Title level="2" weight="2" style={{ fontSize: '20px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(76, 175, 80, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px'
+          }}>
+            <FileText size={40} color="rgb(76, 175, 80)" strokeWidth={2} />
+          </div>
+
+          <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '8px' }}>
             Как заполнять программу
           </Title>
-          <div
-            onClick={onClose}
-            style={{
-              cursor: 'pointer',
-              padding: '8px',
+          
+          <Text style={{ 
+            fontSize: '14px', 
+            color: 'var(--tg-theme-hint-color)',
+            display: 'block'
+          }}>
+            Следуйте этим простым правилам при создании программы
+          </Text>
+        </div>
+
+        <div style={{
+          padding: '0 24px 24px',
+          overflowY: 'auto',
+          flex: 1
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            marginBottom: '24px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(33, 150, 243, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '50%',
-              backgroundColor: 'var(--tg-theme-secondary-bg-color)'
-            }}
-          >
-            <X size={20} color="var(--tg-theme-text-color)" strokeWidth={2} />
+              flexShrink: 0
+            }}>
+              <Dumbbell size={24} color="rgb(33, 150, 243)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text weight="2" style={{ fontSize: '16px', display: 'block', marginBottom: '6px' }}>
+                Типы упражнений
+              </Text>
+              <Text style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Повт — для жима, приседа, тяги. Время — для планки, удержания. Расст — для бега, велосипеда.
+              </Text>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            marginBottom: '24px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(255, 152, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Weight size={24} color="rgb(255, 152, 0)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text weight="2" style={{ fontSize: '16px', display: 'block', marginBottom: '6px' }}>
+                Вес (кг)
+              </Text>
+              <Text style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Для упражнений с собственным весом (подтягивания, отжимания) оставьте поле пустым или 0.
+              </Text>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            alignItems: 'flex-start'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(156, 39, 176, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <FileText size={24} color="rgb(156, 39, 176)" strokeWidth={2} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <Text weight="2" style={{ fontSize: '16px', display: 'block', marginBottom: '6px' }}>
+                Заметки
+              </Text>
+              <Text style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)', lineHeight: '1.5' }}>
+                Используйте для описания техники, особенностей выполнения или напоминаний.
+              </Text>
+            </div>
           </div>
         </div>
 
         <div style={{
-          padding: '16px',
-          overflowY: 'auto',
-          flex: 1
-        }}>
-          <Card style={{ width: '100%', padding: '16px', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-              <Dumbbell size={20} color="var(--tg-theme-link-color)" strokeWidth={2} />
-              <Text weight="2" style={{ fontSize: '15px' }}>
-                Типы упражнений
-              </Text>
-            </div>
-            <div style={{ paddingLeft: '32px' }}>
-              <Text style={{ fontSize: '14px', display: 'block', marginBottom: '6px' }}>
-                • Повт — для жима, приседа, тяги
-              </Text>
-              <Text style={{ fontSize: '14px', display: 'block', marginBottom: '6px' }}>
-                • Время — для планки, удержания
-              </Text>
-              <Text style={{ fontSize: '14px', display: 'block' }}>
-                • Расст — для бега, велосипеда
-              </Text>
-            </div>
-          </Card>
-
-          <Card style={{ width: '100%', padding: '16px', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-              <Weight size={20} color="var(--tg-theme-link-color)" strokeWidth={2} />
-              <Text weight="2" style={{ fontSize: '15px' }}>
-                Вес (кг)
-              </Text>
-            </div>
-            <div style={{ paddingLeft: '32px' }}>
-              <Text style={{ fontSize: '14px', display: 'block', lineHeight: '1.5' }}>
-                Для упражнений с собственным весом (подтягивания, отжимания) оставьте поле пустым или 0.
-              </Text>
-            </div>
-          </Card>
-
-          <Card style={{ width: '100%', padding: '16px', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-              <FileText size={20} color="var(--tg-theme-link-color)" strokeWidth={2} />
-              <Text weight="2" style={{ fontSize: '15px' }}>
-                Заметки
-              </Text>
-            </div>
-            <div style={{ paddingLeft: '32px' }}>
-              <Text style={{ fontSize: '14px', display: 'block', lineHeight: '1.5' }}>
-                Используйте для описания техники, особенностей выполнения или напоминаний.
-              </Text>
-            </div>
-          </Card>
-        </div>
-
-        <div style={{
-          padding: '16px',
-          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          borderTop: '1px solid var(--tg-theme-hint-color)'
+          padding: '16px 24px',
+          paddingBottom: 'max(24px, env(safe-area-inset-bottom))'
         }}>
           <Button
             size="l"
