@@ -273,6 +273,16 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
   }, []);
 
 
+  const handleNumericKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+    if (allowedKeys.includes(e.key)) return;
+    if (e.key === '.' && (e.currentTarget.step === '0.5' || e.currentTarget.step === '0.1')) return;
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  }, []);
+
+
   const isEditing = useMemo(() => !!initialData, [initialData]);
 
 
@@ -320,7 +330,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
 
 
       <div style={{ padding: '0 16px 16px' }}>
-        <Card style={{ padding: '16px', marginBottom: '16px' }}>
+        <Card style={{ width: '100%', padding: '16px', marginBottom: '16px' }}>
           <Text weight="2" style={{ 
             fontSize: '14px', 
             marginBottom: '10px', 
@@ -343,7 +353,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
         </Card>
 
 
-        <Card style={{ padding: '16px', marginBottom: '16px' }}>
+        <Card style={{ width: '100%', padding: '16px', marginBottom: '16px' }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
@@ -470,6 +480,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
 
         {exercises.length === 0 ? (
           <Card style={{
+            width: '100%',
             textAlign: 'center',
             padding: '60px 16px'
           }}>
@@ -493,8 +504,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
             <Text style={{ 
               color: 'var(--tg-theme-hint-color)', 
               fontSize: '14px',
-              display: 'block',
-              textAlign: 'center'
+              display: 'block'
             }}>
               Добавьте упражнения в программу
             </Text>
@@ -503,7 +513,7 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {exercises.map((ex, i) => (
-                <Card key={i} style={{ padding: '16px' }}>
+                <Card key={`exercise-${i}`} style={{ width: '100%', padding: '16px' }}>
                   <div style={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
@@ -661,10 +671,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         </Text>
                         <Input
                           type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min="1"
                           placeholder="3"
                           value={ex.target_sets || ''}
-                          onFocus={(e) => e.target.select()}
+                          onKeyDown={handleNumericKeyDown}
                           onChange={(e) => updateExercise(i, 'target_sets', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
@@ -685,10 +697,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         </Text>
                         <Input
                           type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min="1"
                           placeholder="10"
                           value={ex.target_reps || ''}
-                          onFocus={(e) => e.target.select()}
+                          onKeyDown={handleNumericKeyDown}
                           onChange={(e) => updateExercise(i, 'target_reps', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
@@ -709,11 +723,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         </Text>
                         <Input
                           type="number"
+                          inputMode="decimal"
                           min="0"
                           step="0.5"
                           placeholder="0"
                           value={ex.target_weight || ''}
-                          onFocus={(e) => e.target.select()}
+                          onKeyDown={handleNumericKeyDown}
                           onChange={(e) => updateExercise(i, 'target_weight', e.target.value === '' ? 0 : Math.max(0, parseFloat(e.target.value) || 0))}
                           style={{ 
                             fontSize: '14px', 
@@ -745,10 +760,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         </Text>
                         <Input
                           type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min="1"
                           placeholder="3"
                           value={ex.target_sets || ''}
-                          onFocus={(e) => e.target.select()}
+                          onKeyDown={handleNumericKeyDown}
                           onChange={(e) => updateExercise(i, 'target_sets', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                           style={{ 
                             fontSize: '14px', 
@@ -769,10 +786,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         </Text>
                         <Input
                           type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min="0"
                           placeholder="1"
                           value={ex.time_minutes || ''}
-                          onFocus={(e) => e.target.select()}
+                          onKeyDown={handleNumericKeyDown}
                           onChange={(e) => updateExercise(i, 'time_minutes', e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                           style={{ 
                             fontSize: '14px', 
@@ -793,11 +812,13 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                         </Text>
                         <Input
                           type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           min="0"
                           max="59"
                           placeholder="0"
                           value={ex.time_seconds || ''}
-                          onFocus={(e) => e.target.select()}
+                          onKeyDown={handleNumericKeyDown}
                           onChange={(e) => updateExercise(i, 'time_seconds', e.target.value === '' ? 0 : Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
                           style={{ 
                             fontSize: '14px', 
@@ -823,10 +844,12 @@ export const ProgramEditor: React.FC<Props> = ({ onSave, onBack, initialData, us
                       </Text>
                       <Input
                         type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         min="1"
                         placeholder="1000"
                         value={ex.distance || ''}
-                        onFocus={(e) => e.target.select()}
+                        onKeyDown={handleNumericKeyDown}
                         onChange={(e) => updateExercise(i, 'distance', e.target.value === '' ? 0 : Math.max(1, parseInt(e.target.value) || 1))}
                         style={{ 
                           fontSize: '14px', 
