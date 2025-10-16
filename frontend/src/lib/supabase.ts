@@ -195,7 +195,7 @@ class SupabaseService {
       .update({
         program_name,
         day_order: day_order !== undefined && day_order !== null ? day_order : null,
-        weekday_hint: weekday_hint || null,
+        weekday_hint: weekdayHint || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', programId)
@@ -329,7 +329,6 @@ class SupabaseService {
     set_no: number;
     reps: number;
     weight: number;
-    rpe?: number;
     datetime: string;
     duration?: number;
     distance?: number;
@@ -346,7 +345,6 @@ class SupabaseService {
         set_no: logData.set_no,
         reps: logData.reps,
         weight: logData.weight,
-        rpe: logData.rpe || null,
         duration: logData.duration || 0,
         distance: logData.distance || 0,
         datetime: logData.datetime,
@@ -486,7 +484,7 @@ class SupabaseService {
   async getWorkoutDetail(sessionId: string) {
     const { data, error } = await supabase
       .from('logs')
-      .select('exercise_name, set_no, reps, weight, duration, distance, rpe')
+      .select('exercise_name, set_no, reps, weight, duration, distance')
       .eq('session_id', sessionId)
       .order('datetime', { ascending: true});
 
@@ -506,8 +504,7 @@ class SupabaseService {
       return {
         exercise_name: log.exercise_name,
         set_no: log.set_no,
-        display_value,
-        rpe: log.rpe || undefined,
+        display_value
       };
     });
   }
@@ -663,7 +660,6 @@ class SupabaseService {
       })
       .filter(Boolean) as string[];
 
-    // Получаем размер сплита
     const { data: splitPrograms, error: splitError } = await this.supabase
       .from('programs')
       .select('id')
