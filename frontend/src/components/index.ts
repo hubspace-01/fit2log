@@ -12,3 +12,5 @@ export { WeekActivityBar } from './WeekActivityBar';
 export { TopExerciseItem } from './TopExerciseItem';
 export { Profile } from './Profile';
 
+export { ConfirmModal } from './ConfirmModal';
+export { AlertModal } from './AlertModal';
