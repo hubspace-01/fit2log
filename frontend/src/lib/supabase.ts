@@ -358,6 +358,24 @@ class SupabaseService {
     return data;
   }
 
+  async updateWorkoutLog(logId: string, updates: {
+    reps?: number;
+    weight?: number;
+    duration?: number;
+    distance?: number;
+    comments?: string;
+  }) {
+    const { data, error } = await this.supabase
+      .from('logs')
+      .update(updates)
+      .eq('id', logId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async saveWorkoutLogs(logs: any[]) {
     if (logs.length === 0) return [];
 
@@ -750,23 +768,6 @@ class SupabaseService {
       .slice(0, limit);
 
     return topExercises;
-  }
-
-  async updateWorkoutLog(logId: string, updates: {
-    reps?: number;
-    weight?: number;
-    duration?: number;
-    distance?: number;
-  }) {
-    const { data, error } = await this.supabase
-      .from('logs')
-      .update(updates)
-      .eq('id', logId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
   }
 }
 

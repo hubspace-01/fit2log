@@ -1,5 +1,6 @@
 import React from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { telegramService } from '../lib/telegram';
 
 interface StepperProps {
   label: string;
@@ -21,13 +22,19 @@ export const Stepper: React.FC<StepperProps> = ({
   suffix = ''
 }) => {
   const handleDecrement = () => {
-    const newValue = Math.max(min, value - step);
-    onChange(newValue);
+    if (value > min) {
+      telegramService.hapticFeedback('impact', 'light');
+      const newValue = Math.max(min, value - step);
+      onChange(newValue);
+    }
   };
 
   const handleIncrement = () => {
-    const newValue = Math.min(max, value + step);
-    onChange(newValue);
+    if (value < max) {
+      telegramService.hapticFeedback('impact', 'light');
+      const newValue = Math.min(max, value + step);
+      onChange(newValue);
+    }
   };
 
   return (

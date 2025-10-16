@@ -2,20 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Button, Title, Text } from '@telegram-apps/telegram-ui';
 import { Edit2 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
+import { formatDuration } from '../lib/utils/formatters';
 import { Stepper } from './Stepper';
+import type { EditSetData, WorkoutLogUpdate } from '../types';
 
 interface EditSetModalProps {
   isOpen: boolean;
-  setData: {
-    id?: string;
-    exercise_type: 'reps' | 'time' | 'distance';
-    set_no: number;
-    reps?: number;
-    weight?: number;
-    duration?: number;
-    distance?: number;
-  } | null;
-  onSave: (updatedData: any) => void;
+  setData: EditSetData | null;
+  onSave: (updatedData: EditSetData & WorkoutLogUpdate) => void;
   onClose: () => void;
 }
 
@@ -45,9 +39,14 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
   const handleSave = () => {
     telegramService.hapticFeedback('impact', 'medium');
     
-    const updatedData: any = {
+    const updatedData: EditSetData & WorkoutLogUpdate = {
       id: setData.id,
-      set_no: setData.set_no
+      exercise_type: setData.exercise_type,
+      set_no: setData.set_no,
+      reps: 0,
+      weight: 0,
+      duration: 0,
+      distance: 0
     };
 
     if (setData.exercise_type === 'reps') {
@@ -65,13 +64,6 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
   const handleClose = () => {
     telegramService.hapticFeedback('impact', 'light');
     onClose();
-  };
-
-  const formatDuration = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}с`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return secs > 0 ? `${mins}м ${secs}с` : `${mins}м`;
   };
 
   return (

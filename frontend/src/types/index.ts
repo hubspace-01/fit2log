@@ -200,3 +200,63 @@ export interface TopExercise {
   total_sets: number;
   secondary_metric?: string;
 }
+
+export interface CompletedSet {
+  id: string;
+  exercise_id: string;
+  exercise_name: string;
+  set_no: number;
+  reps: number;
+  weight: number;
+  duration: number;
+  distance: number;
+  timestamp: string;
+}
+
+export interface EditSetData {
+  id: string;
+  exercise_type: 'reps' | 'time' | 'distance';
+  set_no: number;
+  reps: number;
+  weight: number;
+  duration: number;
+  distance: number;
+}
+
+export interface WorkoutLogUpdate {
+  reps?: number;
+  weight?: number;
+  duration?: number;
+  distance?: number;
+  comments?: string;
+}
+
+export interface CompletedSet {
+  id: string;
+  exercise_id: string;
+  exercise_name: string;
+  set_no: number;
+  reps: number;
+  weight: number;
+  duration: number;
+  distance: number;
+  timestamp: string;
+}
+
+export interface EditSetData {
+  id: string;
+  exercise_type: 'reps' | 'time' | 'distance';
+  set_no: number;
+  reps: number;
+  weight: number;
+  duration: number;
+  distance: number;
+}
+
+export interface WorkoutLogUpdate {
+  reps?: number;
+  weight?: number;
+  duration?: number;
+  distance?: number;
+  comments?: string;
+}
