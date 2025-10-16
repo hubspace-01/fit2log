@@ -56,7 +56,9 @@ export const useExerciseNavigation = ({
   const effectiveTargetSets = (currentExercise?.target_sets || 0) + exerciseExtraSets;
   
   const currentSetNumber = exerciseCompletedSets.length + exerciseSkippedCount + 1;
-  const isLastSetOfExercise = currentSetNumber > effectiveTargetSets;
+  
+  // FIX: isLastSetOfExercise должен учитывать, что мы можем быть на последнем подходе
+  const isLastSetOfExercise = exerciseCompletedSets.length >= effectiveTargetSets;
 
   const addExtraSet = useCallback(() => {
     if (!currentExercise) return;
@@ -84,7 +86,7 @@ export const useExerciseNavigation = ({
     currentExerciseIndex,
     totalExercises,
     exerciseCompletedSets,
-    currentSetNumber,
+    currentSetNumber: Math.min(currentSetNumber, effectiveTargetSets), // FIX: не показываем 5 из 4
     effectiveTargetSets,
     isLastSetOfExercise,
     isLastExercise,

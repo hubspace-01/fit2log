@@ -95,7 +95,8 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
           display: 'flex',
           flexDirection: 'column',
           zIndex: 1000,
-          animation: 'slideUp 0.3s ease-out'
+          animation: 'slideUp 0.3s ease-out',
+          paddingBottom: 'env(safe-area-inset-bottom)'
         }}
       >
         <div style={{
@@ -154,7 +155,7 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
 
             {setData.exercise_type === 'time' && (
               <Stepper
-                label={`Время${duration >= 60 ? ` (${formatDuration(duration)})` : ''}`}
+                label={duration >= 60 ? `Время (${formatDuration(duration)})` : 'Время (сек)'}
                 value={duration}
                 onChange={setDuration}
                 min={5}
@@ -180,7 +181,6 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
 
         <div style={{
           padding: '0 24px 24px',
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px'
