@@ -195,7 +195,7 @@ class SupabaseService {
       .update({
         program_name,
         day_order: day_order !== undefined && day_order !== null ? day_order : null,
-        weekday_hint: weekdayHint || null,
+        weekday_hint: weekday_hint || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', programId)
