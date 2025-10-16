@@ -10,24 +10,20 @@ import type { WorkoutHistoryItem, WorkoutDetailLog } from '../types';
 import { supabaseService } from '../lib/supabase';
 import { telegramService } from '../lib/telegram';
 
-
 interface Props {
   workout: WorkoutHistoryItem;
   onBack: () => void;
 }
-
 
 export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
   const [details, setDetails] = useState<WorkoutDetailLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
-
   useEffect(() => {
     telegramService.showBackButton(onBack);
     return () => telegramService.hideBackButton();
   }, [onBack]);
-
 
   useEffect(() => {
     const loadDetails = async () => {
@@ -37,7 +33,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
         const data = await supabaseService.getWorkoutDetail(workout.id);
         setDetails(data);
       } catch (err) {
-        console.error('Error loading workout details:', err);
         setError('Ошибка загрузки деталей тренировки');
       } finally {
         setLoading(false);
@@ -46,7 +41,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
 
     loadDetails();
   }, [workout.id]);
-
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -57,7 +51,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
     });
   };
 
-
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('ru-RU', { 
@@ -65,7 +58,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
       minute: '2-digit' 
     });
   };
-
 
   const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${seconds}с`;
@@ -76,8 +68,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
     return `${hours}ч ${remainingMinutes}мин`;
   };
 
-
-  // Группируем подходы по упражнениям
   const groupedDetails = details.reduce((acc, detail) => {
     if (!acc[detail.exercise_name]) {
       acc[detail.exercise_name] = [];
@@ -85,7 +75,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
     acc[detail.exercise_name].push(detail);
     return acc;
   }, {} as Record<string, WorkoutDetailLog[]>);
-
 
   if (loading) {
     return (
@@ -99,7 +88,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
       </div>
     );
   }
-
 
   if (error) {
     return (
@@ -122,7 +110,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
       </div>
     );
   }
-
 
   return (
     <div className="app-container fade-in" style={{ padding: '16px' }}>
@@ -148,7 +135,6 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
           ⏱️ Длительность: {formatDuration(workout.total_duration || 0)}
         </Text>
       </div>
-
 
       {Object.keys(groupedDetails).length === 0 ? (
         <Section>
@@ -191,25 +177,12 @@ export const WorkoutDetail: React.FC<Props> = ({ workout, onBack }) => {
                         <Text style={{ fontSize: '14px' }}>
                           Подход {set.set_no}:
                         </Text>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Text style={{ 
-                            fontSize: '14px',
-                            fontWeight: '500'
-                          }}>
-                            {set.display_value}
-                          </Text>
-                          {set.rpe && (
-                            <Text style={{ 
-                              fontSize: '12px',
-                              color: 'var(--tg-theme-hint-color)',
-                              backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-                              padding: '2px 6px',
-                              borderRadius: '4px'
-                            }}>
-                              RPE {set.rpe}
-                            </Text>
-                          )}
-                        </div>
+                        <Text style={{ 
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}>
+                          {set.display_value}
+                        </Text>
                       </div>
                     ))}
                   </div>
