@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button, Title, Text } from '@telegram-apps/telegram-ui';
-import { AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 
 interface ConfirmModalProps {
