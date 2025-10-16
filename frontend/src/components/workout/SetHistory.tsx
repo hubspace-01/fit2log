@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section, Cell } from '@telegram-apps/telegram-ui';
 import { CheckCircle, Edit2 } from 'lucide-react';
-import { formatDuration } from '../../lib/utils/formatters';
+import { formatSetDisplay } from '../../lib/utils/formatters';
 import type { CompletedSet } from '../../types';
 
 interface SetHistoryProps {
@@ -20,14 +20,7 @@ export const SetHistory: React.FC<SetHistoryProps> = ({
   return (
     <Section header="История подходов" style={{ marginTop: '8px' }}>
       {sets.map((set, index) => {
-        let subtitle = '';
-        if (exerciseType === 'reps') {
-          subtitle = `${set.reps} повт • ${set.weight} кг`;
-        } else if (exerciseType === 'time') {
-          subtitle = formatDuration(set.duration || 0);
-        } else if (exerciseType === 'distance') {
-          subtitle = `${set.distance} м`;
-        }
+        const subtitle = formatSetDisplay(exerciseType, set);
 
         return (
           <Cell

@@ -2,7 +2,7 @@ import React from 'react';
 import { Section } from '@telegram-apps/telegram-ui';
 import { Plus } from 'lucide-react';
 import { Stepper } from '../Stepper';
-import { formatDuration } from '../../lib/utils/formatters';
+import { TimeInput } from '../TimeInput';
 
 interface SetControlsProps {
   exerciseType: 'reps' | 'time' | 'distance';
@@ -90,20 +90,18 @@ export const SetControls: React.FC<SetControlsProps> = ({
         )}
 
         {exerciseType === 'time' && (
-          <Stepper
-            label={duration >= 60 ? `Время (${formatDuration(duration)})` : 'Время (сек)'}
+          <TimeInput
+            label="Время"
             value={duration}
             onChange={onDurationChange}
             min={5}
-            max={600}
-            step={5}
-            suffix=" сек"
+            max={3600}
           />
         )}
 
         {exerciseType === 'distance' && (
           <Stepper
-            label="Расстояние (м)"
+            label="Расстояние"
             value={distance}
             onChange={onDistanceChange}
             min={100}

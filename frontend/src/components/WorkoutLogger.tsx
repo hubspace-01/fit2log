@@ -152,7 +152,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         try {
           await cancelSession();
         } catch (error) {
-          // Ignore error
+          
         } finally {
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
           onCancel();
@@ -361,6 +361,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         <WorkoutActions
           saving={saving}
           isLastSetOfExercise={isLastSetOfExercise}
+          isLastExercise={isLastExercise}
+          totalSets={currentExercise?.target_sets || 1}
           onComplete={handleCompleteSet}
           onSkip={handleSkipSet}
         />

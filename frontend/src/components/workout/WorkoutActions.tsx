@@ -4,6 +4,8 @@ import { Button, Divider } from '@telegram-apps/telegram-ui';
 interface WorkoutActionsProps {
   saving: boolean;
   isLastSetOfExercise: boolean;
+  isLastExercise: boolean;
+  totalSets: number;
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -11,9 +13,18 @@ interface WorkoutActionsProps {
 export const WorkoutActions: React.FC<WorkoutActionsProps> = ({
   saving,
   isLastSetOfExercise,
+  isLastExercise,
+  totalSets,
   onComplete,
   onSkip
 }) => {
+  const getSkipButtonText = () => {
+    if (isLastSetOfExercise) {
+      return isLastExercise ? 'Завершить тренировку' : 'Следующее упражнение';
+    }
+    return totalSets === 1 ? (isLastExercise ? 'Завершить тренировку' : 'Следующее упражнение') : 'Пропустить подход';
+  };
+
   return (
     <>
       <Divider />
@@ -37,7 +48,7 @@ export const WorkoutActions: React.FC<WorkoutActionsProps> = ({
           disabled={saving}
           style={{ fontSize: '14px' }}
         >
-          {isLastSetOfExercise ? 'Следующее упражнение' : 'Пропустить подход'}
+          {getSkipButtonText()}
         </Button>
       </div>
     </>

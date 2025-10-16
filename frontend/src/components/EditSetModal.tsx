@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button, Title, Text } from '@telegram-apps/telegram-ui';
 import { Edit2 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
-import { formatDuration } from '../lib/utils/formatters';
 import { Stepper } from './Stepper';
+import { TimeInput } from './TimeInput';
 import type { EditSetData, WorkoutLogUpdate } from '../types';
 
 interface EditSetModalProps {
@@ -95,8 +95,7 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
           display: 'flex',
           flexDirection: 'column',
           zIndex: 1000,
-          animation: 'slideUp 0.3s ease-out',
-          paddingBottom: 'env(safe-area-inset-bottom)'
+          animation: 'slideUp 0.3s ease-out'
         }}
       >
         <div style={{
@@ -154,20 +153,18 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
             )}
 
             {setData.exercise_type === 'time' && (
-              <Stepper
-                label={duration >= 60 ? `Время (${formatDuration(duration)})` : 'Время (сек)'}
+              <TimeInput
+                label="Время"
                 value={duration}
                 onChange={setDuration}
                 min={5}
-                max={600}
-                step={5}
-                suffix=" сек"
+                max={3600}
               />
             )}
 
             {setData.exercise_type === 'distance' && (
               <Stepper
-                label="Расстояние (м)"
+                label="Расстояние"
                 value={distance}
                 onChange={setDistance}
                 min={100}
@@ -180,7 +177,8 @@ export const EditSetModal: React.FC<EditSetModalProps> = ({
         </div>
 
         <div style={{
-          padding: '0 24px 24px',
+          padding: '0 24px',
+          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
           display: 'flex',
           flexDirection: 'column',
           gap: '12px'
