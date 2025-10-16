@@ -16,6 +16,8 @@ import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
 import { normalizeExerciseName } from '../lib/personalRecords';
 import { Stepper } from './Stepper';
+import { ConfirmModal } from './ConfirmModal';
+import { AlertModal } from './AlertModal';
 import type { WorkoutSession, PersonalRecord } from '../types';
 
 interface WorkoutLoggerProps {
@@ -47,6 +49,20 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const [saving, setSaving] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    danger: false
+  });
+
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    message: '',
+    type: 'info' as 'info' | 'error' | 'success'
+  });
+
   const startTimeRef = useRef(new Date(session.started_at).getTime());
   const sessionIdRef = useRef<string | null>(null);
   
@@ -75,28 +91,30 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const handleBack = useCallback(() => {
     telegramService.hapticFeedback('impact', 'medium');
-    telegramService.showConfirm(
-      'Отменить тренировку? Прогресс будет сохранён.',
-      async (confirmed: boolean) => {
-        if (confirmed) {
-          telegramService.hapticFeedback('impact', 'heavy');
-          try {
-            if (sessionIdRef.current) {
-              const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-              await supabaseService.updateWorkoutSession(sessionIdRef.current, {
-                status: 'cancelled',
-                completed_at: new Date().toISOString(),
-                total_duration: currentElapsed
-              });
-            }
-          } catch (error) {
-            
-          } finally {
-            onCancel();
+    setConfirmModal({
+      isOpen: true,
+      title: 'Отменить тренировку?',
+      message: 'Прогресс будет сохранён',
+      danger: true,
+      onConfirm: async () => {
+        telegramService.hapticFeedback('impact', 'heavy');
+        try {
+          if (sessionIdRef.current) {
+            const currentElapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+            await supabaseService.updateWorkoutSession(sessionIdRef.current, {
+              status: 'cancelled',
+              completed_at: new Date().toISOString(),
+              total_duration: currentElapsed
+            });
           }
+        } catch (error) {
+          
+        } finally {
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          onCancel();
         }
       }
-    );
+    });
   }, [onCancel]);
 
   useEffect(() => {
@@ -151,7 +169,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           setSessionId(newSession.id);
         }
       } catch (error) {
-        telegramService.showAlert('Ошибка создания сессии. Попробуйте позже.');
+        setAlertModal({
+          isOpen: true,
+          message: 'Ошибка создания сессии. Попробуйте позже',
+          type: 'error'
+        });
       } finally {
         setInitializing(false);
       }
@@ -246,17 +268,29 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
     if (exerciseType === 'reps' && reps <= 0) {
       telegramService.hapticFeedback('impact', 'medium');
-      telegramService.showAlert('Введите количество повторений больше 0');
+      setAlertModal({
+        isOpen: true,
+        message: 'Введите количество повторений больше 0',
+        type: 'error'
+      });
       return;
     }
     if (exerciseType === 'time' && duration <= 0) {
       telegramService.hapticFeedback('impact', 'medium');
-      telegramService.showAlert('Введите время больше 0 секунд');
+      setAlertModal({
+        isOpen: true,
+        message: 'Введите время больше 0 секунд',
+        type: 'error'
+      });
       return;
     }
     if (exerciseType === 'distance' && distance <= 0) {
       telegramService.hapticFeedback('impact', 'medium');
-      telegramService.showAlert('Введите расстояние больше 0 метров');
+      setAlertModal({
+        isOpen: true,
+        message: 'Введите расстояние больше 0 метров',
+        type: 'error'
+      });
       return;
     }
 
@@ -305,7 +339,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
     } catch (error) {
       telegramService.hapticFeedback('impact', 'heavy');
-      telegramService.showAlert('Ошибка сохранения. Попробуйте ещё раз.');
+      setAlertModal({
+        isOpen: true,
+        message: 'Ошибка сохранения. Попробуйте ещё раз',
+        type: 'error'
+      });
       return;
     } finally {
       setSaving(false);
@@ -314,14 +352,16 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     if (currentSetNumber >= effectiveTargetSets) {
       if (currentExerciseIndex < totalExercises - 1) {
         telegramService.hapticFeedback('impact', 'medium');
-        telegramService.showConfirm(
-          'Упражнение завершено! Перейти к следующему?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleNextExercise();
-            }
+        setConfirmModal({
+          isOpen: true,
+          title: 'Упражнение завершено!',
+          message: 'Перейти к следующему?',
+          danger: false,
+          onConfirm: () => {
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            handleNextExercise();
           }
-        );
+        });
       } else {
         handleFinishWorkout();
       }
@@ -343,23 +383,27 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
     if (isLastSetOfExercise) {
       if (currentExerciseIndex < totalExercises - 1) {
-        telegramService.showConfirm(
-          'Завершить упражнение и перейти к следующему?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleNextExercise();
-            }
+        setConfirmModal({
+          isOpen: true,
+          title: 'Завершить упражнение?',
+          message: 'Перейти к следующему упражнению?',
+          danger: false,
+          onConfirm: () => {
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            handleNextExercise();
           }
-        );
+        });
       } else {
-        telegramService.showConfirm(
-          'Это последнее упражнение. Завершить тренировку?',
-          (confirmed: boolean) => {
-            if (confirmed) {
-              handleFinishWorkout();
-            }
+        setConfirmModal({
+          isOpen: true,
+          title: 'Последнее упражнение',
+          message: 'Завершить тренировку?',
+          danger: false,
+          onConfirm: () => {
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            handleFinishWorkout();
           }
-        );
+        });
       }
     } else {
       const skipKey = `${currentExercise.id}_${currentSetNumber}`;
@@ -425,284 +469,302 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      paddingBottom: '40px',
-      backgroundColor: 'var(--tg-theme-bg-color)'
-    }}>
-      <div style={{
-        padding: '16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-        marginBottom: '8px'
+    <>
+      <div style={{ 
+        minHeight: '100vh',
+        paddingBottom: '40px',
+        backgroundColor: 'var(--tg-theme-bg-color)'
       }}>
-        <Text weight="2" style={{ fontSize: '15px' }}>
-          {session.program_name}
-        </Text>
-        <Caption level="1" style={{ 
-          fontSize: '14px', 
-          color: 'var(--tg-theme-hint-color)',
+        <div style={{
+          padding: '16px',
           display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '6px'
+          backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+          marginBottom: '8px'
         }}>
-          <Clock size={16} />
-          {formatTime(elapsedTime)}
-        </Caption>
-      </div>
-
-      <Section>
-        <div style={{ padding: '12px 16px' }}>
+          <Text weight="2" style={{ fontSize: '15px' }}>
+            {session.program_name}
+          </Text>
           <Caption level="1" style={{ 
             fontSize: '14px', 
             color: 'var(--tg-theme-hint-color)',
-            marginBottom: '8px',
             display: 'flex',
             alignItems: 'center',
             gap: '6px'
           }}>
-            <Activity size={16} />
-            Упражнение {currentExerciseIndex + 1} из {totalExercises}
+            <Clock size={16} />
+            {formatTime(elapsedTime)}
           </Caption>
-          <div style={{
-            width: '100%',
-            height: '4px',
-            backgroundColor: 'var(--tg-theme-secondary-bg-color)',
-            borderRadius: '2px',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              width: `${((currentExerciseIndex + 1) / totalExercises) * 100}%`,
-              height: '100%',
-              backgroundColor: 'var(--tg-theme-button-color)',
-              transition: 'width 0.3s ease'
-            }} />
-          </div>
         </div>
-      </Section>
 
-      <div style={{ padding: '16px 16px 0', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-          {getExerciseIcon()}
-        </div>
-        <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
-          {currentExercise.exercise_name}
-        </Title>
-        <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
-          {getTargetDescription()}
-        </Caption>
-      </div>
-
-      {currentExercisePR && (
-        <div style={{ padding: '12px 16px' }}>
-          <div style={{
-            padding: '12px',
-            backgroundColor: 'var(--tg-theme-link-color)',
-            borderRadius: '10px',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              gap: '6px',
-              marginBottom: '4px'
-            }}>
-              <Trophy size={16} color="white" />
-              <span style={{ 
-                fontSize: '13px',
-                color: 'rgba(255,255,255,0.9)',
-                fontWeight: '500'
-              }}>
-                Твой рекорд
-              </span>
-            </div>
-            <div style={{ 
-              fontSize: '18px',
-              fontWeight: '700',
-              color: 'white',
-              marginBottom: '2px'
-            }}>
-              {formatPR()}
-            </div>
-            <div style={{ 
-              fontSize: '11px',
-              color: 'rgba(255,255,255,0.8)'
-            }}>
-              {formatDate(currentExercisePR.achieved_at)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {currentExercise.notes && (
-        <div style={{ padding: '0 16px 12px' }}>
-          <div style={{
-            padding: '12px 14px',
-            backgroundColor: 'rgba(255, 193, 7, 0.15)',
-            border: '1px solid rgba(255, 193, 7, 0.3)',
-            borderRadius: '10px',
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              minWidth: '32px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 193, 7, 0.2)',
+        <Section>
+          <div style={{ padding: '12px 16px' }}>
+            <Caption level="1" style={{ 
+              fontSize: '14px', 
+              color: 'var(--tg-theme-hint-color)',
+              marginBottom: '8px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              gap: '6px'
             }}>
-              <Lightbulb size={18} color="#FFC107" />
-            </div>
-            <div style={{ 
-              fontSize: '14px',
-              color: 'var(--tg-theme-text-color)',
-              lineHeight: '1.4',
-              flex: 1
+              <Activity size={16} />
+              Упражнение {currentExerciseIndex + 1} из {totalExercises}
+            </Caption>
+            <div style={{
+              width: '100%',
+              height: '4px',
+              backgroundColor: 'var(--tg-theme-secondary-bg-color)',
+              borderRadius: '2px',
+              overflow: 'hidden'
             }}>
-              {currentExercise.notes}
+              <div style={{
+                width: `${((currentExerciseIndex + 1) / totalExercises) * 100}%`,
+                height: '100%',
+                backgroundColor: 'var(--tg-theme-button-color)',
+                transition: 'width 0.3s ease'
+              }} />
             </div>
           </div>
-        </div>
-      )}
+        </Section>
 
-      <Section 
-        header={
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            gap: '10px',
-            padding: '0 16px'
-          }}>
-            <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
-            <button
-              onClick={handleAddSet}
-              style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                border: 'none',
-                backgroundColor: 'var(--tg-theme-link-color)',
+        <div style={{ padding: '16px 16px 0', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+            {getExerciseIcon()}
+          </div>
+          <Title level="1" weight="2" style={{ fontSize: '24px', marginBottom: '4px' }}>
+            {currentExercise.exercise_name}
+          </Title>
+          <Caption level="1" style={{ fontSize: '14px', color: 'var(--tg-theme-hint-color)' }}>
+            {getTargetDescription()}
+          </Caption>
+        </div>
+
+        {currentExercisePR && (
+          <div style={{ padding: '12px 16px' }}>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'var(--tg-theme-link-color)',
+              borderRadius: '10px',
+              textAlign: 'center'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: '6px',
+                marginBottom: '4px'
+              }}>
+                <Trophy size={16} color="white" />
+                <span style={{ 
+                  fontSize: '13px',
+                  color: 'rgba(255,255,255,0.9)',
+                  fontWeight: '500'
+                }}>
+                  Твой рекорд
+                </span>
+              </div>
+              <div style={{ 
+                fontSize: '18px',
+                fontWeight: '700',
                 color: 'white',
+                marginBottom: '2px'
+              }}>
+                {formatPR()}
+              </div>
+              <div style={{ 
+                fontSize: '11px',
+                color: 'rgba(255,255,255,0.8)'
+              }}>
+                {formatDate(currentExercisePR.achieved_at)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentExercise.notes && (
+          <div style={{ padding: '0 16px 12px' }}>
+            <div style={{
+              padding: '12px 14px',
+              backgroundColor: 'rgba(255, 193, 7, 0.15)',
+              border: '1px solid rgba(255, 193, 7, 0.3)',
+              borderRadius: '10px',
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center'
+            }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255, 193, 7, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                padding: 0
-              }}
-            >
-              <Plus size={16} />
-            </button>
+                justifyContent: 'center'
+              }}>
+                <Lightbulb size={18} color="#FFC107" />
+              </div>
+              <div style={{ 
+                fontSize: '14px',
+                color: 'var(--tg-theme-text-color)',
+                lineHeight: '1.4',
+                flex: 1
+              }}>
+                {currentExercise.notes}
+              </div>
+            </div>
           </div>
-        }
-        style={{ marginTop: '8px' }}
-      >
-        <div style={{ padding: '0 16px' }}>
-          {exerciseType === 'reps' && (
-            <>
-              <Stepper
-                label="Повторения"
-                value={reps}
-                onChange={setReps}
-                min={1}
-                max={50}
-                step={1}
-              />
+        )}
 
-              <Stepper
-                label="Вес (кг)"
-                value={weight}
-                onChange={setWeight}
-                min={0}
-                max={500}
-                step={2.5}
-                suffix=" кг"
-              />
-            </>
-          )}
-
-          {exerciseType === 'time' && (
-            <Stepper
-              label="Время (сек)"
-              value={duration}
-              onChange={setDuration}
-              min={5}
-              max={600}
-              step={5}
-              suffix=" сек"
-            />
-          )}
-
-          {exerciseType === 'distance' && (
-            <Stepper
-              label="Расстояние (м)"
-              value={distance}
-              onChange={setDistance}
-              min={100}
-              max={50000}
-              step={100}
-              suffix=" м"
-            />
-          )}
-        </div>
-      </Section>
-
-      {exerciseCompletedSets.length > 0 && (
-        <Section header="История подходов" style={{ marginTop: '8px' }}>
-          {exerciseCompletedSets.map((set, index) => {
-            let subtitle = '';
-            if (exerciseType === 'reps') {
-              subtitle = `${set.reps} повт • ${set.weight} кг`;
-            } else if (exerciseType === 'time') {
-              subtitle = `${set.duration} сек`;
-            } else if (exerciseType === 'distance') {
-              subtitle = `${set.distance} м`;
-            }
-
-            return (
-              <Cell
-                key={`set-${index}`}
-                before={<CheckCircle size={18} color="var(--tg-theme-link-color)" />}
-                subtitle={subtitle}
+        <Section 
+          header={
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              gap: '10px',
+              padding: '0 16px'
+            }}>
+              <span>Подход {currentSetNumber} из {effectiveTargetSets}</span>
+              <button
+                onClick={handleAddSet}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  backgroundColor: 'var(--tg-theme-link-color)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
               >
-                Подход {set.set_no}
-              </Cell>
-            );
-          })}
+                <Plus size={16} />
+              </button>
+            </div>
+          }
+          style={{ marginTop: '8px' }}
+        >
+          <div style={{ padding: '0 16px' }}>
+            {exerciseType === 'reps' && (
+              <>
+                <Stepper
+                  label="Повторения"
+                  value={reps}
+                  onChange={setReps}
+                  min={1}
+                  max={50}
+                  step={1}
+                />
+
+                <Stepper
+                  label="Вес (кг)"
+                  value={weight}
+                  onChange={setWeight}
+                  min={0}
+                  max={500}
+                  step={2.5}
+                  suffix=" кг"
+                />
+              </>
+            )}
+
+            {exerciseType === 'time' && (
+              <Stepper
+                label="Время (сек)"
+                value={duration}
+                onChange={setDuration}
+                min={5}
+                max={600}
+                step={5}
+                suffix=" сек"
+              />
+            )}
+
+            {exerciseType === 'distance' && (
+              <Stepper
+                label="Расстояние (м)"
+                value={distance}
+                onChange={setDistance}
+                min={100}
+                max={50000}
+                step={100}
+                suffix=" м"
+              />
+            )}
+          </div>
         </Section>
-      )}
 
-      <Divider />
+        {exerciseCompletedSets.length > 0 && (
+          <Section header="История подходов" style={{ marginTop: '8px' }}>
+            {exerciseCompletedSets.map((set, index) => {
+              let subtitle = '';
+              if (exerciseType === 'reps') {
+                subtitle = `${set.reps} повт • ${set.weight} кг`;
+              } else if (exerciseType === 'time') {
+                subtitle = `${set.duration} сек`;
+              } else if (exerciseType === 'distance') {
+                subtitle = `${set.distance} м`;
+              }
 
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <Button
-          size="l"
-          stretched
-          mode="filled"
-          onClick={handleCompleteSet}
-          disabled={saving}
-          style={{ fontSize: '16px' }}
-        >
-          {saving ? 'Сохранение...' : 'Выполнить подход'}
-        </Button>
+              return (
+                <Cell
+                  key={`set-${index}`}
+                  before={<CheckCircle size={18} color="var(--tg-theme-link-color)" />}
+                  subtitle={subtitle}
+                >
+                  Подход {set.set_no}
+                </Cell>
+              );
+            })}
+          </Section>
+        )}
 
-        <Button
-          size="m"
-          stretched
-          mode="outline"
-          onClick={handleSkipSet}
-          disabled={saving}
-          style={{ fontSize: '14px' }}
-        >
-          {isLastSetOfExercise ? 'Следующее упражнение' : 'Пропустить подход'}
-        </Button>
+        <Divider />
+
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Button
+            size="l"
+            stretched
+            mode="filled"
+            onClick={handleCompleteSet}
+            disabled={saving}
+            style={{ fontSize: '16px' }}
+          >
+            {saving ? 'Сохранение...' : 'Выполнить подход'}
+          </Button>
+
+          <Button
+            size="m"
+            stretched
+            mode="outline"
+            onClick={handleSkipSet}
+            disabled={saving}
+            style={{ fontSize: '14px' }}
+          >
+            {isLastSetOfExercise ? 'Следующее упражнение' : 'Пропустить подход'}
+          </Button>
+        </div>
       </div>
-    </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        danger={confirmModal.danger}
+      />
+      
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        message={alertModal.message}
+        type={alertModal.type}
+        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+      />
+    </>
   );
 };
