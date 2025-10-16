@@ -206,18 +206,11 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const handleSkipSet = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
 
+    // FIX: Правильная логика skip
     if (isLastSetOfExercise) {
+      // Все подходы выполнены/пропущены - переходим к следующему упражнению или завершаем
       if (!isLastExercise) {
-        setConfirmModal({
-          isOpen: true,
-          title: 'Завершить упражнение?',
-          message: 'Перейти к следующему упражнению?',
-          danger: false,
-          onConfirm: () => {
-            setConfirmModal(prev => ({ ...prev, isOpen: false }));
-            goToNextExercise();
-          }
-        });
+        goToNextExercise();
       } else {
         setConfirmModal({
           isOpen: true,
@@ -231,6 +224,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         });
       }
     } else {
+      // Просто skip текущего подхода
       skipCurrentSet();
     }
   }, [isLastSetOfExercise, isLastExercise, goToNextExercise, skipCurrentSet]);
