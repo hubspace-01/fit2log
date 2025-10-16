@@ -751,9 +751,6 @@ class SupabaseService {
 
     return topExercises;
   }
-}
-
-export const supabaseService = new SupabaseService();
 
   async updateWorkoutLog(logId: string, updates: {
     reps?: number;
@@ -771,3 +768,6 @@ export const supabaseService = new SupabaseService();
     if (error) throw error;
     return data;
   }
+}
+
+export const supabaseService = new SupabaseService();
