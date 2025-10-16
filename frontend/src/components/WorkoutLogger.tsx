@@ -10,7 +10,8 @@ import {
   CheckCircle, 
   Trophy,
   Loader2,
-  Plus
+  Plus,
+  Edit2
 } from 'lucide-react';
 import { telegramService } from '../lib/telegram';
 import { supabaseService } from '../lib/supabase';
@@ -18,6 +19,7 @@ import { normalizeExerciseName } from '../lib/personalRecords';
 import { Stepper } from './Stepper';
 import { ConfirmModal } from './ConfirmModal';
 import { AlertModal } from './AlertModal';
+import { EditSetModal } from './EditSetModal';
 import type { WorkoutSession, PersonalRecord } from '../types';
 
 interface WorkoutLoggerProps {
@@ -63,8 +65,19 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     type: 'info' as 'info' | 'error' | 'success'
   });
 
+  const [editSetModal, setEditSetModal] = useState({
+    isOpen: false,
+    setData: null as any
+  });
+
   const startTimeRef = useRef(new Date(session.started_at).getTime());
   const sessionIdRef = useRef<string | null>(null);
+  const initialValuesRef = useRef<{
+    reps: number;
+    weight: number;
+    duration: number;
+    distance: number;
+  }>({ reps: 0, weight: 0, duration: 0, distance: 0 });
   
   const currentExercise = session.exercises[currentExerciseIndex];
   const totalExercises = session.exercises.length;
@@ -81,13 +94,20 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const effectiveTargetSets = (currentExercise?.target_sets || 0) + exerciseExtraSets;
   
   const currentSetNumber = exerciseCompletedSets.length + exerciseSkippedCount + 1;
-  const isLastSetOfExercise = currentSetNumber >= effectiveTargetSets;
+  const isLastSetOfExercise = currentSetNumber > effectiveTargetSets;
 
   const exerciseType = currentExercise?.exercise_type || 'reps';
 
   useEffect(() => {
     sessionIdRef.current = sessionId;
   }, [sessionId]);
+
+  const formatDuration = useCallback((seconds: number): string => {
+    if (seconds < 60) return `${seconds}с`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return secs > 0 ? `${mins}м ${secs}с` : `${mins}м`;
+  }, []);
 
   const handleBack = useCallback(() => {
     telegramService.hapticFeedback('impact', 'medium');
@@ -150,9 +170,12 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
             
             if (lastExerciseIndex !== -1) {
               const setsForLastEx = logs.filter(l => l.exercise_id === lastExerciseId).length;
-              const targetSets = session.exercises[lastExerciseIndex].target_sets;
+              const exercise = session.exercises[lastExerciseIndex];
+              const targetSets = exercise.target_sets;
+              const extraForExercise = extraSets.get(exercise.id) || 0;
+              const totalSetsForExercise = targetSets + extraForExercise;
               
-              if (setsForLastEx >= targetSets && lastExerciseIndex < session.exercises.length - 1) {
+              if (setsForLastEx >= totalSetsForExercise && lastExerciseIndex < session.exercises.length - 1) {
                 setCurrentExerciseIndex(lastExerciseIndex + 1);
               } else {
                 setCurrentExerciseIndex(lastExerciseIndex);
@@ -211,10 +234,28 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       if (exerciseType === 'reps') {
         setReps(currentExercise.target_reps);
         setWeight(currentExercise.target_weight);
+        initialValuesRef.current = {
+          reps: currentExercise.target_reps,
+          weight: currentExercise.target_weight,
+          duration: 0,
+          distance: 0
+        };
       } else if (exerciseType === 'time') {
         setDuration(currentExercise.duration || 60);
+        initialValuesRef.current = {
+          reps: 0,
+          weight: 0,
+          duration: currentExercise.duration || 60,
+          distance: 0
+        };
       } else if (exerciseType === 'distance') {
         setDistance(currentExercise.distance || 1000);
+        initialValuesRef.current = {
+          reps: 0,
+          weight: 0,
+          duration: 0,
+          distance: currentExercise.distance || 1000
+        };
       }
     }
   }, [currentExerciseIndex, currentExercise, exerciseType]);
@@ -249,7 +290,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     if (currentExercisePR.exercise_type === 'reps') {
       return `${currentExercisePR.record_weight}кг × ${currentExercisePR.record_reps}`;
     } else if (currentExercisePR.exercise_type === 'time') {
-      return `${currentExercisePR.record_duration}сек`;
+      return formatDuration(currentExercisePR.record_duration || 0);
     } else if (currentExercisePR.exercise_type === 'distance') {
       return `${currentExercisePR.record_distance}м`;
     }
@@ -318,7 +359,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       setSaving(true);
       telegramService.hapticFeedback('impact', 'light');
 
-      await supabaseService.saveWorkoutLog({
+      const savedLog = await supabaseService.saveWorkoutLog({
         user_id: userId,
         program_id: session.program_id,
         exercise_id: currentExercise.id,
@@ -331,6 +372,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         datetime: newSet.timestamp,
         session_id: sessionId
       });
+
+      newSet.id = savedLog.id;
 
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
@@ -427,11 +470,59 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     }
   }, [sessionId, elapsedTime, completedSets, onFinish]);
 
+  const handleEditSet = useCallback((set: any) => {
+    telegramService.hapticFeedback('impact', 'light');
+    setEditSetModal({
+      isOpen: true,
+      setData: {
+        id: set.id,
+        exercise_type: exerciseType,
+        set_no: set.set_no,
+        reps: set.reps,
+        weight: set.weight,
+        duration: set.duration,
+        distance: set.distance
+      }
+    });
+  }, [exerciseType]);
+
+  const handleSaveEditedSet = useCallback(async (updatedData: any) => {
+    try {
+      if (updatedData.id) {
+        await supabaseService.updateWorkoutLog(updatedData.id, {
+          reps: updatedData.reps || 0,
+          weight: updatedData.weight || 0,
+          duration: updatedData.duration || 0,
+          distance: updatedData.distance || 0
+        });
+      }
+      
+      setCompletedSets(prev => prev.map(set => 
+        set.id === updatedData.id ? { ...set, ...updatedData } : set
+      ));
+      
+      setEditSetModal({ isOpen: false, setData: null });
+      
+      setAlertModal({
+        isOpen: true,
+        message: 'Подход обновлён',
+        type: 'success'
+      });
+    } catch (error) {
+      setAlertModal({
+        isOpen: true,
+        message: 'Ошибка обновления подхода',
+        type: 'error'
+      });
+    }
+  }, []);
+
   const getTargetDescription = () => {
     if (exerciseType === 'reps') {
       return `${currentExercise.target_sets} подхода × ${currentExercise.target_reps} повторений`;
     } else if (exerciseType === 'time') {
-      return `${currentExercise.target_sets} подхода × ${currentExercise.duration}с`;
+      const formattedDuration = formatDuration(currentExercise.duration || 0);
+      return `${currentExercise.target_sets} подхода × ${formattedDuration}`;
     } else if (exerciseType === 'distance') {
       return `${currentExercise.distance}м`;
     }
@@ -674,7 +765,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
             {exerciseType === 'time' && (
               <Stepper
-                label="Время (сек)"
+                label={duration >= 60 ? `Время (${formatDuration(duration)})` : 'Время (сек)'}
                 value={duration}
                 onChange={setDuration}
                 min={5}
@@ -705,7 +796,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               if (exerciseType === 'reps') {
                 subtitle = `${set.reps} повт • ${set.weight} кг`;
               } else if (exerciseType === 'time') {
-                subtitle = `${set.duration} сек`;
+                subtitle = formatDuration(set.duration || 0);
               } else if (exerciseType === 'distance') {
                 subtitle = `${set.distance} м`;
               }
@@ -714,6 +805,22 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
                 <Cell
                   key={`set-${index}`}
                   before={<CheckCircle size={18} color="var(--tg-theme-link-color)" />}
+                  after={
+                    <button
+                      onClick={() => handleEditSet(set)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Edit2 size={18} color="var(--tg-theme-hint-color)" />
+                    </button>
+                  }
                   subtitle={subtitle}
                 >
                   Подход {set.set_no}
@@ -764,6 +871,13 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
         message={alertModal.message}
         type={alertModal.type}
         onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <EditSetModal
+        isOpen={editSetModal.isOpen}
+        setData={editSetModal.setData}
+        onSave={handleSaveEditedSet}
+        onClose={() => setEditSetModal({ isOpen: false, setData: null })}
       />
     </>
   );

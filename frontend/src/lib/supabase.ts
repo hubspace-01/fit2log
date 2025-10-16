@@ -754,3 +754,20 @@ class SupabaseService {
 }
 
 export const supabaseService = new SupabaseService();
+
+  async updateWorkoutLog(logId: string, updates: {
+    reps?: number;
+    weight?: number;
+    duration?: number;
+    distance?: number;
+  }) {
+    const { data, error } = await this.supabase
+      .from('logs')
+      .update(updates)
+      .eq('id', logId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
