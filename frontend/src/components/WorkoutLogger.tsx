@@ -245,17 +245,17 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     if (saving || !currentExercise || !sessionId) return;
 
     if (exerciseType === 'reps' && reps <= 0) {
-      telegramService.hapticFeedback('notification', 'error');
+      telegramService.hapticFeedback('impact', 'medium');
       telegramService.showAlert('Введите количество повторений больше 0');
       return;
     }
     if (exerciseType === 'time' && duration <= 0) {
-      telegramService.hapticFeedback('notification', 'error');
+      telegramService.hapticFeedback('impact', 'medium');
       telegramService.showAlert('Введите время больше 0 секунд');
       return;
     }
     if (exerciseType === 'distance' && distance <= 0) {
-      telegramService.hapticFeedback('notification', 'error');
+      telegramService.hapticFeedback('impact', 'medium');
       telegramService.showAlert('Введите расстояние больше 0 метров');
       return;
     }
@@ -301,10 +301,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
       const updatedSets = [...completedSets, newSet];
       setCompletedSets(updatedSets);
       
-      telegramService.hapticFeedback('notification', 'success');
+      telegramService.hapticFeedback('impact', 'light');
 
     } catch (error) {
-      telegramService.hapticFeedback('notification', 'error');
+      telegramService.hapticFeedback('impact', 'heavy');
       telegramService.showAlert('Ошибка сохранения. Попробуйте ещё раз.');
       return;
     } finally {
@@ -369,7 +369,7 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
 
   const handleFinishWorkout = useCallback(async () => {
     try {
-      telegramService.hapticFeedback('notification', 'success');
+      telegramService.hapticFeedback('impact', 'heavy');
       if (sessionId) {
         await supabaseService.updateWorkoutSession(sessionId, {
           status: 'completed',
