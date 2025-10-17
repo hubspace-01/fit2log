@@ -215,7 +215,20 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
     
     if (willBeLastSet) {
       if (!isLastExercise) {
-        if (effectiveTargetSets === 1 && exerciseCompletedSets.length === 0) {
+        const hasCompletedAnySets = exerciseCompletedSets.length > 0;
+        
+        if (hasCompletedAnySets) {
+          setConfirmModal({
+            isOpen: true,
+            title: 'Перейти к следующему?',
+            message: `Упражнение "${currentExercise?.exercise_name}" завершено`,
+            danger: false,
+            onConfirm: () => {
+              setConfirmModal(prev => ({ ...prev, isOpen: false }));
+              goToNextExercise();
+            }
+          });
+        } else {
           setConfirmModal({
             isOpen: true,
             title: 'Пропустить упражнение?',
@@ -226,8 +239,6 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
               goToNextExercise();
             }
           });
-        } else {
-          goToNextExercise();
         }
       } else {
         setConfirmModal({
