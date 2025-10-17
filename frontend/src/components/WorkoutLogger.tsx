@@ -126,6 +126,14 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   });
 
   const exerciseType = currentExercise?.exercise_type || 'reps';
+  
+  // Вычисляем количество пропущенных подходов для текущего упражнения
+  const exerciseSkippedCount = React.useMemo(() => {
+    if (!currentExercise) return 0;
+    return Array.from(new Set<string>()).filter(
+      key => key.startsWith(`${currentExercise.id}_`)
+    ).length;
+  }, [currentExercise, completedSets]);
 
   useEffect(() => {
     if (currentExercise) {
@@ -206,16 +214,39 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
   const handleSkipSet = useCallback(() => {
     telegramService.hapticFeedback('impact', 'light');
 
-    // FIX: Правильная логика skip
-    if (isLastSetOfExercise) {
-      // Все подходы выполнены/пропущены - переходим к следующему упражнению или завершаем
+    // FIX: Сначала skip, затем проверяем будет ли это последний подход
+    skipCurrentSet();
+    
+    // Вычисляем будет ли это последний подход ПОСЛЕ skip
+    const newSkippedCount = exerciseSkippedCount + 1;
+    const totalDone = exerciseCompletedSets.length + newSkippedCount;
+    const willBeLastSet = totalDone >= effectiveTargetSets;
+    
+    if (willBeLastSet) {
+      // Все подходы выполнены/пропущены - переходим к следующему упражнению
       if (!isLastExercise) {
-        goToNextExercise();
+        // Если упражнение на 1 подход - показываем подтверждение
+        if (effectiveTargetSets === 1 && exerciseCompletedSets.length === 0) {
+          setConfirmModal({
+            isOpen: true,
+            title: 'Пропустить упражнение?',
+            message: `Вы не выполните "${currentExercise?.exercise_name}"`,
+            danger: false,
+            onConfirm: () => {
+              setConfirmModal(prev => ({ ...prev, isOpen: false }));
+              goToNextExercise();
+            }
+          });
+        } else {
+          // Обычный переход
+          goToNextExercise();
+        }
       } else {
+        // Последнее упражнение - подтверждение завершения
         setConfirmModal({
           isOpen: true,
-          title: 'Последнее упражнение',
-          message: 'Завершить тренировку?',
+          title: 'Завершить тренировку?',
+          message: 'Последнее упражнение будет пропущено',
           danger: false,
           onConfirm: () => {
             setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -223,11 +254,8 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           }
         });
       }
-    } else {
-      // Просто skip текущего подхода
-      skipCurrentSet();
     }
-  }, [isLastSetOfExercise, isLastExercise, goToNextExercise, skipCurrentSet]);
+  }, [skipCurrentSet, exerciseSkippedCount, exerciseCompletedSets.length, effectiveTargetSets, isLastExercise, currentExercise, goToNextExercise]);
 
   const handleFinishWorkout = useCallback(async () => {
     try {
@@ -356,7 +384,10 @@ export const WorkoutLogger: React.FC<WorkoutLoggerProps> = ({
           saving={saving}
           isLastSetOfExercise={isLastSetOfExercise}
           isLastExercise={isLastExercise}
-          totalSets={currentExercise?.target_sets || 1}
+          
+          currentSetNumber={currentSetNumber}
+          effectiveTargetSets={effectiveTargetSets}
+          hasCompletedSets={exerciseCompletedSets.length > 0}
           onComplete={handleCompleteSet}
           onSkip={handleSkipSet}
         />

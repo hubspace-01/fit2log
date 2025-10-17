@@ -5,7 +5,9 @@ interface WorkoutActionsProps {
   saving: boolean;
   isLastSetOfExercise: boolean;
   isLastExercise: boolean;
-  totalSets: number;
+  currentSetNumber: number;
+  effectiveTargetSets: number;
+  hasCompletedSets: boolean;
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -14,15 +16,25 @@ export const WorkoutActions: React.FC<WorkoutActionsProps> = ({
   saving,
   isLastSetOfExercise,
   isLastExercise,
-  totalSets,
+  currentSetNumber,
+  effectiveTargetSets,
+  hasCompletedSets,
   onComplete,
   onSkip
 }) => {
   const getSkipButtonText = () => {
-    if (isLastSetOfExercise) {
+    // Если упражнение на 1 подход и он ещё не выполнен
+    if (effectiveTargetSets === 1 && currentSetNumber === 1 && !hasCompletedSets) {
+      return isLastExercise ? 'Завершить тренировку' : 'Пропустить упражнение';
+    }
+    
+    // Если на последнем подходе (или уже все выполнены)
+    if (isLastSetOfExercise || currentSetNumber === effectiveTargetSets) {
       return isLastExercise ? 'Завершить тренировку' : 'Следующее упражнение';
     }
-    return totalSets === 1 ? (isLastExercise ? 'Завершить тренировку' : 'Следующее упражнение') : 'Пропустить подход';
+    
+    // Обычный промежуточный подход
+    return 'Пропустить подход';
   };
 
   return (
