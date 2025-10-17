@@ -57,7 +57,6 @@ export const useExerciseNavigation = ({
   
   const currentSetNumber = exerciseCompletedSets.length + exerciseSkippedCount + 1;
   
-  // FIX: учитываем и completed и skipped
   const totalCompletedAndSkipped = exerciseCompletedSets.length + exerciseSkippedCount;
   const isLastSetOfExercise = totalCompletedAndSkipped >= effectiveTargetSets;
 
@@ -91,6 +90,7 @@ export const useExerciseNavigation = ({
     effectiveTargetSets,
     isLastSetOfExercise,
     isLastExercise,
+    exerciseSkippedCount,
     addExtraSet,
     skipCurrentSet,
     goToNextExercise
